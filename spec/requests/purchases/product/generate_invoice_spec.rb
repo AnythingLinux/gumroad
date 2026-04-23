@@ -896,5 +896,30 @@ describe("Generate invoice for purchase", type: :system, js: true) do
         expect(pdf_text).to have_content("Products supplied by Gumroad.")
       end
     end
+
+    it "updates the Business/VAT ID field label based on the selected invoice country" do
+      purchase = create(
+        :purchase,
+        link: @product,
+        country: "Australia",
+        gumroad_tax_cents: 100,
+        was_purchase_taxable: true
+      )
+      purchase.create_purchase_sales_tax_info!(country_code: Compliance::Countries::AUS.alpha2)
+
+      visit new_purchase_invoice_path(purchase.external_id, email: purchase.email)
+
+      expect(page).to have_field("Business ABN ID (Optional)")
+
+      select "Germany", from: "Country"
+      expect(page).to have_field("VAT ID")
+      expect(page).not_to have_field("Business ABN ID (Optional)")
+
+      select "Brazil", from: "Country"
+      expect(page).to have_field("CNPJ")
+
+      select "Canada", from: "Country"
+      expect(page).to have_field("GST/HST")
+    end
   end
 end
