@@ -54,8 +54,11 @@ const PurchaseNewInvoicePage = () => {
 
   const form = useForm(form_data);
 
+  const isUsAddress = form.data.address_fields.country_code === "US";
+
   const validateFields = () =>
     Object.entries(form.data.address_fields).reduce((isValid, [key, value]) => {
+      if (key === "state" && !isUsAddress) return isValid;
       if (!value.trim()) {
         form.setError(`address_fields.${key}`, "Setting error message for highlighting the field in UI");
         return false;
@@ -122,7 +125,13 @@ const PurchaseNewInvoicePage = () => {
                   onChange={(e) => form.setData("address_fields.street_address", e.target.value)}
                 />
               </Fieldset>
-              <div style={{ display: "grid", gap: "var(--spacer-2)", gridTemplateColumns: "2fr 1fr 1fr" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gap: "var(--spacer-2)",
+                  gridTemplateColumns: isUsAddress ? "2fr 1fr 1fr" : "1fr 1fr",
+                }}
+              >
                 <Fieldset state={form.errors["address_fields.city"] ? "danger" : undefined}>
                   <Label htmlFor="city">City</Label>
                   <Input
@@ -132,15 +141,17 @@ const PurchaseNewInvoicePage = () => {
                     onChange={(e) => form.setData("address_fields.city", e.target.value)}
                   />
                 </Fieldset>
-                <Fieldset state={form.errors["address_fields.state"] ? "danger" : undefined}>
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    type="text"
-                    value={form.data.address_fields.state}
-                    onChange={(e) => form.setData("address_fields.state", e.target.value)}
-                  />
-                </Fieldset>
+                {isUsAddress ? (
+                  <Fieldset state={form.errors["address_fields.state"] ? "danger" : undefined}>
+                    <Label htmlFor="state">State</Label>
+                    <Input
+                      id="state"
+                      type="text"
+                      value={form.data.address_fields.state}
+                      onChange={(e) => form.setData("address_fields.state", e.target.value)}
+                    />
+                  </Fieldset>
+                ) : null}
                 <Fieldset state={form.errors["address_fields.zip_code"] ? "danger" : undefined}>
                   <Label htmlFor="zip_code">ZIP code</Label>
                   <Input
@@ -218,13 +229,19 @@ const PurchaseNewInvoicePage = () => {
                   <span
                     style={{ opacity: form.data.address_fields.city.length ? undefined : "var(--disabled-opacity)" }}
                   >
-                    {`${form.data.address_fields.city || "San Francisco"},`}
+                    {`${form.data.address_fields.city || "San Francisco"}${isUsAddress ? "," : ""}`}
                   </span>{" "}
-                  <span
-                    style={{ opacity: form.data.address_fields.state.length ? undefined : "var(--disabled-opacity)" }}
-                  >
-                    {form.data.address_fields.state || "CA"}
-                  </span>{" "}
+                  {isUsAddress ? (
+                    <>
+                      <span
+                        style={{
+                          opacity: form.data.address_fields.state.length ? undefined : "var(--disabled-opacity)",
+                        }}
+                      >
+                        {form.data.address_fields.state || "CA"}
+                      </span>{" "}
+                    </>
+                  ) : null}
                   <span
                     style={{
                       opacity: form.data.address_fields.zip_code.length ? undefined : "var(--disabled-opacity)",

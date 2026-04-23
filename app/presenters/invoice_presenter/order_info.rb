@@ -77,7 +77,7 @@ class InvoicePresenter::OrderInfo
         [
           address_fields[:full_name],
           address_fields[:street_address],
-          [address_fields[:city], address_fields[:state], address_fields[:zip_code]].compact.join(", "),
+          [address_fields[:city], address_fields[:state], address_fields[:zip_code]].reject(&:blank?).join(", "),
           address_fields[:country]
         ].compact,
         tag.br
