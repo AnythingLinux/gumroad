@@ -30,6 +30,7 @@ type NewInvoicePageProps = {
     heading: string;
     display_vat_id: boolean;
     vat_id_label: string;
+    business_id_country_codes: string[];
     supplier_info: {
       heading: string;
       attributes: { label: string | null; value: string }[];
@@ -54,6 +55,10 @@ const PurchaseNewInvoicePage = () => {
 
   const form = useForm(form_data);
 
+  const showBusinessIdField =
+    form_metadata.display_vat_id ||
+    form_metadata.business_id_country_codes.includes(form.data.address_fields.country_code);
+
   const validateFields = () =>
     Object.entries(form.data.address_fields).reduce((isValid, [key, value]) => {
       if (!value.trim()) {
@@ -68,7 +73,7 @@ const PurchaseNewInvoicePage = () => {
 
     form.transform((data) => ({
       ...data,
-      vat_id: form_metadata.display_vat_id ? data.vat_id : null,
+      vat_id: showBusinessIdField ? data.vat_id : null,
     }));
 
     form.post(Routes.purchase_invoice_path(form.data.purchase_id), {
@@ -100,7 +105,7 @@ const PurchaseNewInvoicePage = () => {
                   onChange={(e) => form.setData("address_fields.full_name", e.target.value)}
                 />
               </Fieldset>
-              {form_metadata.display_vat_id ? (
+              {showBusinessIdField ? (
                 <Fieldset className="flex-1">
                   <FieldsetTitle>
                     <Label htmlFor="chargeable_vat_id">{form_metadata.vat_id_label}</Label>

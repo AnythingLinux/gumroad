@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 class InvoicePresenter::FormInfo
+  BUSINESS_ID_COUNTRY_CODES = %w[
+    AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE
+    GB NO CH IS
+    CA AU NZ ZA
+    JP KR IN BR MX
+  ].freeze
+
   def initialize(chargeable)
     @chargeable = chargeable
   end
@@ -11,6 +18,10 @@ class InvoicePresenter::FormInfo
 
   def display_vat_id?
     chargeable.taxed_by_gumroad? && !chargeable.purchase_sales_tax_info&.business_vat_id
+  end
+
+  def business_id_country_codes
+    BUSINESS_ID_COUNTRY_CODES
   end
 
   def vat_id_label

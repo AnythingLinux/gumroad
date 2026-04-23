@@ -107,6 +107,21 @@ describe InvoicePresenter::FormInfo do
       end
     end
 
+    describe "#business_id_country_codes" do
+      it "includes all 27 EU member states" do
+        eu = %w[AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE]
+        expect(presenter.business_id_country_codes).to include(*eu)
+      end
+
+      it "includes the United Kingdom" do
+        expect(presenter.business_id_country_codes).to include("GB")
+      end
+
+      it "does not include the United States" do
+        expect(presenter.business_id_country_codes).not_to include("US")
+      end
+    end
+
     describe "#data" do
       let(:product) { create(:physical_product, user: seller) }
       let(:address_fields) do

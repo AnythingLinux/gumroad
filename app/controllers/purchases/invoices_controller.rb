@@ -23,18 +23,25 @@ class Purchases::InvoicesController < ApplicationController
     return redirect_to new_purchase_invoice_path(@purchase.external_id, email: invoice_params[:email]), alert: "Address information is required to generate an invoice." if address_fields.blank?
 
     address_fields[:country] = ISO3166::Country[invoice_params[:address_fields][:country_code]]&.common_name
-    business_vat_id = invoice_params[:vat_id] if is_vat_id_valid?(invoice_params[:vat_id])
+    submitted_vat_id = invoice_params[:vat_id]&.strip.presence
+    refundable_vat_id = submitted_vat_id if is_vat_id_valid?(submitted_vat_id)
+    business_vat_id =
+      if refundable_vat_id
+        refundable_vat_id
+      elsif submitted_vat_id && InvoicePresenter::FormInfo::BUSINESS_ID_COUNTRY_CODES.include?(invoice_params.dig(:address_fields, :country_code))
+        submitted_vat_id
+      end
     invoice_presenter = InvoicePresenter.new(@chargeable, address_fields:, additional_notes: invoice_params[:additional_notes]&.strip, business_vat_id:)
 
     begin
-      @chargeable.refund_gumroad_taxes!(refunding_user_id: logged_in_user&.id, note: address_fields.to_json, business_vat_id:) if business_vat_id
+      @chargeable.refund_gumroad_taxes!(refunding_user_id: logged_in_user&.id, note: address_fields.to_json, business_vat_id: refundable_vat_id) if refundable_vat_id
 
       invoice_html = render_to_string(locals: { invoice_presenter: }, formats: [:pdf], layout: false)
       pdf = PDFKit.new(invoice_html, page_size: "Letter").to_pdf
       s3_obj = @chargeable.upload_invoice_pdf(pdf)
 
       message = +"The invoice will be downloaded automatically."
-      if business_vat_id
+      if refundable_vat_id
         notice =
           if @chargeable.purchase_sales_tax_info.present? &&
              (Compliance::Countries::GST_APPLICABLE_COUNTRY_CODES.include?(@chargeable.purchase_sales_tax_info.country_code) ||
