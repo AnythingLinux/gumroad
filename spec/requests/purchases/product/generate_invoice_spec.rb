@@ -945,7 +945,9 @@ describe("Generate invoice for purchase", type: :system, js: true) do
       reader = PDF::Reader.new(URI.open(invoice_url))
       pdf_text = reader.page(1).text.squish
 
-      expect(pdf_text).to include("Wonderful Alice Crooked St.")
+      expect(pdf_text).to include("Wonderful Alice")
+      expect(pdf_text).to include("Crooked St.")
+      expect(pdf_text).not_to include("Acme Corp GmbH")
     end
   end
 end
