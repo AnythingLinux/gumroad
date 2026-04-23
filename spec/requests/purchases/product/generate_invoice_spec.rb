@@ -896,5 +896,40 @@ describe("Generate invoice for purchase", type: :system, js: true) do
         expect(pdf_text).to have_content("Products supplied by Gumroad.")
       end
     end
+
+    it "hides the State field for non-US countries and renders a clean PDF address" do
+      purchase = create(:purchase, link: @product)
+
+      visit new_purchase_invoice_path(purchase.external_id, email: purchase.email)
+
+      fill_in("Full name", with: "Wonderful Alice")
+      fill_in("Street address", with: "Crooked St.")
+      fill_in("City", with: "Berlin")
+      fill_in("ZIP code", with: "10115")
+      select "Germany", from: "Country"
+
+      expect(page).not_to have_field("State")
+
+      click_on "Download"
+      wait_for_ajax
+
+      invoice_url = find_link("here")[:href]
+      reader = PDF::Reader.new(URI.open(invoice_url))
+      pdf_text = reader.page(1).text.squish
+
+      expect(pdf_text).to include("Wonderful Alice")
+      expect(pdf_text).to include("Berlin, 10115")
+      expect(pdf_text).to include("Germany")
+      expect(pdf_text).not_to match(/Berlin,\s+,/)
+    end
+
+    it "shows and requires the State field when country is US" do
+      purchase = create(:purchase, link: @product, country: "United States")
+
+      visit new_purchase_invoice_path(purchase.external_id, email: purchase.email)
+      select "United States", from: "Country"
+
+      expect(page).to have_field("State")
+    end
   end
 end
