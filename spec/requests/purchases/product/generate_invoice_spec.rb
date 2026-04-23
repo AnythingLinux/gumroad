@@ -896,5 +896,43 @@ describe("Generate invoice for purchase", type: :system, js: true) do
         expect(pdf_text).to have_content("Products supplied by Gumroad.")
       end
     end
+
+    it "reveals the Business/VAT ID field when the buyer selects an EU country on a non-Gumroad-taxed charge" do
+      purchase = create(:physical_purchase, link: @physical_product)
+
+      visit new_purchase_invoice_path(purchase.external_id, email: purchase.email)
+
+      expect(page).not_to have_field("Business VAT ID (Optional)")
+
+      select "Germany", from: "Country"
+      expect(page).to have_field("Business VAT ID (Optional)")
+
+      fill_in("Full name", with: "Wonderful Alice")
+      fill_in("Business VAT ID (Optional)", with: "DE123456789")
+      fill_in("Street address", with: "Crooked St.")
+      fill_in("City", with: "Berlin")
+      fill_in("ZIP code", with: "10115")
+
+      click_on "Download"
+      wait_for_ajax
+
+      invoice_url = find_link("here")[:href]
+      reader = PDF::Reader.new(URI.open(invoice_url))
+      pdf_text = reader.page(1).text.squish
+
+      expect(pdf_text).to include("DE123456789")
+      expect(pdf_text).not_to include("VAT has also been refunded")
+    end
+
+    it "keeps the Business/VAT ID field hidden when the selected country is outside the broader list" do
+      purchase = create(:physical_purchase, link: @physical_product)
+
+      visit new_purchase_invoice_path(purchase.external_id, email: purchase.email)
+
+      expect(page).not_to have_field("Business VAT ID (Optional)")
+
+      select "Tanzania", from: "Country"
+      expect(page).not_to have_field("Business VAT ID (Optional)")
+    end
   end
 end
