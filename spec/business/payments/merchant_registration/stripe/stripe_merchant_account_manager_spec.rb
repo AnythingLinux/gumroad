@@ -3067,7 +3067,7 @@ describe StripeMerchantAccountManager, :vcr do
           bank_account: {
             country: "SV",
             currency: "usd",
-            account_number: "12345678901234",
+            account_number: "SV44BCIE12345678901234567890",
             routing_number: "AAAASVS1XXX"
           },
           settings: {

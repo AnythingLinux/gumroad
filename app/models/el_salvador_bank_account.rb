@@ -4,8 +4,7 @@ class ElSalvadorBankAccount < BankAccount
   BANK_ACCOUNT_TYPE = "SV"
 
   BANK_CODE_FORMAT_REGEX = /^[a-zA-Z0-9]{8,11}$/
-  ACCOUNT_NUMBER_FORMAT_REGEX = /\A[0-9]{10,20}\z/
-  private_constant :BANK_CODE_FORMAT_REGEX, :ACCOUNT_NUMBER_FORMAT_REGEX
+  private_constant :BANK_CODE_FORMAT_REGEX
 
   alias_attribute :bank_code, :bank_number
 
@@ -47,7 +46,7 @@ class ElSalvadorBankAccount < BankAccount
     end
 
     def validate_account_number
-      return if ACCOUNT_NUMBER_FORMAT_REGEX.match?(account_number_decrypted)
+      return if Ibandit::IBAN.new(account_number_decrypted).valid?
       errors.add :base, "The account number is invalid."
     end
 end
