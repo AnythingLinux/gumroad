@@ -15,6 +15,8 @@ class ProfileSectionsController < ApplicationController
     render json: { id: section.external_id }
   rescue ActiveRecord::SubclassNotFound
     render json: { error: "Invalid section type" }, status: :unprocessable_entity
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def update
@@ -29,6 +31,8 @@ class ProfileSectionsController < ApplicationController
     unless section.update(attributes)
       render json: { error: section.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def destroy

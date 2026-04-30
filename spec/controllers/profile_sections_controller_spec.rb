@@ -271,6 +271,22 @@ describe ProfileSectionsController do
         expect(new_upsell).to be_alive
         expect(new_upsell.product_id).to eq(product.id)
       end
+
+      it "returns a validation error when an upsell discount results in an invalid price" do
+        product.update!(price_cents: 150)
+        invalid_discount_text = {
+          "type" => "doc",
+          "content" => [
+            { "type" => "paragraph", "content" => [{ "text" => "hi", "type" => "text" }] },
+            { "type" => "upsellCard", "attrs" => { "discount" => { "type" => "fixed", "cents" => 100 }, "productId" => product.external_id } }
+          ]
+        }
+
+        patch :update, params: { id: section.external_id, text: invalid_discount_text }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.parsed_body["error"]).to include("price after discount")
+      end
     end
   end
 
