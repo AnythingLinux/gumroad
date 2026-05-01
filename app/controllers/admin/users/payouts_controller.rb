@@ -37,7 +37,7 @@ class Admin::Users::PayoutsController < Admin::BaseController
   end
 
   def resume
-    render json: { success: false } and return unless @user.payouts_paused_internally?
+    render json: { success: false } and return unless @user.payouts_paused_by_source == User::PAYOUT_PAUSE_SOURCE_ADMIN
 
     @user.update!(payouts_paused_internally: false, payouts_paused_by: nil)
     @user.comments.create!(

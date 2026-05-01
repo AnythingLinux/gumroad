@@ -47,7 +47,7 @@ class Api::Internal::Admin::PayoutsController < Api::Internal::Admin::BaseContro
   end
 
   def resume
-    unless @user.payouts_paused_internally?
+    unless @user.payouts_paused_by_source == User::PAYOUT_PAUSE_SOURCE_ADMIN
       return render json: {
         success: true,
         status: "not_paused",

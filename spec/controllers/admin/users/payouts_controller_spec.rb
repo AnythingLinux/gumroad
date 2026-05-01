@@ -88,36 +88,32 @@ describe Admin::Users::PayoutsController, type: :controller, inertia: true do
       expect(seller.payouts_paused_for_reason).to be nil
     end
 
-    it "resumes payouts for seller and clears the payout pause source if payouts are paused by stripe" do
+    it "refuses to resume payouts paused by Stripe" do
       seller.update!(payouts_paused_by: User::PAYOUT_PAUSE_SOURCE_STRIPE)
       expect(seller.reload.payouts_paused_internally?).to be true
       expect(seller.payouts_paused_by_source).to eq(User::PAYOUT_PAUSE_SOURCE_STRIPE)
-      expect(seller.payouts_paused_for_reason).to be nil
 
       expect do
         post :resume, params: { user_external_id: seller.external_id }, format: :json
-      end.to change { seller.comments.with_type_payouts_resumed.count }.by(1)
+      end.not_to change { seller.comments.with_type_payouts_resumed.count }
 
-      expect(seller.reload.payouts_paused_internally?).to be false
-      expect(seller.payouts_paused_by).to be nil
-      expect(seller.payouts_paused_by_source).to be nil
-      expect(seller.payouts_paused_for_reason).to be nil
+      expect(response.parsed_body["success"]).to be(false)
+      expect(seller.reload.payouts_paused_internally?).to be true
+      expect(seller.payouts_paused_by_source).to eq(User::PAYOUT_PAUSE_SOURCE_STRIPE)
     end
 
-    it "resumes payouts for seller and clears the payout pause source if payouts are paused by the system" do
+    it "refuses to resume payouts paused by the system" do
       seller.update!(payouts_paused_by: User::PAYOUT_PAUSE_SOURCE_SYSTEM)
       expect(seller.reload.payouts_paused_internally?).to be true
       expect(seller.payouts_paused_by_source).to eq(User::PAYOUT_PAUSE_SOURCE_SYSTEM)
-      expect(seller.payouts_paused_for_reason).to be nil
 
       expect do
         post :resume, params: { user_external_id: seller.external_id }, format: :json
-      end.to change { seller.comments.with_type_payouts_resumed.count }.by(1)
+      end.not_to change { seller.comments.with_type_payouts_resumed.count }
 
-      expect(seller.reload.payouts_paused_internally?).to be false
-      expect(seller.payouts_paused_by).to be nil
-      expect(seller.payouts_paused_by_source).to be nil
-      expect(seller.payouts_paused_for_reason).to be nil
+      expect(response.parsed_body["success"]).to be(false)
+      expect(seller.reload.payouts_paused_internally?).to be true
+      expect(seller.payouts_paused_by_source).to eq(User::PAYOUT_PAUSE_SOURCE_SYSTEM)
     end
   end
 end

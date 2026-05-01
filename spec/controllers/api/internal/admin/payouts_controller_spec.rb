@@ -229,5 +229,37 @@ describe Api::Internal::Admin::PayoutsController do
         "payouts_paused" => true
       )
     end
+
+    it "refuses to resume payouts paused by the system" do
+      user.update!(payouts_paused_internally: true, payouts_paused_by: User::PAYOUT_PAUSE_SOURCE_SYSTEM)
+
+      expect { post :resume, params: { email: user.email } }
+        .not_to change { user.comments.count }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include(
+        "success" => true,
+        "status" => "not_paused",
+        "message" => "Payouts are not paused by admin"
+      )
+      expect(user.reload.payouts_paused_internally?).to be(true)
+      expect(user.payouts_paused_by_source).to eq(User::PAYOUT_PAUSE_SOURCE_SYSTEM)
+    end
+
+    it "refuses to resume payouts paused by Stripe" do
+      user.update!(payouts_paused_internally: true, payouts_paused_by: User::PAYOUT_PAUSE_SOURCE_STRIPE)
+
+      expect { post :resume, params: { email: user.email } }
+        .not_to change { user.comments.count }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include(
+        "success" => true,
+        "status" => "not_paused",
+        "message" => "Payouts are not paused by admin"
+      )
+      expect(user.reload.payouts_paused_internally?).to be(true)
+      expect(user.payouts_paused_by_source).to eq(User::PAYOUT_PAUSE_SOURCE_STRIPE)
+    end
   end
 end
