@@ -300,6 +300,7 @@ class LinksController < ApplicationController
 
   def update
     authorize @product
+    deadlock_retries = 0
     begin
       ActiveRecord::Base.transaction do
         @product.assign_attributes(product_permitted_params.except(
@@ -393,6 +394,13 @@ class LinksController < ApplicationController
         toggle_community_chat!(product_permitted_params[:community_chat_enabled])
         @product.generate_product_files_archives!
       end
+    rescue ActiveRecord::Deadlocked
+      deadlock_retries += 1
+      if deadlock_retries <= 2
+        @product.reload
+        retry
+      end
+      raise
     rescue ActiveRecord::RecordNotSaved, ActiveRecord::RecordInvalid, Link::LinkInvalid => e
       if @product.errors.details[:custom_fields].present?
         error_message = "You must add titles to all of your inputs"

@@ -2842,6 +2842,40 @@ describe LinksController, :vcr, inertia: true do
           end
         end
       end
+
+      context "when a deadlock occurs" do
+        it "retries and succeeds on the second attempt" do
+          deadlock_raised = false
+          allow(ActiveRecord::Base).to receive(:transaction).and_wrap_original do |original, *args, **kwargs, &block|
+            if !deadlock_raised && block && caller.any? { |frame| frame.include?("links_controller") }
+              deadlock_raised = true
+              raise ActiveRecord::Deadlocked
+            end
+            original.call(*args, **kwargs, &block)
+          end
+
+          put :update, params: @params, as: :json
+
+          expect(response).to have_http_status(:no_content)
+          expect(deadlock_raised).to be(true)
+        end
+
+        it "re-raises after exhausting retries" do
+          deadlock_count = 0
+          allow(ActiveRecord::Base).to receive(:transaction).and_wrap_original do |original, *args, **kwargs, &block|
+            if block && caller.any? { |frame| frame.include?("links_controller") }
+              deadlock_count += 1
+              raise ActiveRecord::Deadlocked
+            end
+            original.call(*args, **kwargs, &block)
+          end
+
+          expect {
+            put :update, params: @params, as: :json
+          }.to raise_error(ActiveRecord::Deadlocked)
+          expect(deadlock_count).to eq(3)
+        end
+      end
     end
 
     describe "GET new" do
