@@ -2,7 +2,14 @@
 
 class CreateUsStatesSalesSummaryReportJob
   include Sidekiq::Job
-  sidekiq_options retry: 1, queue: :default, lock: :until_executed
+  sidekiq_options retry: 3, queue: :default, lock: :until_executed
+
+  sidekiq_retries_exhausted do |job, exception|
+    subdivision_codes, month, year = job["args"]
+    AccountingMailer.us_states_sales_summary_report_failed(
+      subdivision_codes, month, year, exception.class.name, exception.message
+    ).deliver_later
+  end
 
   attr_reader :taxjar_api
 
