@@ -40,6 +40,7 @@ describe Api::Internal::Admin::UsersController do
         "name" => "Seller One",
         "username" => "sellerone",
         "deleted_at" => nil,
+        "active_watched_user" => nil,
         "two_factor_authentication_enabled" => false
       )
       expect(info["created_at"]).to eq(user.created_at.as_json)
@@ -183,6 +184,29 @@ describe Api::Internal::Admin::UsersController do
       stats = response.parsed_body["user"]["stats"]
       expect(stats["sales_count"]).to eq(2)
       expect(stats["total_earnings_formatted"]).to eq("$15.00")
+    end
+
+    it "includes the active watched user" do
+      user = create(:compliant_user, email: "watched@example.com")
+      watched_user = create(:watched_user,
+                            user:,
+                            revenue_threshold_cents: 20_000,
+                            revenue_cents: 12_500,
+                            unpaid_balance_cents: 2_500,
+                            notes: "Review again")
+      watched_user.update!(last_synced_at: 1.hour.ago)
+
+      post :info, params: { email: user.email }
+
+      expect(response.parsed_body["user"]["active_watched_user"]).to eq(
+        "id" => watched_user.external_id,
+        "revenue_threshold_cents" => 20_000,
+        "revenue_cents" => 12_500,
+        "unpaid_balance_cents" => 2_500,
+        "notes" => "Review again",
+        "created_at" => watched_user.created_at.iso8601,
+        "last_synced_at" => watched_user.last_synced_at.iso8601
+      )
     end
   end
 
@@ -710,6 +734,181 @@ describe Api::Internal::Admin::UsersController do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body["success"]).to be(false)
       expect(user.reload).to be_compliant
+    end
+  end
+
+  describe "POST watch" do
+    let(:user) { create(:user) }
+
+    include_examples "admin api authorization required", :post, :watch
+
+    it "returns bad request when email is missing" do
+      post :watch, params: { revenue_threshold: "200" }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body["message"]).to eq("email is required")
+    end
+
+    it "returns bad request when revenue_threshold is missing" do
+      post :watch, params: { email: user.email }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body["message"]).to eq("revenue_threshold is required")
+    end
+
+    it "returns bad request when revenue_threshold is not positive" do
+      post :watch, params: { email: user.email, revenue_threshold: "0" }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body["message"]).to eq("revenue_threshold must be a positive number")
+    end
+
+    it "returns bad request when revenue_threshold is non-finite" do
+      ["Infinity", "-Infinity", "NaN"].each do |revenue_threshold|
+        post :watch, params: { email: user.email, revenue_threshold: }
+
+        expect(response).to have_http_status(:bad_request)
+        expect(response.parsed_body["message"]).to eq("revenue_threshold must be a positive number")
+      end
+    end
+
+    it "returns not found when user does not exist" do
+      post :watch, params: { email: "missing@example.com", revenue_threshold: "200" }
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "creates a watched user record" do
+      expect do
+        post :watch, params: { email: user.email, revenue_threshold: "200", notes: "Risk review: monitoring" }
+      end.to change { WatchedUser.count }.by(1)
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["success"]).to be(true)
+      expect(body["message"]).to eq("User added to watchlist")
+      expect(body["watched_user"]["revenue_threshold_cents"]).to eq(20_000)
+      expect(body["watched_user"]["notes"]).to eq("Risk review: monitoring")
+    end
+
+    it "returns 422 when user is already being watched" do
+      create(:watched_user, user: user)
+
+      post :watch, params: { email: user.email, revenue_threshold: "500" }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body["message"]).to eq("User is already being watched")
+    end
+  end
+
+  describe "POST unwatch" do
+    let(:user) { create(:user) }
+
+    include_examples "admin api authorization required", :post, :unwatch
+
+    it "returns bad request when email is missing" do
+      post :unwatch
+
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body["message"]).to eq("email is required")
+    end
+
+    it "returns not found when user does not exist" do
+      post :unwatch, params: { email: "missing@example.com" }
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "removes the user from the watchlist" do
+      watched_user = create(:watched_user, user: user)
+
+      post :unwatch, params: { email: user.email }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["success"]).to be(true)
+      expect(watched_user.reload.deleted_at).not_to be_nil
+    end
+
+    it "returns 422 when user is not being watched" do
+      post :unwatch, params: { email: user.email }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body["message"]).to eq("User is not currently being watched")
+    end
+  end
+
+  describe "POST update_watch" do
+    let(:user) { create(:user) }
+
+    include_examples "admin api authorization required", :post, :update_watch
+
+    it "returns bad request when email is missing" do
+      post :update_watch, params: { revenue_threshold: "200" }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body["message"]).to eq("email is required")
+    end
+
+    it "returns bad request when revenue_threshold is missing" do
+      post :update_watch, params: { email: user.email }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body["message"]).to eq("revenue_threshold is required")
+    end
+
+    it "returns bad request when revenue_threshold is not positive" do
+      create(:watched_user, user:)
+
+      post :update_watch, params: { email: user.email, revenue_threshold: "0" }
+
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body["message"]).to eq("revenue_threshold must be a positive number")
+    end
+
+    it "returns not found when user does not exist" do
+      post :update_watch, params: { email: "missing@example.com", revenue_threshold: "200" }
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "returns 422 when user is not being watched" do
+      post :update_watch, params: { email: user.email, revenue_threshold: "200" }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body["message"]).to eq("User is not currently being watched")
+    end
+
+    it "updates the active watched user" do
+      watched_user = create(:watched_user, user:, revenue_threshold_cents: 20_000, notes: "Old notes")
+
+      expect do
+        post :update_watch, params: { email: user.email, revenue_threshold: "500", notes: "New notes" }
+      end.not_to change { WatchedUser.count }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["success"]).to be(true)
+      expect(response.parsed_body["message"]).to eq("Watchlist updated")
+      expect(response.parsed_body["watched_user"]["revenue_threshold_cents"]).to eq(50_000)
+      expect(response.parsed_body["watched_user"]["notes"]).to eq("New notes")
+      expect(watched_user.reload).to have_attributes(revenue_threshold_cents: 50_000, notes: "New notes")
+    end
+
+    it "preserves notes when notes is omitted" do
+      watched_user = create(:watched_user, user:, notes: "Keep this")
+
+      post :update_watch, params: { email: user.email, revenue_threshold: "300" }
+
+      expect(response).to have_http_status(:ok)
+      expect(watched_user.reload.notes).to eq("Keep this")
+    end
+
+    it "clears notes when notes is blank" do
+      watched_user = create(:watched_user, user:, notes: "Clear this")
+
+      post :update_watch, params: { email: user.email, revenue_threshold: "300", notes: "" }
+
+      expect(response).to have_http_status(:ok)
+      expect(watched_user.reload.notes).to be_nil
     end
   end
 end
