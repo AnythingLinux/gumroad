@@ -44,6 +44,10 @@ RUN npm ci
 # duplicated all of $APP_DIR — including node_modules — into a new layer).
 COPY --chown=app:app . ./
 
+# Pre-build Vite assets for test mode so Capybara system tests can load
+# the admin JS/CSS without relying on auto-build at request time.
+RUN npx vite build --mode test
+
 # Switch back so subsequent ImageMagick edits and the worker step's `su -c
 # ... app` pattern work correctly.
 USER root
