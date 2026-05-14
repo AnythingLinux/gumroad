@@ -4,6 +4,7 @@ import { resolve } from "path";
 import AutoImport from "unplugin-auto-import/vite";
 import { defineConfig, type Plugin } from "vite";
 import RubyPlugin from "vite-plugin-ruby";
+import tsSafeCastPlugin from "./config/vite/plugins/tsSafeCastPlugin.js";
 
 // Custom plugin to transform webpack's require.context() into Vite-compatible code.
 // This allows shared files to work with both webpack (which natively supports require.context)
@@ -74,6 +75,7 @@ export default defineConfig({
     RubyPlugin(),
     react(),
     requireContextPlugin(),
+    tsSafeCastPlugin(),
     AutoImport({
       imports: [
         {
@@ -99,6 +101,11 @@ export default defineConfig({
   },
   define: {
     SSR: false,
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'test'),
+    'process.env.RAILS_ENV': JSON.stringify(process.env.RAILS_ENV || 'test'),
+    'process.env.PROTOCOL': JSON.stringify(process.env.PROTOCOL || 'https'),
+    // Fallback so any other process.env.FOO won't throw
+    'process.env': '{}',
   },
   css: {
     preprocessorOptions: {
