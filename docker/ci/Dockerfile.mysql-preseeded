@@ -14,14 +14,24 @@ ENV MYSQL_DATABASE=gumroad_test
 
 COPY schema_dump.sql /docker-entrypoint-initdb.d/01-schema.sql
 
-# Boot MySQL, let it process the init script (creates DB + loads schema),
-# then shut down cleanly. This populates /var/lib/mysql with the schema.
+# Boot MySQL via docker-entrypoint.sh, which:
+#   1. Initializes data dir
+#   2. Starts a TEMPORARY server (port 0, socket only)
+#   3. Runs init SQL files (our schema dump)
+#   4. Shuts down the temporary server
+#   5. Starts the FINAL mysqld on port 3306
+#
+# We must wait for step 5 (not just step 2). The temporary server
+# in step 2 listens on port 0 only — mysqladmin ping via socket
+# succeeds there, but init SQL may still be running.
+# We use --protocol=tcp to only match the final server on port 3306.
 RUN docker-entrypoint.sh mysqld & \
     SERVER_PID=$! && \
-    until mysqladmin ping -h localhost -uroot -ppassword --silent 2>/dev/null; do sleep 1; done && \
-    sleep 5 && \
-    echo "Schema loaded, shutting down..." && \
-    mysqladmin -uroot -ppassword shutdown && \
+    echo "Waiting for MySQL init + schema import to complete..." && \
+    until mysqladmin ping -h 127.0.0.1 --protocol=tcp -uroot -ppassword --silent 2>/dev/null; do sleep 2; done && \
+    TABLE_COUNT=$(mysql -h 127.0.0.1 --protocol=tcp -uroot -ppassword -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='gumroad_test'" 2>/dev/null) && \
+    echo "Schema ready ($TABLE_COUNT tables), shutting down..." && \
+    mysqladmin -h 127.0.0.1 --protocol=tcp -uroot -ppassword shutdown && \
     wait $SERVER_PID
 
 # Final stage: clean image with pre-populated data stored in /var/lib/mysql-seed
