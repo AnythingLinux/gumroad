@@ -209,6 +209,9 @@ SecureHeaders::Configuration.default do |config|
     config.csp[:script_src] << "localhost:3035" # Required by webpack-dev-server
     config.csp[:connect_src] << "localhost:3035" # Required by webpack-dev-server
     config.csp[:connect_src] << "ws://localhost:3035" # Required by webpack-dev-server
+    config.csp[:script_src] << "localhost:3036" # Required by vite-dev-server
+    config.csp[:connect_src] << "localhost:3036" # Required by vite-dev-server
+    config.csp[:connect_src] << "ws://localhost:3036" # Required by vite-dev-server HMR websocket
     cable_scheme = PROTOCOL == "https" ? "wss" : "ws"
     cable_port = PROTOCOL == "https" ? 8081 : 8080
     config.csp[:connect_src] << "#{cable_scheme}://#{ANYCABLE_HOST}:#{cable_port}" # Required by AnyCable
