@@ -1,10 +1,5 @@
-// Admin entrypoint for Vite
-// Mirrors app/javascript/packs/admin.ts but using Vite conventions
-
-// Import admin styles
 import "../packs/admin.scss";
 
-// Import the admin Inertia app
 import { createInertiaApp } from "@inertiajs/react";
 import React, { createElement } from "react";
 import { createRoot } from "react-dom/client";
@@ -15,16 +10,13 @@ import Layout from "../layouts/Admin";
 const AdminLayout = (page: React.ReactNode) => React.createElement(Layout, { children: page });
 
 type PageComponent = React.ComponentType & { layout?: (page: React.ReactNode) => React.ReactElement };
+type PageModule = { default?: unknown };
 
 const isPageComponent = (value: unknown): value is PageComponent => typeof value === "function";
 
-// Vite uses import.meta.glob instead of webpack's dynamic import.
-// Restrict to admin pages only (webpack used dynamic import() which was
-// lazy per-page; a `**/*.tsx` glob would pull every Inertia page into the
-// admin bundle). Include a .jsx fallback for legacy files.
-const pages = {
-  ...import.meta.glob("../pages/Admin/**/*.tsx"),
-  ...import.meta.glob("../pages/Admin/**/*.jsx"),
+const pages: Record<string, () => Promise<PageModule>> = {
+  ...import.meta.glob<PageModule>("../pages/Admin/**/*.tsx"),
+  ...import.meta.glob<PageModule>("../pages/Admin/**/*.jsx"),
 };
 
 const resolvePageComponent = async (name: string): Promise<PageComponent> => {
@@ -34,7 +26,7 @@ const resolvePageComponent = async (name: string): Promise<PageComponent> => {
   if (!resolver) {
     throw new Error(`Admin page component not found: ${name} (tried ${tsxPath}, ${jsxPath})`);
   }
-  const module = (await resolver()) as { default?: unknown };
+  const module = await resolver();
   if (module && typeof module === "object" && "default" in module && isPageComponent(module.default)) {
     const component = module.default;
     component.layout = AdminLayout;
