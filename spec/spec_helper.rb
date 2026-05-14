@@ -254,7 +254,15 @@ RSpec.configure do |config|
     WebMock.allow_net_connect!(net_http_connect_on_start: true)
     [
       Thread.new { prepare_mysql },
-      Thread.new { ElasticsearchSetup.prepare_test_environment }
+      Thread.new { ElasticsearchSetup.prepare_test_environment },
+      Thread.new {
+        routes_dir = Rails.root.join("app", "javascript", "utils")
+        routes_file = routes_dir.join("routes.js")
+        unless routes_file.exist?
+          JsRoutes.generate!(routes_file)
+          JsRoutes.definitions!(routes_dir.join("routes.d.ts"))
+        end
+      }
     ].each(&:join)
   end
 
