@@ -68,33 +68,65 @@ RSpec.configure do |config|
         # Test: launch Chrome with --remote-debugging-port like Ferrum does
         require "timeout"
         $stderr.puts "[cuprite] LD_PRELOAD=#{ENV['LD_PRELOAD'].inspect}"
-        $stderr.puts "[cuprite] Testing remote-debugging-port launch (without LD_PRELOAD)..."
-        rd, wr = IO.pipe
-        pid = Process.spawn(
-          { "LD_PRELOAD" => nil },
+
+        # Test 1: with LD_PRELOAD (as-is)
+        $stderr.puts "[cuprite] Test 1: Chrome with LD_PRELOAD..."
+        rd1, wr1 = IO.pipe
+        pid1 = Process.spawn(
           chrome_path,
           "--headless", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage",
-          "--remote-debugging-port=0", "about:blank",
-          in: File::NULL, out: wr, err: wr
+          "--remote-debugging-port=0",
+          in: File::NULL, out: wr1, err: wr1
         )
-        wr.close
-        output = ""
+        wr1.close
+        output1 = ""
         begin
           Timeout.timeout(10) do
-            while (chunk = rd.read_nonblock(512) rescue nil)
-              output += chunk
-              break if output.include?("DevTools listening")
-              sleep 0.1
+            loop do
+              output1 += rd1.read_nonblock(512)
+              break if output1.include?("DevTools listening")
+            rescue IO::WaitReadable
+              rd1.wait_readable(0.5)
             end
           end
         rescue Timeout::Error
-          $stderr.puts "[cuprite] TIMEOUT waiting for DevTools line after 10s"
+          # timeout
         end
-        rd.close
-        Process.kill("TERM", pid) rescue nil
-        Process.wait(pid) rescue nil
-        $stderr.puts "[cuprite] Chrome stderr output (#{output.length} bytes): #{output[0..500]}"
-        $stderr.puts "[cuprite] DevTools line found: #{output.include?('DevTools listening')}"
+        rd1.close
+        Process.kill("TERM", pid1) rescue nil
+        Process.wait(pid1) rescue nil
+        $stderr.puts "[cuprite] Test 1 result (#{output1.length} bytes): #{output1[0..500]}"
+        $stderr.puts "[cuprite] Test 1 DevTools found: #{output1.include?('DevTools listening')}"
+
+        # Test 2: without LD_PRELOAD
+        $stderr.puts "[cuprite] Test 2: Chrome without LD_PRELOAD..."
+        rd2, wr2 = IO.pipe
+        pid2 = Process.spawn(
+          { "LD_PRELOAD" => nil },
+          chrome_path,
+          "--headless", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage",
+          "--remote-debugging-port=0",
+          in: File::NULL, out: wr2, err: wr2
+        )
+        wr2.close
+        output2 = ""
+        begin
+          Timeout.timeout(10) do
+            loop do
+              output2 += rd2.read_nonblock(512)
+              break if output2.include?("DevTools listening")
+            rescue IO::WaitReadable
+              rd2.wait_readable(0.5)
+            end
+          end
+        rescue Timeout::Error
+          # timeout
+        end
+        rd2.close
+        Process.kill("TERM", pid2) rescue nil
+        Process.wait(pid2) rescue nil
+        $stderr.puts "[cuprite] Test 2 result (#{output2.length} bytes): #{output2[0..500]}"
+        $stderr.puts "[cuprite] Test 2 DevTools found: #{output2.include?('DevTools listening')}"
       else
         $stderr.puts "[cuprite] WARNING: No Chrome binary found on PATH!"
         $stderr.puts "[cuprite] PATH=#{ENV['PATH']}"
