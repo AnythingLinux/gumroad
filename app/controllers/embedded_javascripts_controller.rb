@@ -5,7 +5,8 @@ class EmbeddedJavascriptsController < ApplicationController
 
   def overlay
     @script_path = "/js/gumroad.js"
-    @global_stylesheet_path = ViteRuby.instance.manifest.resolve_entries("design", type: :typescript).fetch(:stylesheets, []).first
+    stylesheets = ViteRuby.instance.manifest.resolve_entries("design", type: :typescript).fetch(:stylesheets, [])
+    @global_stylesheet_path = stylesheets.first || helpers.vite_asset_path("entrypoints/design.scss")
     @stylesheet = "overlay"
     render :index
   end
