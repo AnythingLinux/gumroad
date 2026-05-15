@@ -50,13 +50,7 @@ Capybara.register_driver :cuprite_billy do |app|
     "ignore-certificate-errors" => nil,
     "proxy-server" => "#{Billy.proxy.host}:#{Billy.proxy.port}",
   )
-  Capybara::Cuprite::Driver.new(app,
-    window_size: [1440, 900],
-    browser_options: billy_opts,
-    process_timeout: 30,
-    timeout: 15,
-    js_errors: true,
-    headless: true)
+  Capybara::Cuprite::Driver.new(app, **CUPRITE_COMMON_OPTS, window_size: [1440, 900], browser_options: billy_opts)
 end
 
 # ── RSpec hooks ──────────────────────────────────────────────────────

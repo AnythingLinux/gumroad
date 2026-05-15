@@ -340,6 +340,7 @@ RSpec.configure do |config|
       Capybara.reset_sessions!
     rescue Ferrum::DeadBrowserError,
            Ferrum::BrowserError,
+           Ferrum::ProcessTimeoutError,
            Errno::ECONNREFUSED => e
       Rails.logger.warn("[RSpec] Browser session corrupted during reset: #{e.class}: #{e.message}. Restarting driver.")
       force_browser_restart!

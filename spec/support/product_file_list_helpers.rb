@@ -64,7 +64,7 @@ module ProductFileListHelpers
   end
 
   def expect_focused(active_el)
-    expect(page.driver.browser.switch_to.active_element).to eql(active_el.native)
+    expect(active_el).to match_selector(":focus")
   end
 
   def pick_dropbox_file(url, skip_transfer = false)

@@ -5,7 +5,7 @@ class SubscribePreviewGeneratorService
   RETINA_PIXEL_RATIO = 2
   ASPECT_RATIO = 128/67r
   WIDTH = 512
-  HEIGHT = WIDTH / ASPECT_RATIO
+  HEIGHT = (WIDTH / ASPECT_RATIO).to_i
   BROWSER_OPTIONS = {
     "force-device-scale-factor" => RETINA_PIXEL_RATIO.to_s,
     "headless" => nil,

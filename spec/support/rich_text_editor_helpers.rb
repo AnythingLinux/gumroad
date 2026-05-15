@@ -45,6 +45,6 @@ module RichTextEditorHelpers
   end
 
   def ctrl_key
-    page.driver.browser.capabilities.platform_name.include?("mac") ? :command : :control
+    RbConfig::CONFIG["host_os"] =~ /darwin/ ? :command : :control
   end
 end

@@ -123,14 +123,4 @@ RUN curl --retry 10 --connect-timeout 5 --retry-max-time 60 --output /tmp/google
   /tmp/* \
   /var/tmp/*
 
-RUN CHROME_VERSION="$(google-chrome --version)" \
-  && export CHROMEDRIVER_RELEASE="$(echo $CHROME_VERSION | sed 's/^Google Chrome //')" \
-  && curl --silent --show-error --location --fail --retry 4 --retry-delay 5 --output /tmp/chromedriver_linux64.zip "https://storage.googleapis.com/chrome-for-testing-public/$CHROMEDRIVER_RELEASE/linux64/chromedriver-linux64.zip" \
-  && cd /tmp \
-  && unzip chromedriver_linux64.zip \
-  && rm -rf chromedriver_linux64.zip \
-  && sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
-  && sudo chmod +x /usr/local/bin/chromedriver \
-  && chromedriver --version
-
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
