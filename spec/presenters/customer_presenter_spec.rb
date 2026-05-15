@@ -36,7 +36,6 @@ describe CustomerPresenter do
   end
 
   describe "#customer" do
-    let(:seller) { create(:named_seller) }
     let(:product) { create(:product, user: seller, name: "Product", price_cents: 100, is_physical: true, require_shipping: true) }
     let(:membership) { create(:membership_product_with_preset_tiered_pricing, user: seller, name: "Membership", is_multiseat_license: true, is_licensed: true, native_type: Link::NATIVE_TYPE_MEMBERSHIP) }
     let(:offer_code) { create(:percentage_offer_code, code: "code", products: [membership], amount_percentage: 100) }
