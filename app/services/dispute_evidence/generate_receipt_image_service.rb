@@ -53,9 +53,9 @@ class DisputeEvidence::GenerateReceiptImageService
 
       # Use a fixed width in order to have a consistent way to determine if is a retina display screenshot
       @width = BREAKPOINT_LG
-      height = browser.evaluate(js_max_height_dimension)
+      height = browser.evaluate(js_max_height_dimension).to_i
 
-      browser.resize(width:, height:)
+      browser.resize(width: width, height: height)
       browser.screenshot(format: "png", encoding: :binary)
     ensure
       browser&.quit

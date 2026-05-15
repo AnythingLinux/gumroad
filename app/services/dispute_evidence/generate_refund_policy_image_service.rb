@@ -59,18 +59,18 @@ class DisputeEvidence::GenerateRefundPolicyImageService
       browser.goto(url)
       browser.network.wait_for_idle
 
-      height = calculate_height(browser, open_fine_print_modal:)
+      height = calculate_height(browser, open_fine_print_modal:).to_i
 
-      browser.resize(width:, height:)
+      browser.resize(width: width, height: height)
       browser.screenshot(format: "png", encoding: :binary)
     ensure
       browser&.quit
     end
 
     def calculate_height(browser, open_fine_print_modal:)
-      document_height = browser.evaluate(js_max_height_dimension)
+      document_height = browser.evaluate(js_max_height_dimension).to_i
       if open_fine_print_modal
-        modal_height = browser.evaluate(%{ document.querySelector("dialog").scrollHeight })
+        modal_height = browser.evaluate(%{ document.querySelector("dialog").scrollHeight }).to_i
         [modal_height, document_height].max
       else
         begin
@@ -81,7 +81,7 @@ class DisputeEvidence::GenerateRefundPolicyImageService
         rescue Timeout::Error
           return document_height
         end
-        content_height = browser.evaluate(%{ document.querySelector("article")?.parentElement?.scrollHeight ?? 0 })
+        content_height = browser.evaluate(%{ document.querySelector("article")?.parentElement?.scrollHeight ?? 0 }).to_i
         [content_height, document_height].max
       end
     end
