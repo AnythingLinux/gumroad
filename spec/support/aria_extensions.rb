@@ -322,6 +322,7 @@ module CapybaraAccessibleSelectors
           Capybara.page.within(disclosure, &wrapped_block)
         rescue Ferrum::NodeNotFoundError
           retry if !block_executed && attempts == 1
+        end
       end
   end
 end
