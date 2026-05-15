@@ -320,7 +320,7 @@ describe "Product creation", type: :system, js: true do
       click_on("Next: Customize")
 
       price_field = find_field("Price")
-      expect(page.active_element).to eq(price_field)
+      expect(price_field).to match_selector(":focus")
       expect(price_field.ancestor("fieldset.danger")).to be_truthy
     end
   end
