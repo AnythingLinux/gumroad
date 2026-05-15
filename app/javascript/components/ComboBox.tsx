@@ -55,7 +55,7 @@ export const ComboBox = <Option extends unknown>({
   const itemRefs: (HTMLElement | null)[] = [];
 
   const moveCursor = (from: number, by: number) => {
-    let i = from;
+    let i: number;
     do {
       i = (from + by) % options.length;
       if (!itemRefs[i]?.inert) {
