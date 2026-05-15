@@ -3444,9 +3444,8 @@ describe Subscription, :vcr do
 
             expect_any_instance_of(Purchase).to receive(:reschedule_workflow_installments).with(send_delay: resubscribed_after_interval).and_call_original
 
-            travel_to(resubscribed_after_interval.from_now) do
-              @subscription.resubscribe!
-            end
+            travel resubscribed_after_interval
+            @subscription.resubscribe!
           end
         end
       end
