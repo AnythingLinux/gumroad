@@ -1070,6 +1070,38 @@ describe SettingsPresenter do
       expect(presenter.payments_props[:can_manage_beneficial_owners]).to be(true)
     end
 
+    context "when the seller has no Stripe account" do
+      before do
+        seller.merchant_accounts.destroy_all
+      end
+
+      it "exposes false" do
+        expect(presenter.payments_props[:can_manage_beneficial_owners]).to be(false)
+      end
+    end
+
+    context "when the seller has a Stripe Connect OAuth account" do
+      before do
+        seller.merchant_accounts.destroy_all
+        create(:merchant_account_stripe_connect, user: seller)
+      end
+
+      it "exposes false" do
+        expect(presenter.payments_props[:can_manage_beneficial_owners]).to be(false)
+      end
+    end
+
+    context "when the seller compliance info is individual" do
+      before do
+        seller.user_compliance_infos.destroy_all
+        create(:user_compliance_info_individual, user: seller)
+      end
+
+      it "exposes false" do
+        expect(presenter.payments_props[:can_manage_beneficial_owners]).to be(false)
+      end
+    end
+
     context "when the logged-in user is an admin for the seller" do
       let(:user) { create(:user) }
 
