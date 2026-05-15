@@ -140,7 +140,7 @@ describe "Checkout cart", :js, type: :system do
     end
 
     describe "cart persistence" do
-      let(:wait) { Selenium::WebDriver::Wait.new }
+      let(:wait) { PollWait.new }
 
       context "when adding a product with a discount code" do
         let(:offer_code) { create(:percentage_offer_code, code: "get-it-for-free", amount_percentage: 100, products: [@product], user: @product.user) }

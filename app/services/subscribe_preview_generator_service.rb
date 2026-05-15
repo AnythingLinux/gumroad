@@ -6,31 +6,32 @@ class SubscribePreviewGeneratorService
   ASPECT_RATIO = 128/67r
   WIDTH = 512
   HEIGHT = WIDTH / ASPECT_RATIO
-  CHROME_ARGS = [
-    "force-device-scale-factor=#{RETINA_PIXEL_RATIO}",
-    "headless",
-    "no-sandbox",
-    "disable-setuid-sandbox",
-    "disable-dev-shm-usage",
-    "user-data-dir=/tmp/chrome",
-  ].freeze
+  BROWSER_OPTIONS = {
+    "headless" => nil,
+    "no-sandbox" => nil,
+    "disable-setuid-sandbox" => nil,
+    "disable-dev-shm-usage" => nil,
+    "user-data-dir" => "/tmp/chrome",
+  }.freeze
 
   def self.generate_pngs(users)
-    options = Selenium::WebDriver::Chrome::Options.new(args: CHROME_ARGS)
-    driver = Selenium::WebDriver.for(:chrome, options:)
+    browser = Ferrum::Browser.new(
+      browser_options: BROWSER_OPTIONS,
+      window_size: [WIDTH, HEIGHT],
+      process_timeout: 30,
+      timeout: 10,
+    )
     users.map do |user|
       url = Rails.application.routes.url_helpers.user_subscribe_preview_url(
         user.username,
         host: DOMAIN,
         protocol: PROTOCOL,
       )
-      driver.navigate.to url
-      wait = Selenium::WebDriver::Wait.new(timeout: 10)
-      wait.until { driver.execute_script("return document.readyState") == "complete" }
-      driver.manage.window.size = Selenium::WebDriver::Dimension.new(WIDTH, HEIGHT)
-      driver.screenshot_as(:png)
+      browser.goto(url)
+      browser.network.wait_for_idle
+      browser.screenshot(format: "png", encoding: :binary)
     end
   ensure
-    driver.quit if driver.present?
+    browser&.quit
   end
 end

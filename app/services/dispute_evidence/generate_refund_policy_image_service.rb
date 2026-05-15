@@ -29,14 +29,14 @@ class DisputeEvidence::GenerateRefundPolicyImageService
   end
 
   private
-    CHROME_ARGS = [
-      "headless",
-      "no-sandbox",
-      "disable-setuid-sandbox",
-      "disable-dev-shm-usage",
-      "user-data-dir=/tmp/chrome",
-      "disable-scrollbars"
-    ].freeze
+    BROWSER_OPTIONS = {
+      "headless" => nil,
+      "no-sandbox" => nil,
+      "disable-setuid-sandbox" => nil,
+      "disable-dev-shm-usage" => nil,
+      "user-data-dir" => "/tmp/chrome",
+      "disable-scrollbars" => nil,
+    }.freeze
 
     # Should match $breakpoints definitions from app/javascript/stylesheets/_definitions.scss
     BREAKPOINT_SM = 640
@@ -49,53 +49,53 @@ class DisputeEvidence::GenerateRefundPolicyImageService
     attr_reader :url, :width, :open_fine_print_modal, :max_size_allowed
 
     def generate_screenshot
-      options = Selenium::WebDriver::Chrome::Options.new(args: CHROME_ARGS)
-      driver = Selenium::WebDriver.for(:chrome, options:)
-      # Height will be adjusted after the page is loaded
-      driver.manage.window.size = Selenium::WebDriver::Dimension.new(width, width)
+      browser = Ferrum::Browser.new(
+        browser_options: BROWSER_OPTIONS,
+        window_size: [width, width],
+        process_timeout: 30,
+        timeout: 10,
+      )
 
-      driver.navigate.to url
+      browser.goto(url)
+      browser.network.wait_for_idle
 
-      # Ensures the page is fully loaded, especially when we want to render with the refund policy modal open.
-      wait = Selenium::WebDriver::Wait.new(timeout: 10)
-      wait.until { driver.execute_script("return document.readyState") == "complete" }
+      height = calculate_height(browser, open_fine_print_modal:)
 
-      height = calculate_height(driver, open_fine_print_modal:)
-
-      driver.manage.window.size = Selenium::WebDriver::Dimension.new(width, height)
-      driver.screenshot_as(:png)
+      browser.window.resize(width:, height:)
+      browser.screenshot(format: "png", encoding: :binary)
     ensure
-      driver.quit if driver.present?
+      browser&.quit
     end
 
-    def calculate_height(driver, open_fine_print_modal:)
-      document_height = driver.execute_script(js_max_height_dimension)
+    def calculate_height(browser, open_fine_print_modal:)
+      document_height = browser.evaluate(js_max_height_dimension)
       if open_fine_print_modal
-        modal_height = driver.execute_script(%{ return document.querySelector("dialog").scrollHeight; })
+        modal_height = browser.evaluate(%{ document.querySelector("dialog").scrollHeight })
         [modal_height, document_height].max
       else
         begin
-          Selenium::WebDriver::Wait.new(timeout: ARTICLE_WAIT_TIMEOUT_SECONDS).until do
-            driver.execute_script(%{ return document.querySelector("article") !== null; })
+          Timeout.timeout(ARTICLE_WAIT_TIMEOUT_SECONDS) do
+            loop until browser.evaluate(%{ document.querySelector("article") !== null })
+            sleep 0.1
           end
-        rescue Selenium::WebDriver::Error::TimeoutError
+        rescue Timeout::Error
           return document_height
         end
-        content_height = driver.execute_script(%{ return document.querySelector("article")?.parentElement?.scrollHeight ?? 0; })
+        content_height = browser.evaluate(%{ document.querySelector("article")?.parentElement?.scrollHeight ?? 0 })
         [content_height, document_height].max
       end
     end
 
     def js_max_height_dimension
       %{
-        return Math.max(
+        Math.max(
           document.body.scrollHeight,
           document.body.offsetHeight,
           document.documentElement.clientHeight,
           document.documentElement.scrollHeight,
-          document.documentElement.offsetHeight,
-          );
-        }
+          document.documentElement.offsetHeight
+        )
+      }
     end
 
     def optimize_image(binary_data)

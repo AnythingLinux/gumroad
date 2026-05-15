@@ -40,7 +40,13 @@ class JSErrorReporter
   end
 
   def report_errors!(ctx)
-    errors_to_log = read_errors!(ctx.page.driver.browser)
+    # With Cuprite/Ferrum, JS errors are raised automatically (js_errors: true
+    # in the driver config), so we only need the manual log-scraping path for
+    # the legacy Selenium driver.
+    driver = ctx.page.driver
+    return unless driver.respond_to?(:browser) && driver.browser.respond_to?(:logs)
+
+    errors_to_log = read_errors!(driver.browser)
     ctx.aggregate_failures "javascript errors" do
       errors_to_log.each do |error|
         ctx.expect(error).to ctx.eq ""

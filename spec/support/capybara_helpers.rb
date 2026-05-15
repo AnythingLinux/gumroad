@@ -83,10 +83,10 @@ module CapybaraHelpers
   end
 
   def accept_browser_dialog
-    page.driver.browser.switch_to.alert.accept
-  rescue Selenium::WebDriver::Error::NoSuchAlertError
+    page.accept_modal
+  rescue Capybara::ModalNotFound
     sleep 0.5
-    page.driver.browser.switch_to.alert.accept
+    page.accept_modal
   end
 
   # Waits for checkout surcharges to load after country/ZIP/tax ID changes.
@@ -98,9 +98,14 @@ module CapybaraHelpers
 
   def with_throttled_network(fixture_file, factor: 4)
     throughput = (File.size(fixture_file) * factor)
-    page.driver.browser.execute_cdp("Network.enable")
-    page.driver.browser.execute_cdp("Network.emulateNetworkConditions", offline: false, latency: 0, downloadThroughput: throughput, uploadThroughput: throughput)
+    page.driver.browser.network.emulate_network_conditions(
+      offline: false, latency: 0,
+      download_throughput: throughput, upload_throughput: throughput
+    )
     yield
-    page.driver.browser.execute_cdp("Network.emulateNetworkConditions", offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1)
+    page.driver.browser.network.emulate_network_conditions(
+      offline: false, latency: 0,
+      download_throughput: -1, upload_throughput: -1
+    )
   end
 end

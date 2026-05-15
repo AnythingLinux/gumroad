@@ -34,6 +34,7 @@ end
 
 group :test do
   gem "capybara", "~> 3.38"
+  gem "cuprite", "~> 0.15"
   gem "factory_bot_rails", "~> 6.4"
   gem "faker", "~> 3.1"
   gem "rspec", "~> 3.12"
@@ -166,7 +167,6 @@ gem "ruby-oembed", "~> 0.16", require: "oembed"
 gem "rubyzip", "~> 2.3"
 gem "sass-rails", "~> 6.0"
 gem "secure_headers", "~> 6.5"
-gem "selenium-webdriver", "~> 4.35"
 gem "sendgrid-ruby", "~> 6.6"
 gem "vite_rails", "~> 3.0"
 gem "sidekiq-cron", "~> 1.9"

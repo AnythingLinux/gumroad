@@ -21,14 +21,14 @@ class DisputeEvidence::GenerateReceiptImageService
   end
 
   private
-    CHROME_ARGS = [
-      "headless",
-      "no-sandbox",
-      "disable-setuid-sandbox",
-      "disable-dev-shm-usage",
-      "user-data-dir=/tmp/chrome",
-      "disable-scrollbars"
-    ].freeze
+    BROWSER_OPTIONS = {
+      "headless" => nil,
+      "no-sandbox" => nil,
+      "disable-setuid-sandbox" => nil,
+      "disable-dev-shm-usage" => nil,
+      "user-data-dir" => "/tmp/chrome",
+      "disable-scrollbars" => nil,
+    }.freeze
 
     BREAKPOINT_LG = 1024
 
@@ -39,33 +39,37 @@ class DisputeEvidence::GenerateReceiptImageService
     attr_accessor :width
 
     def generate_screenshot
-      options = Selenium::WebDriver::Chrome::Options.new(args: CHROME_ARGS)
-      driver = Selenium::WebDriver.for(:chrome, options:)
+      browser = Ferrum::Browser.new(
+        browser_options: BROWSER_OPTIONS,
+        window_size: [BREAKPOINT_LG, BREAKPOINT_LG],
+        process_timeout: 30,
+        timeout: 10,
+      )
 
       html = generate_html(purchase)
       encoded_content = Addressable::URI.encode_component(html, Addressable::URI::CharacterClasses::QUERY)
 
-      driver.navigate.to "data:text/html;charset=UTF-8,#{encoded_content}"
+      browser.goto("data:text/html;charset=UTF-8,#{encoded_content}")
 
       # Use a fixed width in order to have a consistent way to determine if is a retina display screenshot
       @width = BREAKPOINT_LG
-      height = driver.execute_script(js_max_height_dimension)
+      height = browser.evaluate(js_max_height_dimension)
 
-      driver.manage.window.size = Selenium::WebDriver::Dimension.new(width, height)
-      driver.screenshot_as(:png)
+      browser.window.resize(width:, height:)
+      browser.screenshot(format: "png", encoding: :binary)
     ensure
-      driver.quit if driver.present?
+      browser&.quit
     end
 
     def js_max_height_dimension
       %{
-        return Math.max(
+        Math.max(
           document.body.scrollHeight,
           document.body.offsetHeight,
           document.documentElement.clientHeight,
           document.documentElement.scrollHeight,
           document.documentElement.offsetHeight
-        );
+        )
       }
     end
 

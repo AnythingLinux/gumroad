@@ -16,15 +16,15 @@ describe SubscribePreviewGeneratorService, type: :system, js: true do
       expect(images.second).to start_with("\x89PNG".b)
     end
 
-    it "always quits the webdriver on success" do
-      expect_any_instance_of(Selenium::WebDriver::Driver).to receive(:quit)
+    it "always quits the browser on success" do
+      expect_any_instance_of(Ferrum::Browser).to receive(:quit)
       described_class.generate_pngs([@user1])
     end
 
-    it "always quits the webdriver on error" do
+    it "always quits the browser on error" do
       error = "FAILURE"
-      expect_any_instance_of(Selenium::WebDriver::Driver).to receive(:quit)
-      allow_any_instance_of(Selenium::WebDriver::Driver).to receive(:screenshot_as).and_raise(error)
+      expect_any_instance_of(Ferrum::Browser).to receive(:quit)
+      allow_any_instance_of(Ferrum::Browser).to receive(:screenshot).and_raise(error)
       expect { described_class.generate_pngs([@user2]) }.to raise_error(error)
     end
   end

@@ -320,9 +320,8 @@ module CapybaraAccessibleSelectors
           block_executed = false
           wrapped_block = proc { block.call; block_executed = true }
           Capybara.page.within(disclosure, &wrapped_block)
-        rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        rescue Ferrum::NodeNotFoundError
           retry if !block_executed && attempts == 1
-        end
       end
   end
 end

@@ -7,7 +7,7 @@ describe DisputeEvidence::GenerateReceiptImageService, type: :system, js: true d
 
   describe ".perform" do
     it "generates a JPG receipt image" do
-      expect_any_instance_of(Selenium::WebDriver::Driver).to receive(:quit)
+      expect_any_instance_of(Ferrum::Browser).to receive(:quit)
       binary_data = described_class.perform(purchase)
       expect(binary_data).to start_with("\xFF\xD8".b)
       expect(binary_data).to end_with("\xFF\xD9".b)
