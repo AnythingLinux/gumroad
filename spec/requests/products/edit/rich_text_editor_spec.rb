@@ -348,7 +348,7 @@ describe("Product Edit Rich Text Editor", type: :system, js: true) do
     click_on "Add link"
 
     expect(page).to_not have_alert(text: "Please enter a valid URL.")
-    rich_text_editor_input.send_keys(:control, "e") # Move cursor to end of line
+    rich_text_editor_input.send_keys([:control, "e"]) # Move cursor to end of line
     rich_text_editor_input.send_keys(:enter)
     click_on "Insert link"
     within_modal do
@@ -358,7 +358,7 @@ describe("Product Edit Rich Text Editor", type: :system, js: true) do
     end
 
     expect(page).to_not have_alert(text: "Please enter a valid URL.")
-    rich_text_editor_input.send_keys(:control, "e") # Move cursor to end of line
+    rich_text_editor_input.send_keys([:control, "e"]) # Move cursor to end of line
     rich_text_editor_input.send_keys(:enter)
     click_on "Insert link"
     within_modal do
