@@ -108,7 +108,6 @@ Capybara.register_driver :docker_headless_mobile_chrome do |app|
   options = ::Selenium::WebDriver::Chrome::Options.new.tap do |opts|
     docker_browser_args.each { |arg| opts.args << arg }
   end
-  options.add_emulation(device_name: "iPhone 8")
   options.add_preference("intl.accept_languages", "en-US")
   options.logging_prefs = { driver: "DEBUG" }
 
