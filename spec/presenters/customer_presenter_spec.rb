@@ -183,7 +183,7 @@ describe CustomerPresenter do
           review: nil,
           custom_fields: [
             { type: "text", attribute: "Field 1", value: "Value" },
-            { type: "text", attribute: "Field 2", value: "false" },
+            { type: "text", attribute: "Field 2", value: false },
           ],
           transaction_url_for_seller: nil,
           is_access_revoked: nil,
