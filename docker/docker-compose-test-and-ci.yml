@@ -26,12 +26,11 @@ services:
       - "6379"
 
   mongo:
-    image: mongo:3.6.16
+    image: mongo:7.0
     volumes:
       - mongo_data:/data/db
     ports:
       - "27017"
-    command: "mongod --smallfiles"
 
   elasticsearch:
     image: elasticsearch:7.9.3
