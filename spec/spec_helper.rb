@@ -52,7 +52,7 @@ def configure_vcr
   VCR.configure do |config|
     config.cassette_library_dir = File.join(Rails.root, "spec", "support", "fixtures", "vcr_cassettes")
     config.hook_into :webmock
-    config.ignore_hosts "gumroad-specs.s3.amazonaws.com", "s3.amazonaws.com", "codeclimate.com", "mongo", "redis", "elasticsearch", "minio"
+    config.ignore_hosts "gumroad-specs.s3.amazonaws.com", "s3.amazonaws.com", "codeclimate.com", "mongo", "redis", "elasticsearch", "minio", "chrome"
     config.ignore_hosts "api.knapsackpro.com"
     config.ignore_hosts "googlechromelabs.github.io"
     config.ignore_hosts "storage.googleapis.com"
@@ -526,7 +526,7 @@ def setup_js(val = false)
     WebMock.allow_net_connect!(net_http_connect_on_start: true)
   else
     VCR.turn_on!
-    WebMock.disable_net_connect!(allow_localhost: true, allow: ["api.knapsackpro.com"])
+    WebMock.disable_net_connect!(allow_localhost: true, allow: ["api.knapsackpro.com", ENV["CHROME_URL"] && URI.parse(ENV["CHROME_URL"]).host].compact)
   end
 end
 
@@ -536,7 +536,7 @@ end
 
 def teardown_js(val = false)
   if val
-    WebMock.disable_net_connect!(allow_localhost: true, allow: ["api.knapsackpro.com"])
+    WebMock.disable_net_connect!(allow_localhost: true, allow: ["api.knapsackpro.com", ENV["CHROME_URL"] && URI.parse(ENV["CHROME_URL"]).host].compact)
     stub_webmock
   end
 end

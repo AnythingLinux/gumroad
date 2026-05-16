@@ -2,36 +2,57 @@
 
 require "capybara/cuprite"
 
-# ── Shared browser options ────────────────────────────────────────────
-# Chrome 125's old --headless mode doesn't output the DevTools WebSocket URL
-# that Ferrum needs to connect. We must use --headless=new (Chrome's new headless
-# mode) which properly supports CDP remote debugging.
-#
-# Since Ferrum 0.17 only adds --headless (no =new), we set headless: false
-# to prevent Ferrum from adding the flag, then add it ourselves via browser_options.
-CUPRITE_BROWSER_OPTIONS = {
-  "headless" => "new",
-  "no-sandbox" => nil,
-  "disable-setuid-sandbox" => nil,
-  "disable-dev-shm-usage" => nil,
-  "disable-popup-blocking" => nil,
-  "disable-site-isolation-trials" => nil,
-  "disable-gpu" => nil,
-}.freeze
+# ── Remote Chrome detection ──────────────────────────────────────────
+# In Docker/CI, Chrome runs as a separate service (browserless/chrome)
+# accessible via CHROME_URL. Locally, Cuprite launches Chrome directly.
+REMOTE_CHROME_URL = ENV["CHROME_URL"]
+REMOTE_CHROME_HOST, REMOTE_CHROME_PORT =
+  if REMOTE_CHROME_URL
+    require "uri"
+    uri = URI.parse(REMOTE_CHROME_URL)
+    [uri.host, uri.port]
+  end
 
-DOCKER_ENV = ENV["IN_DOCKER"] == "true"
+REMOTE_CHROME =
+  begin
+    if REMOTE_CHROME_URL.nil?
+      false
+    else
+      require "socket"
+      Socket.tcp(REMOTE_CHROME_HOST, REMOTE_CHROME_PORT, connect_timeout: 2).close
+      true
+    end
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError
+    false
+  end
 
+# ── Shared driver options ────────────────────────────────────────────
 CUPRITE_COMMON_OPTS = {
-  browser_options: CUPRITE_BROWSER_OPTIONS,
-  process_timeout: DOCKER_ENV ? 60 : 30,
-  timeout: DOCKER_ENV ? 30 : 15,
+  process_timeout: REMOTE_CHROME ? 30 : 30,
+  timeout: REMOTE_CHROME ? 30 : 15,
   js_errors: true,
-  headless: false, # We handle headless via browser_options above (--headless=new)
   inspector: !ENV["CI"],
 }.tap do |opts|
-  if DOCKER_ENV
-    chrome = %w[google-chrome google-chrome-stable chromium chromium-browser chrome].find { |c| system("which #{c} > /dev/null 2>&1") }
-    opts[:browser_path] = `which #{chrome}`.strip if chrome
+  if REMOTE_CHROME
+    # Connect to remote Chrome service — no local browser launch needed.
+    # browserless/chrome handles its own headless mode.
+    opts[:url] = REMOTE_CHROME_URL
+    opts[:browser_options] = { "no-sandbox" => nil }
+  else
+    # Local development — launch Chrome directly.
+    # Chrome 125's old --headless doesn't output DevTools WS URL.
+    # Set headless: false to suppress Ferrum's --headless flag,
+    # then add --headless=new ourselves via browser_options.
+    opts[:headless] = false
+    opts[:browser_options] = {
+      "headless" => "new",
+      "no-sandbox" => nil,
+      "disable-setuid-sandbox" => nil,
+      "disable-dev-shm-usage" => nil,
+      "disable-popup-blocking" => nil,
+      "disable-site-isolation-trials" => nil,
+      "disable-gpu" => nil,
+    }
   end
 end.freeze
 
@@ -48,6 +69,14 @@ end
 # ── Mobile (375×667, iPhone 8 equiv) ─────────────────────────────────
 Capybara.register_driver :cuprite_mobile do |app|
   Capybara::Cuprite::Driver.new(app, **CUPRITE_COMMON_OPTS, window_size: [375, 667])
+end
+
+# ── Capybara server config for remote Chrome ─────────────────────────
+# When Chrome runs in a separate container, it needs to reach the test
+# server. Bind to 0.0.0.0 and set app_host to the container hostname.
+if REMOTE_CHROME
+  Capybara.server_host = "0.0.0.0"
+  Capybara.app_host = "http://#{ENV.fetch('APP_HOST', `hostname`.strip&.downcase || '0.0.0.0')}"
 end
 
 # ── RSpec hooks ──────────────────────────────────────────────────────
