@@ -114,7 +114,22 @@ services:
           echo \"Error: '$$file' not found in fixtures directory\";
           exit 1;
         fi;
-      done < /fixture-files-public.txt; echo \"Fixture files copied successfully\"; exit 0; "
+      done < /fixture-files-public.txt; echo \\\"Fixture files copied successfully\\\"; exit 0; "
+
+  chrome:
+    image: browserless/chrome:latest
+    ports:
+      - "3333"
+    # Mount source code so Chrome can access files for attach_file uploads.
+    # Specs use absolute paths like /app/spec/support/fixtures/... which must
+    # exist inside the Chrome container at the same path as in the test container.
+    volumes:
+      - ../spec/support/fixtures:/app/spec/support/fixtures:ro
+    environment:
+      PORT: 3333
+      CONNECTION_TIMEOUT: 600000
+      MAX_CONCURRENT_SESSIONS: 5
+    shm_size: "2gb"
 
 volumes:
   redis_data:

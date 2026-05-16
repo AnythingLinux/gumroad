@@ -84,10 +84,10 @@ describe("Download Page", type: :system, js: true) do
         expect(page).to_not have_button "Join Discord"
       end
 
-      it "adds customer to discord if oauth successful", billy: true do
+      it "adds customer to discord if oauth successful" do
         # TODO: Use the below commented out line instead, after removing the :custom_domain_download feature flag (curtiseinsmann)
-        proxy.stub("https://www.discord.com:443/api/oauth2/authorize").and_return(redirect_to: oauth_redirect_integrations_discord_index_url(code: "test_code", host: UrlService.domain_with_protocol))
-        # proxy.stub("https://www.discord.com:443/api/oauth2/authorize").and_return(redirect_to: oauth_redirect_integrations_discord_index_url(code: "test_code", host: product.user.subdomain_with_protocol))
+        stub_external_redirect("https://www.discord.com:443/api/oauth2/authorize", redirect_to: oauth_redirect_integrations_discord_index_url(code: "test_code", host: UrlService.domain_with_protocol))
+        # stub_external_redirect("https://www.discord.com:443/api/oauth2/authorize", redirect_to: oauth_redirect_integrations_discord_index_url(code: "test_code", host: product.user.subdomain_with_protocol))
 
         WebMock.stub_request(:post, DISCORD_OAUTH_TOKEN_URL).
           to_return(status: 200,
@@ -117,10 +117,10 @@ describe("Download Page", type: :system, js: true) do
         expect(purchase_discord_integration.purchase).to eq(purchase)
       end
 
-      it "shows error if oauth fails while adding customer to discord", billy: true do
+      it "shows error if oauth fails while adding customer to discord" do
         # TODO: Use the below commented out line instead, after removing the :custom_domain_download feature flag (curtiseinsmann)
-        proxy.stub("https://www.discord.com:443/api/oauth2/authorize").and_return(redirect_to: oauth_redirect_integrations_discord_index_url(error: "error_message", host: UrlService.domain_with_protocol))
-        # proxy.stub("https://www.discord.com:443/api/oauth2/authorize").and_return(redirect_to: oauth_redirect_integrations_discord_index_url(error: "error_message", host: product.user.subdomain_with_protocol))
+        stub_external_redirect("https://www.discord.com:443/api/oauth2/authorize", redirect_to: oauth_redirect_integrations_discord_index_url(error: "error_message", host: UrlService.domain_with_protocol))
+        # stub_external_redirect("https://www.discord.com:443/api/oauth2/authorize", redirect_to: oauth_redirect_integrations_discord_index_url(error: "error_message", host: product.user.subdomain_with_protocol))
 
         visit("/d/#{url_redirect.token}")
 
@@ -132,10 +132,10 @@ describe("Download Page", type: :system, js: true) do
         end.to change { PurchaseIntegration.count }.by(0)
       end
 
-      it "shows error if adding customer to discord fails", billy: true do
+      it "shows error if adding customer to discord fails" do
         # TODO: Use the below commented out line instead, after removing the :custom_domain_download feature flag (curtiseinsmann)
-        proxy.stub("https://www.discord.com:443/api/oauth2/authorize").and_return(redirect_to: oauth_redirect_integrations_discord_index_url(code: "test_code", host: UrlService.domain_with_protocol))
-        # proxy.stub("https://www.discord.com:443/api/oauth2/authorize").and_return(redirect_to: oauth_redirect_integrations_discord_index_url(code: "test_code", host: product.user.subdomain_with_protocol))
+        stub_external_redirect("https://www.discord.com:443/api/oauth2/authorize", redirect_to: oauth_redirect_integrations_discord_index_url(code: "test_code", host: UrlService.domain_with_protocol))
+        # stub_external_redirect("https://www.discord.com:443/api/oauth2/authorize", redirect_to: oauth_redirect_integrations_discord_index_url(code: "test_code", host: product.user.subdomain_with_protocol))
 
         WebMock.stub_request(:post, DISCORD_OAUTH_TOKEN_URL).
           to_return(status: 200,
@@ -664,7 +664,7 @@ describe("Download Page", type: :system, js: true) do
     within(find_file_row!(name: "chapter1")) do
       click_on "Watch"
     end
-    page.driver.browser.switch_to.window(page.driver.browser.window_handles.last)
+    switch_to_window(windows.last)
     click_on "More Videos"
     expect(page).to_not have_button("1. chapter1")
     expect(page).to have_button("Next Upchapter2")
@@ -764,13 +764,13 @@ describe("Download Page", type: :system, js: true) do
 
       short_answer_field = find_field("Short Answer")
       short_answer_field.fill_in with: "This is a short answer"
-      short_answer_field.native.send_keys(:tab)
+      short_answer_field.send_keys(:tab)
       wait_for_ajax
       expect(page).to have_alert(text: "Response saved!")
 
       long_answer_field = find_field("Long Answer")
       long_answer_field.fill_in with: "This is a longer answer with multiple sentences. It can contain more detailed information."
-      long_answer_field.native.send_keys(:tab)
+      long_answer_field.send_keys(:tab)
       wait_for_ajax
       expect(page).to have_alert(text: "Response saved!")
 
@@ -808,13 +808,13 @@ describe("Download Page", type: :system, js: true) do
 
       short_answer_field = find_field("Short Answer", with: "This is a short answer")
       short_answer_field.fill_in with: "Updated short answer"
-      short_answer_field.native.send_keys(:tab)
+      short_answer_field.send_keys(:tab)
       wait_for_ajax
       expect(page).to have_alert(text: "Response saved!")
 
       long_answer_field = find_field("Long Answer", with: "This is a longer answer with multiple sentences. It can contain more detailed information.")
       long_answer_field.fill_in with: "This is an updated longer answer. It now contains different information."
-      long_answer_field.native.send_keys(:tab)
+      long_answer_field.send_keys(:tab)
       wait_for_ajax
       expect(page).to have_alert(text: "Response saved!")
 

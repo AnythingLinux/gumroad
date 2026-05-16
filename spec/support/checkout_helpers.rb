@@ -11,7 +11,7 @@ module CheckoutHelpers
 
     fill_in "Name a fair price", with: pwyw_price if pwyw_price.present?
 
-    if product.purchase_info_for_product_page(logged_in_user, Capybara.current_session.driver.browser.manage.all_cookies.find { |cookie| cookie[:name] == "_gumroad_guid" }&.[](:value)).present?
+    if product.purchase_info_for_product_page(logged_in_user, Capybara.current_session.driver.browser.cookies["_gumroad_guid"]&.value).present?
       buy_text = "Purchase again"
     elsif cart
       buy_text = "Add to cart"
@@ -157,7 +157,7 @@ module CheckoutHelpers
           elsif page.has_text?("You entered this address:", wait: 5) && page.has_text?("We recommend using this format:", wait: 5)
             click_on "No, continue"
           end
-        rescue Capybara::ElementNotFound, Selenium::WebDriver::Error::StaleElementReferenceError
+        rescue Capybara::ElementNotFound, Ferrum::NodeNotFoundError
           # Page may still be loading after payment processing or Chrome may be unstable; continue to success assertion
         end
       end

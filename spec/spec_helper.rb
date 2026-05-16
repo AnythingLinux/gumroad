@@ -52,7 +52,7 @@ def configure_vcr
   VCR.configure do |config|
     config.cassette_library_dir = File.join(Rails.root, "spec", "support", "fixtures", "vcr_cassettes")
     config.hook_into :webmock
-    config.ignore_hosts "gumroad-specs.s3.amazonaws.com", "s3.amazonaws.com", "codeclimate.com", "mongo", "redis", "elasticsearch", "minio"
+    config.ignore_hosts "gumroad-specs.s3.amazonaws.com", "s3.amazonaws.com", "codeclimate.com", "mongo", "redis", "elasticsearch", "minio", "chrome"
     config.ignore_hosts "api.knapsackpro.com"
     config.ignore_hosts "googlechromelabs.github.io"
     config.ignore_hosts "storage.googleapis.com"
@@ -135,8 +135,9 @@ end
 
 def browser_session_corrupted?(exception)
   return false unless exception
-  return true if exception.is_a?(Selenium::WebDriver::Error::NoSuchWindowError)
-  return true if exception.is_a?(Selenium::WebDriver::Error::InvalidSessionIdError)
+  return true if exception.is_a?(Ferrum::DeadBrowserError)
+  return true if exception.is_a?(Ferrum::BrowserError)
+  return true if exception.is_a?(Ferrum::ProcessTimeoutError)
   return true if exception.is_a?(Errno::ECONNREFUSED)
   return true if exception.is_a?(NoMethodError) && exception.message.include?("unpack1")
 
@@ -146,7 +147,8 @@ def browser_session_corrupted?(exception)
 end
 
 def force_browser_restart!
-  return unless Capybara.current_session.driver.is_a?(Capybara::Selenium::Driver)
+  driver = Capybara.current_session.driver
+  return unless driver.is_a?(Capybara::Cuprite::Driver)
 
   begin
     Capybara.current_session.driver.quit
@@ -336,8 +338,9 @@ RSpec.configure do |config|
     capture_state_on_failure(example)
     begin
       Capybara.reset_sessions!
-    rescue Selenium::WebDriver::Error::NoSuchWindowError,
-           Selenium::WebDriver::Error::InvalidSessionIdError,
+    rescue Ferrum::DeadBrowserError,
+           Ferrum::BrowserError,
+           Ferrum::ProcessTimeoutError,
            Errno::ECONNREFUSED => e
       Rails.logger.warn("[RSpec] Browser session corrupted during reset: #{e.class}: #{e.message}. Restarting driver.")
       force_browser_restart!
@@ -487,7 +490,7 @@ end
 def capture_state_on_failure(example)
   return if example.exception.blank?
 
-  suppress(Capybara::NotSupportedByDriverError) do
+  suppress(Capybara::NotSupportedByDriverError, Ferrum::ProcessTimeoutError, Ferrum::DeadBrowserError, Ferrum::BrowserError) do
     save_path = example.metadata[:example_group][:location]
     Capybara.page.save_page("#{save_path}.html")
     Capybara.page.save_screenshot "#{save_path}.png"
@@ -523,7 +526,7 @@ def setup_js(val = false)
     WebMock.allow_net_connect!(net_http_connect_on_start: true)
   else
     VCR.turn_on!
-    WebMock.disable_net_connect!(allow_localhost: true, allow: ["api.knapsackpro.com"])
+    WebMock.disable_net_connect!(allow_localhost: true, allow: ["api.knapsackpro.com", ENV["CHROME_URL"] && URI.parse(ENV["CHROME_URL"]).host].compact)
   end
 end
 
@@ -533,7 +536,7 @@ end
 
 def teardown_js(val = false)
   if val
-    WebMock.disable_net_connect!(allow_localhost: true, allow: ["api.knapsackpro.com"])
+    WebMock.disable_net_connect!(allow_localhost: true, allow: ["api.knapsackpro.com", ENV["CHROME_URL"] && URI.parse(ENV["CHROME_URL"]).host].compact)
     stub_webmock
   end
 end

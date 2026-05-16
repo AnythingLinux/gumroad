@@ -411,9 +411,12 @@ jobs:
             ES_PID=$!
             docker run --rm --entrypoint="" --network $NET $IMG docker/ci/wait_on_connection.sh minio 9000 &
             MINIO_PID=$!
+            docker run --rm --entrypoint="" --network $NET $IMG docker/ci/wait_on_connection.sh chrome 3333 &
+            CHROME_PID=$!
             wait $DB_PID || exit 1
             wait $ES_PID || exit 1
             wait $MINIO_PID || exit 1
+            wait $CHROME_PID || exit 1
         env:
           WEB_REPO: gumroadteam/web
 
@@ -426,6 +429,7 @@ jobs:
           chmod 777 ./test-logs
 
           docker run --rm --entrypoint="" --network ${{ env.COMPOSE_PROJECT_NAME }}_default \
+            --hostname test-app \
             -v "$(pwd)/capybara-artifacts:/app/tmp/capybara" \
             -v "$(pwd)/test-logs:/app/log" \
             -e RUBY_YJIT_ENABLE \
@@ -443,6 +447,8 @@ jobs:
             -e KNAPSACK_PRO_FIXED_QUEUE_SPLIT \
             -e CI \
             -e IN_DOCKER \
+            -e CHROME_URL \
+            -e APP_HOST \
             $WEB_REPO:${{ needs.build.outputs.test_image_tag }} \
             /usr/local/bin/gosu app bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --format progress]"
         env:
@@ -461,6 +467,8 @@ jobs:
           KNAPSACK_PRO_FIXED_QUEUE_SPLIT: true
           CI: true
           IN_DOCKER: true
+          CHROME_URL: http://chrome:3333
+          APP_HOST: test-app
           WEB_REPO: gumroadteam/web
       - name: Archive capybara artifacts
         if: failure()

@@ -31,7 +31,7 @@ module ProductFileListHelpers
       begin
         page.scroll_to row, align: :center
         row.find("h4").hover
-      rescue Selenium::WebDriver::Error::StaleElementReferenceError
+      rescue Ferrum::NodeNotFoundError
         # React re-renders the embed during upload progress, causing stale references
         raise Capybara::ElementNotFound, "Embed element went stale during upload, retrying"
       end
@@ -64,7 +64,7 @@ module ProductFileListHelpers
   end
 
   def expect_focused(active_el)
-    expect(page.driver.browser.switch_to.active_element).to eql(active_el.native)
+    expect(active_el).to match_selector(":focus")
   end
 
   def pick_dropbox_file(url, skip_transfer = false)

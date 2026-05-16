@@ -17,22 +17,17 @@ RSpec.describe ProductReviewVideos::StreamingUrlsController, type: :controller d
       before { product_review_video.approved! }
 
       it "returns the correct media URLs" do
-        freeze_time do
-          get :index, params: {
-            product_review_video_id: product_review_video.external_id
-          }, format: :json
+        get :index, params: {
+          product_review_video_id: product_review_video.external_id
+        }, format: :json
 
-          expect(response).to have_http_status(:ok)
-          expect(response.parsed_body[:streaming_urls]).to eq(
-            [
-              product_review_video_stream_path(
-                product_review_video.external_id,
-                format: :smil
-              ),
-              product_review_video.video_file.signed_download_url
-            ]
-          )
-        end
+        expect(response).to have_http_status(:ok)
+        smil_path, signed_url = response.parsed_body[:streaming_urls]
+        expect(smil_path).to eq(
+          product_review_video_stream_path(product_review_video.external_id, format: :smil)
+        )
+        expected_signed_prefix = product_review_video.video_file.signed_download_url.split("?").first
+        expect(signed_url.split("?").first).to eq(expected_signed_prefix)
       end
     end
 

@@ -40,12 +40,20 @@ class JSErrorReporter
   end
 
   def report_errors!(ctx)
-    errors_to_log = read_errors!(ctx.page.driver.browser)
+    # With Cuprite/Ferrum, JS errors are raised automatically (js_errors: true
+    # in the driver config), so we only need the manual log-scraping path for
+    # the legacy Selenium driver.
+    driver = ctx.page.driver
+    return unless driver.respond_to?(:browser) && driver.browser.respond_to?(:logs)
+
+    errors_to_log = read_errors!(driver.browser)
     ctx.aggregate_failures "javascript errors" do
       errors_to_log.each do |error|
         ctx.expect(error).to ctx.eq ""
       end
     end
+  rescue Ferrum::ProcessTimeoutError, Ferrum::DeadBrowserError, Ferrum::BrowserError
+    # Browser process is dead — nothing to report
   end
 
   def reset!
@@ -137,7 +145,7 @@ class JSErrorReporter
         source_map = frame["url"] && @source_maps[frame["url"]]
         mapped = source_map && Sprockets::SourceMapUtils.bsearch_mappings(source_map[:mappings], [frame["lineNumber"] + 1, frame["columnNumber"]])
         if mapped
-          source = mapped[:source].start_with?("webpack://") ? mapped[:source][12..] : mapped[:source]
+          source = mapped[:source].sub(%r{\A[a-z]+://}i, "")
           "\t#{mapped[:name] || frame["functionName"]} (#{source}:#{mapped[:original][0]})"
         else
           "\t#{frame["functionName"]} (#{frame["url"]}:#{frame["lineNumber"]}:#{frame["columnNumber"]})"

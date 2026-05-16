@@ -34,6 +34,7 @@ end
 
 group :test do
   gem "capybara", "~> 3.38"
+  gem "cuprite", "~> 0.15"
   gem "factory_bot_rails", "~> 6.4"
   gem "faker", "~> 3.1"
   gem "rspec", "~> 3.12"
@@ -48,7 +49,6 @@ group :test do
   gem "json_matchers", "~> 0.11", require: "json_matchers/rspec"
   gem "capybara_accessible_selectors", github: "citizensadvice/capybara_accessible_selectors",
                                        ref: "161b8c5b1a0a5408af914d7544956372e9da2c9e"
-  gem "puffing-billy", "~> 4.0.0", require: "billy/capybara/rspec"
   gem "super_diff", "~> 0.12.0", require: false
 end
 
@@ -112,6 +112,7 @@ gem "image_sorcery", "~> 1.1"
 gem "image_processing", "~> 1.12"
 gem "inertia_rails", "~> 3.15"
 gem "mini_magick", "~> 4.12"
+gem "imgkit", "~> 1.6"
 gem "jbuilder", "~> 2.11"
 gem "js-routes", "~> 2.2"
 gem "json", "~> 2.6"
@@ -166,7 +167,6 @@ gem "ruby-oembed", "~> 0.16", require: "oembed"
 gem "rubyzip", "~> 2.3"
 gem "sass-rails", "~> 6.0"
 gem "secure_headers", "~> 6.5"
-gem "selenium-webdriver", "~> 4.35"
 gem "sendgrid-ruby", "~> 6.6"
 gem "shakapacker", "~> 8.0"
 gem "sidekiq-cron", "~> 1.9"

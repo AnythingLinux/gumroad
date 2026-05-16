@@ -13,7 +13,7 @@ class DisputeEvidence::GenerateReceiptImageService
     binary_data = generate_screenshot
 
     unless binary_data
-      ErrorNotifier.notify("DisputeEvidence::GenerateRefundPolicyImageService: Could not generate screenshot for purchase ID #{purchase.id}")
+      ErrorNotifier.notify("DisputeEvidence::GenerateReceiptImageService: Could not generate screenshot for purchase ID #{purchase.id}")
       return
     end
 
@@ -21,15 +21,6 @@ class DisputeEvidence::GenerateReceiptImageService
   end
 
   private
-    CHROME_ARGS = [
-      "headless",
-      "no-sandbox",
-      "disable-setuid-sandbox",
-      "disable-dev-shm-usage",
-      "user-data-dir=/tmp/chrome",
-      "disable-scrollbars"
-    ].freeze
-
     BREAKPOINT_LG = 1024
 
     IMAGE_RESIZE_FACTOR = 2
@@ -39,34 +30,11 @@ class DisputeEvidence::GenerateReceiptImageService
     attr_accessor :width
 
     def generate_screenshot
-      options = Selenium::WebDriver::Chrome::Options.new(args: CHROME_ARGS)
-      driver = Selenium::WebDriver.for(:chrome, options:)
-
-      html = generate_html(purchase)
-      encoded_content = Addressable::URI.encode_component(html, Addressable::URI::CharacterClasses::QUERY)
-
-      driver.navigate.to "data:text/html;charset=UTF-8,#{encoded_content}"
-
-      # Use a fixed width in order to have a consistent way to determine if is a retina display screenshot
       @width = BREAKPOINT_LG
-      height = driver.execute_script(js_max_height_dimension)
+      html = generate_html(purchase)
 
-      driver.manage.window.size = Selenium::WebDriver::Dimension.new(width, height)
-      driver.screenshot_as(:png)
-    ensure
-      driver.quit if driver.present?
-    end
-
-    def js_max_height_dimension
-      %{
-        return Math.max(
-          document.body.scrollHeight,
-          document.body.offsetHeight,
-          document.documentElement.clientHeight,
-          document.documentElement.scrollHeight,
-          document.documentElement.offsetHeight
-        );
-      }
+      kit = IMGKit.new(html, width: width, quality: 100, format: "png")
+      kit.to_png
     end
 
     def generate_html(purchase)

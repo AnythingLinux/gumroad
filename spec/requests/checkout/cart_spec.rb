@@ -140,13 +140,7 @@ describe "Checkout cart", :js, type: :system do
     end
 
     describe "cart persistence" do
-      let(:wait_timeout) { 10 }
-
-      def poll_until(timeout: wait_timeout)
-        Timeout.timeout(timeout) do
-          sleep 0.1 until yield
-        end
-      end
+      let(:wait) { PollWait.new }
 
       context "when adding a product with a discount code" do
         let(:offer_code) { create(:percentage_offer_code, code: "get-it-for-free", amount_percentage: 100, products: [@product], user: @product.user) }
@@ -173,7 +167,7 @@ describe "Checkout cart", :js, type: :system do
         login_as buyer
         visit @product.long_url
         add_to_cart(@product)
-        poll_until { buyer.reload.alive_cart.present? }
+        wait.until { buyer.reload.alive_cart.present? }
         user_cart = Cart.alive.sole
         expect(user_cart.user).to eq(buyer)
         expect(user_cart.alive_cart_products.sole.product_id).to eq(@product.id)
@@ -192,7 +186,7 @@ describe "Checkout cart", :js, type: :system do
 
         visit @membership_product.long_url
         add_to_cart(@membership_product, recurrence: "Yearly", option: @membership_product.variants.first.name)
-        poll_until { Cart.alive.count == 2 }
+        wait.until { Cart.alive.count == 2 }
         guest_cart = Cart.last
         expect(guest_cart).to be_alive
         expect(guest_cart.user).to be_nil
@@ -217,7 +211,7 @@ describe "Checkout cart", :js, type: :system do
 
         add_to_cart(@membership_product, recurrence: "Yearly", option: @membership_product.variant_categories.first.variants.first.name)
 
-        poll_until { buyer.reload.alive_cart.present? && buyer.alive_cart.cart_products.exists? }
+        wait.until { buyer.reload.alive_cart.present? && buyer.alive_cart.cart_products.exists? }
 
         cart = buyer.alive_cart
         cart_product = cart.cart_products.sole
@@ -236,7 +230,7 @@ describe "Checkout cart", :js, type: :system do
           end
         end
 
-        poll_until { cart_product.reload.deleted? }
+        wait.until { cart_product.reload.deleted? }
 
         new_cart_product = cart.cart_products.alive.sole
 
@@ -248,7 +242,7 @@ describe "Checkout cart", :js, type: :system do
         visit @product.long_url
         add_to_cart(@product)
 
-        poll_until { cart.cart_products.alive.count == 2 }
+        wait.until { cart.cart_products.alive.count == 2 }
         expect(cart.cart_products.alive.first.product).to eq @membership_product
         expect(cart.cart_products.alive.second.product).to eq @product
 
@@ -256,7 +250,7 @@ describe "Checkout cart", :js, type: :system do
 
         expect(cart.reload).to be_deleted
         # A new empty cart is created after checkout
-        poll_until { buyer.reload.alive_cart.present? }
+        wait.until { buyer.reload.alive_cart.present? }
         expect(buyer.alive_cart.cart_products).to be_empty
       end
 
@@ -275,7 +269,7 @@ describe "Checkout cart", :js, type: :system do
         end
         expect(page).to have_link("View content")
 
-        poll_until { buyer.carts.count == 2 }
+        wait.until { buyer.carts.count == 2 }
 
         expect(buyer.alive_cart.cart_products.sole.product).to eq @product
 
@@ -293,7 +287,7 @@ describe "Checkout cart", :js, type: :system do
 
         visit @membership_product.long_url
         add_to_cart(@membership_product, recurrence: "Yearly", option: @membership_product.variants.first.name)
-        poll_until { Cart.alive.count == 2 }
+        wait.until { Cart.alive.count == 2 }
         guest_cart = Cart.alive.last
         expect(guest_cart.user).to be_nil
         expect(guest_cart.alive_cart_products.count).to eq(1)
@@ -322,7 +316,7 @@ describe "Checkout cart", :js, type: :system do
             login_as buyer
             visit product1.long_url
             click_on text: "I want this!"
-            poll_until { buyer.reload.alive_cart.present? }
+            wait.until { buyer.reload.alive_cart.present? }
             create_list(:cart_product, 49, cart: buyer.alive_cart)
           end
 
@@ -365,7 +359,7 @@ describe "Checkout cart", :js, type: :system do
               product2 = create(:product, name: "Product 2")
               visit product2.long_url
               add_to_cart(product2)
-              poll_until { Cart.alive.count == 2 }
+              wait.until { Cart.alive.count == 2 }
               guest_cart = Cart.alive.last
 
               visit checkout_path(cart_id: user_cart.secure_external_id(scope: "cart_login"))
@@ -392,7 +386,7 @@ describe "Checkout cart", :js, type: :system do
               create(:cart_product, cart: current_guest_cart, product: create(:product, name: "Product 2"))
 
               visit root_path
-              current_browser_guid = Capybara.current_session.driver.browser.manage.all_cookies.find { _1[:name] == "_gumroad_guid" }&.[](:value)
+              current_browser_guid = Capybara.current_session.driver.browser.cookies["_gumroad_guid"]&.value
               current_guest_cart.update!(browser_guid: current_browser_guid)
 
               visit checkout_path(cart_id: cart.secure_external_id(scope: "cart_login"))

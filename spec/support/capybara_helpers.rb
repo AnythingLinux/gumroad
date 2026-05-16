@@ -36,7 +36,24 @@ module CapybaraHelpers
     page.visit(url)
     return if Capybara.current_driver == :rack_test
     Timeout.timeout(Capybara.default_max_wait_time) do
-      sleep 0.05 until page.evaluate_script("document.readyState") == "complete"
+      loop do
+        break if page.evaluate_script("document.readyState") == "complete"
+        sleep 0.05
+      end
+    end
+    # JS may be loaded via ESM (type="module") which is deferred —
+    # modules execute after DOMContentLoaded but may not have finished by
+    # the time readyState == "complete". Wait for the Inertia React app to
+    # mount (the #app div gets children) or for non-Inertia pages to load
+    # their JS entry points.
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      sleep 0.05 until page.evaluate_script(<<~JS)
+        (function() {
+          var app = document.getElementById('app');
+          if (!app) return true;
+          return app.children.length > 0;
+        })()
+      JS
     end
     disable_animations
     wait_for_ajax
@@ -79,10 +96,10 @@ module CapybaraHelpers
   end
 
   def accept_browser_dialog
-    page.driver.browser.switch_to.alert.accept
-  rescue StandardError
+    page.accept_modal
+  rescue Capybara::ModalNotFound
     sleep 0.5
-    page.driver.browser.switch_to.alert.accept
+    page.accept_modal
   end
 
   # Reads the flash/toast alert message and immediately dismisses it.
@@ -97,7 +114,7 @@ module CapybaraHelpers
   def flash_message
     toast = find("[data-testid='toast-alert']")
     message = toast.text
-    within(toast) { find('button[aria-label="Close"]').click }
+    within(toast) { click_on "Close" }
     message
   end
 
@@ -108,12 +125,51 @@ module CapybaraHelpers
     wait_for_ajax
   end
 
+  # Intercepts browser navigation to an external URL and responds with a 302
+  # redirect to a local callback URL. Replaces Puffing Billy's proxy.stub()
+  # for OAuth redirect testing with Cuprite's built-in CDP interception.
+  #
+  # Usage:
+  #   stub_external_redirect("https://www.discord.com:443/api/oauth2/authorize",
+  #                          redirect_to: oauth_redirect_url(code: "test_code"))
+  #   visit(page_url)
+  #   click_on "Connect to Discord"  # browser navigates to Discord, gets redirected locally
+  def stub_external_redirect(url, redirect_to:)
+    @external_redirects ||= {}
+    # Normalize: strip default HTTPS port for matching
+    normalized = url.gsub(":443", "")
+    @external_redirects[normalized] = redirect_to
+
+    return if @intercept_active
+
+    page.driver.browser.network.intercept
+    page.driver.browser.on(:request) do |request|
+      normalized_request_url = request.url.gsub(":443", "")
+      match = @external_redirects&.find { |pattern, _| normalized_request_url.start_with?(pattern) }
+      if match
+        request.respond(
+          responseCode: 302,
+          responseHeaders: { "location" => match.last },
+          body: ""
+        )
+      else
+        request.continue
+      end
+    end
+    @intercept_active = true
+  end
+
   def with_throttled_network(fixture_file, factor: 4)
     throughput = (File.size(fixture_file) * factor)
-    page.driver.browser.execute_cdp("Network.enable")
-    page.driver.browser.execute_cdp("Network.emulateNetworkConditions", offline: false, latency: 0, downloadThroughput: throughput, uploadThroughput: throughput)
+    page.driver.browser.network.emulate_network_conditions(
+      offline: false, latency: 0,
+      download_throughput: throughput, upload_throughput: throughput
+    )
     yield
-    page.driver.browser.execute_cdp("Network.emulateNetworkConditions", offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1)
+    page.driver.browser.network.emulate_network_conditions(
+      offline: false, latency: 0,
+      download_throughput: -1, upload_throughput: -1
+    )
   end
 
   private

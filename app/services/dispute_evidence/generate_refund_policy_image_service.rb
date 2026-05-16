@@ -29,73 +29,21 @@ class DisputeEvidence::GenerateRefundPolicyImageService
   end
 
   private
-    CHROME_ARGS = [
-      "headless",
-      "no-sandbox",
-      "disable-setuid-sandbox",
-      "disable-dev-shm-usage",
-      "user-data-dir=/tmp/chrome",
-      "disable-scrollbars"
-    ].freeze
-
     # Should match $breakpoints definitions from app/javascript/stylesheets/_definitions.scss
     BREAKPOINT_SM = 640
     BREAKPOINT_LG = 1024
 
     IMAGE_RESIZE_FACTOR = 2
     IMAGE_QUALITY = 80
-    ARTICLE_WAIT_TIMEOUT_SECONDS = 5
 
     attr_reader :url, :width, :open_fine_print_modal, :max_size_allowed
 
     def generate_screenshot
-      options = Selenium::WebDriver::Chrome::Options.new(args: CHROME_ARGS)
-      driver = Selenium::WebDriver.for(:chrome, options:)
-      # Height will be adjusted after the page is loaded
-      driver.manage.window.size = Selenium::WebDriver::Dimension.new(width, width)
-
-      driver.navigate.to url
-
-      # Ensures the page is fully loaded, especially when we want to render with the refund policy modal open.
-      wait = Selenium::WebDriver::Wait.new(timeout: 10)
-      wait.until { driver.execute_script("return document.readyState") == "complete" }
-
-      height = calculate_height(driver, open_fine_print_modal:)
-
-      driver.manage.window.size = Selenium::WebDriver::Dimension.new(width, height)
-      driver.screenshot_as(:png)
-    ensure
-      driver.quit if driver.present?
-    end
-
-    def calculate_height(driver, open_fine_print_modal:)
-      document_height = driver.execute_script(js_max_height_dimension)
-      if open_fine_print_modal
-        modal_height = driver.execute_script(%{ return document.querySelector("dialog").scrollHeight; })
-        [modal_height, document_height].max
-      else
-        begin
-          Selenium::WebDriver::Wait.new(timeout: ARTICLE_WAIT_TIMEOUT_SECONDS).until do
-            driver.execute_script(%{ return document.querySelector("article") !== null; })
-          end
-        rescue Selenium::WebDriver::Error::TimeoutError
-          return document_height
-        end
-        content_height = driver.execute_script(%{ return document.querySelector("article")?.parentElement?.scrollHeight ?? 0; })
-        [content_height, document_height].max
-      end
-    end
-
-    def js_max_height_dimension
-      %{
-        return Math.max(
-          document.body.scrollHeight,
-          document.body.offsetHeight,
-          document.documentElement.clientHeight,
-          document.documentElement.scrollHeight,
-          document.documentElement.offsetHeight,
-          );
-        }
+      kit = IMGKit.new(url, width: width, quality: 100, format: "png",
+                            "javascript-delay": 2000,
+                            "no-stop-slow-scripts": true,
+                            "enable-javascript": true)
+      kit.to_png
     end
 
     def optimize_image(binary_data)
