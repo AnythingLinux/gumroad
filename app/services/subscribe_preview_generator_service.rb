@@ -8,16 +8,18 @@ class SubscribePreviewGeneratorService
   HEIGHT = (WIDTH / ASPECT_RATIO).to_i
   BROWSER_OPTIONS = {
     "force-device-scale-factor" => RETINA_PIXEL_RATIO.to_s,
-    "headless" => nil,
+    "headless" => "new",
     "no-sandbox" => nil,
     "disable-setuid-sandbox" => nil,
     "disable-dev-shm-usage" => nil,
     "user-data-dir" => "/tmp/chrome",
   }.freeze
+  SCREENSHOT_AREA = { x: 0, y: 0, width: WIDTH, height: HEIGHT }.freeze
 
   def self.generate_pngs(users)
     browser = Ferrum::Browser.new(
       browser_options: BROWSER_OPTIONS,
+      headless: false,
       window_size: [WIDTH, HEIGHT],
       process_timeout: 30,
       timeout: 10,
@@ -29,8 +31,7 @@ class SubscribePreviewGeneratorService
         protocol: PROTOCOL,
       )
       browser.goto(url)
-      browser.network.wait_for_idle
-      browser.screenshot(format: "png", encoding: :binary)
+      browser.screenshot(format: "png", encoding: :binary, area: SCREENSHOT_AREA.dup)
     end
   ensure
     browser&.quit
