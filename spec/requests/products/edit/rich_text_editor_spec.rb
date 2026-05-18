@@ -57,22 +57,23 @@ describe("Product Edit Rich Text Editor", type: :system, js: true) do
 
   it "shows an error when uploading an image that exceeds the size limit" do
     visit edit_link_path(@product)
-    large_image = Tempfile.new(["large_image", ".png"])
+    # Write to fixtures dir so the file is visible to the remote Chrome container
+    # (which only mounts spec/support/fixtures, not /tmp)
+    large_image_path = Rails.root.join("spec/support/fixtures/large_image.png")
     begin
       png_header = "\x89PNG\r\n\x1a\n".b
-      large_image.binmode
-      large_image.write(png_header)
-      large_image.write("\0" * (11 * 1024 * 1024)) # 11MB
-      large_image.flush
+      File.open(large_image_path, "wb") do |f|
+        f.write(png_header)
+        f.write("\0" * (11 * 1024 * 1024)) # 11MB
+      end
 
-      attach_file large_image.path do
+      attach_file large_image_path.to_s do
         click_on "Insert image"
       end
       expect(page).to have_alert(text: "File is too large (max allowed size is 10.0 MB)")
       expect(find("[aria-label='Description']")).to_not have_selector("img")
     ensure
-      large_image.close
-      large_image.unlink
+      FileUtils.rm_f(large_image_path)
     end
   end
 
