@@ -26,7 +26,7 @@ services:
       - "6379"
 
   mongo:
-    image: mongo:7.0
+    image: mongo:7.0.14
     volumes:
       - mongo_data:/data/db
     ports:

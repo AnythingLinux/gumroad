@@ -51,10 +51,10 @@ $(brew —-prefix mysql)/bin/mysqladmin -u root password <NEWPASSWORD>
 
 Search for the available versions using `brew search mongo` and install the appropriate one.
 
-For example, to install version 3.6
+For example, to install version 7.0
 
 ```
-brew install mongodb/brew/mongodb-community@3.6
+brew install mongodb/brew/mongodb-community@7.0
 ```
 
 #### Elasticsearch

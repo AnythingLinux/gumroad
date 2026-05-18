@@ -24,12 +24,11 @@ services:
       - redis_data:/data
 
   mongo:
-    image: mongo:3.6.16
+    image: mongo:7.0.14
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-    command: "mongod --smallfiles"
 
   elasticsearch:
     image: elasticsearch:7.9.3
