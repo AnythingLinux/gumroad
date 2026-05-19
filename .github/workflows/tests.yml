@@ -315,7 +315,7 @@ jobs:
             ES_PID=$!
             docker run --rm --entrypoint="" --network $NET $IMG docker/ci/wait_on_connection.sh minio 9000 &
             MINIO_PID=$!
-            docker run --rm --entrypoint="" --network $NET $IMG docker/ci/wait_on_connection.sh chrome 3333 &
+            docker run --rm --entrypoint="" --network $NET $IMG docker/ci/wait_on_connection.sh chrome 3000 &
             CHROME_PID=$!
             wait $DB_PID || exit 1
             wait $ES_PID || exit 1
@@ -375,7 +375,7 @@ jobs:
           KNAPSACK_PRO_FIXED_QUEUE_SPLIT: true
           CI: true
           IN_DOCKER: true
-          CHROME_URL: http://chrome:3333
+          CHROME_URL: ws://chrome:3000
           APP_HOST: test-app
           WEB_REPO: gumroadteam/web
       - name: Archive flaky specs log
@@ -507,7 +507,7 @@ jobs:
             ES_PID=$!
             docker run --rm --entrypoint="" --network $NET $IMG docker/ci/wait_on_connection.sh minio 9000 &
             MINIO_PID=$!
-            docker run --rm --entrypoint="" --network $NET $IMG docker/ci/wait_on_connection.sh chrome 3333 &
+            docker run --rm --entrypoint="" --network $NET $IMG docker/ci/wait_on_connection.sh chrome 3000 &
             CHROME_PID=$!
             wait $DB_PID || exit 1
             wait $ES_PID || exit 1
@@ -565,7 +565,7 @@ jobs:
           KNAPSACK_PRO_FIXED_QUEUE_SPLIT: true
           CI: true
           IN_DOCKER: true
-          CHROME_URL: http://chrome:3333
+          CHROME_URL: ws://chrome:3000
           APP_HOST: test-app
           WEB_REPO: gumroadteam/web
       - name: Archive capybara artifacts
