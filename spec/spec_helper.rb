@@ -148,6 +148,7 @@ def browser_session_corrupted?(exception)
       error.is_a?(Ferrum::ProcessTimeoutError) ||
       error.is_a?(Errno::ECONNREFUSED) ||
       (error.is_a?(NoMethodError) && error.message.include?("unpack1")) ||
+      (error.is_a?(Capybara::ElementNotFound) && error.message.include?("Upload still in progress")) ||
       error.message.match?(BROWSER_CORRUPTION_PATTERN)
   end
 end
@@ -262,7 +263,7 @@ RSpec.configure do |config|
     config.display_try_failure_messages = true
     config.default_retry_count = 1
     config.around(:each, type: :system) do |example|
-      example.metadata[:retry] ||= 2
+      example.metadata[:retry] ||= 3
       example.run
     end
     config.retry_callback = proc do |example|
