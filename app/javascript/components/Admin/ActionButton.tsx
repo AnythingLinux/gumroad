@@ -50,7 +50,7 @@ export const AdminActionButton = ({
 
     setState("loading");
 
-    const csrfToken = typia.assert<string>($("meta[name=csrf-token]").attr("content"));
+    const csrfToken = typia.assert<string>(document.querySelector("meta[name=csrf-token]")?.getAttribute("content"));
 
     try {
       const response = await request({
