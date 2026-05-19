@@ -152,21 +152,31 @@ def browser_session_corrupted?(exception)
   end
 end
 
-def force_browser_restart!
-  driver = Capybara.current_session.driver
-  return unless driver.is_a?(Capybara::Cuprite::Driver)
+def capybara_sessions
+  ([Capybara.current_session] + Capybara.send(:session_pool).values).uniq
+rescue StandardError
+  [Capybara.current_session]
+end
 
-  begin
-    driver.restart
-  rescue StandardError
-    begin
-      driver.quit
-    rescue StandardError
-      nil
-    end
-    driver.remove_instance_variable(:@browser) if driver.instance_variable_defined?(:@browser)
+def reset_cuprite_driver(driver)
+  driver.quit
+rescue StandardError
+  nil
+ensure
+  driver.remove_instance_variable(:@browser) if driver.instance_variable_defined?(:@browser)
+end
+
+def force_browser_restart!
+  restarted = false
+  capybara_sessions.each do |session|
+    driver = session.driver
+    next unless driver.is_a?(Capybara::Cuprite::Driver)
+
+    reset_cuprite_driver(driver)
+    restarted = true
   end
-  Capybara.reset_sessions!
+
+  Capybara.reset_sessions! if restarted
 rescue StandardError => e
   Rails.logger.warn("[RSpec] Browser restart failed: #{e.class}: #{e.message}")
 end
