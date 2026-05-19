@@ -127,7 +127,8 @@ services:
       - ../spec/support/fixtures:/app/spec/support/fixtures:ro
     environment:
       PORT: 3333
-      CONNECTION_TIMEOUT: 600000
+      CONNECTION_TIMEOUT: 900000
+      TIMEOUT: 900000
       MAX_CONCURRENT_SESSIONS: 5
     shm_size: "2gb"
 
