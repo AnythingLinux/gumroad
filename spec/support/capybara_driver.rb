@@ -40,17 +40,17 @@ CUPRITE_COMMON_OPTS = {
 end.freeze
 
 # ── Desktop (1440×900) ───────────────────────────────────────────────
-Capybara.register_driver :cuprite do |app|
+Capybara.register_driver :gumroad_cuprite do |app|
   Capybara::Cuprite::Driver.new(app, **CUPRITE_COMMON_OPTS, window_size: [1440, 900])
 end
 
 # ── Tablet (800×1024) ────────────────────────────────────────────────
-Capybara.register_driver :cuprite_tablet do |app|
+Capybara.register_driver :gumroad_cuprite_tablet do |app|
   Capybara::Cuprite::Driver.new(app, **CUPRITE_COMMON_OPTS, window_size: [800, 1024])
 end
 
 # ── Mobile (375×667, iPhone 8 equiv) ─────────────────────────────────
-Capybara.register_driver :cuprite_mobile do |app|
+Capybara.register_driver :gumroad_cuprite_mobile do |app|
   Capybara::Cuprite::Driver.new(app, **CUPRITE_COMMON_OPTS, window_size: [375, 667])
 end
 
@@ -71,15 +71,15 @@ RSpec.configure do |config|
   end
 
   config.before(:each, type: :system, js: true) do
-    driven_by :cuprite
+    driven_by :gumroad_cuprite
   end
 
   config.before(:each, :mobile_view) do |_example|
-    driven_by :cuprite_mobile
+    driven_by :gumroad_cuprite_mobile
   end
 
   config.before(:each, :tablet_view) do |_example|
-    driven_by :cuprite_tablet
+    driven_by :gumroad_cuprite_tablet
   end
 
   # Filter Cuprite/Ferrum internals from backtraces
