@@ -3721,14 +3721,13 @@ describe Subscription, :vcr do
     describe "workflows" do
       context "when the subscription has lapsed" do
         it "schedules any workflow installments that were missed during the lapsed period" do
-          resubscribed_after_interval = 1.hour
-
-          travel_to(Time.current.beginning_of_minute) do
+          freeze_time do
             @subscription.cancel_effective_immediately!
 
-            expect_any_instance_of(Purchase).to receive(:reschedule_workflow_installments).with(send_delay: resubscribed_after_interval).and_call_original
+            travel(1.hour)
 
-            travel resubscribed_after_interval
+            expect_any_instance_of(Purchase).to receive(:reschedule_workflow_installments).with(send_delay: 1.hour.to_i).and_call_original
+
             @subscription.resubscribe!
           end
         end
