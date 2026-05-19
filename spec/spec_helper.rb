@@ -120,7 +120,7 @@ def prepare_mysql
 end
 
 DB_CORRUPTION_PATTERN = /SAVEPOINT.*does not exist|Lost connection|gone away/i
-BROWSER_CORRUPTION_PATTERN = /unpack1|no such window|invalid session id/i
+BROWSER_CORRUPTION_PATTERN = /unpack1|no such window|invalid session id|failed to find (?:browser )?context/i
 
 def reset_db_connection(example)
   return unless example.exception&.message&.match?(DB_CORRUPTION_PATTERN)

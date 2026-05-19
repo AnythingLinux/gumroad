@@ -1,3 +1,4 @@
+import $ from "jquery";
 import typia from "typia";
 
 import { startTrackingForGumroad } from "$app/data/google_analytics";

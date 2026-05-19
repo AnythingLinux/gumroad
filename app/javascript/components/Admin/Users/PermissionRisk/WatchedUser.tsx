@@ -1,4 +1,5 @@
 import { router } from "@inertiajs/react";
+import $ from "jquery";
 import * as React from "react";
 import typia from "typia";
 

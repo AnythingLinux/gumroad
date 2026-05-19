@@ -3,6 +3,7 @@
 //! it will show back the initial label when the undo action is done
 //! but it keeps showing the done label that was initially set in the prop of this component
 
+import $ from "jquery";
 import * as React from "react";
 import typia from "typia";
 
@@ -61,9 +62,11 @@ export const AdminActionButton = ({
 
       if (!response.ok) throw new ResponseError("Something went wrong.");
 
-      const { success, message, redirect_to } = typia.assert<{ success?: boolean; message?: string; redirect_to?: string }>(
-        await response.json(),
-      );
+      const { success, message, redirect_to } = typia.assert<{
+        success?: boolean;
+        message?: string;
+        redirect_to?: string;
+      }>(await response.json());
       if (!success) throw new ResponseError(message || "Something went wrong.");
 
       if (message && show_message_in_alert) {

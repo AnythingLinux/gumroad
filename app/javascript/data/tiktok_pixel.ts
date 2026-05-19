@@ -1,4 +1,5 @@
 import loadTikTokPixelScript from "$vendor/tiktok_pixel";
+import $ from "jquery";
 
 import { AnalyticsConfig, BeginCheckoutEvent, GumroadEvents, ProductAnalyticsEvent } from "$app/utils/user_analytics";
 

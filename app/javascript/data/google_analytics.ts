@@ -1,4 +1,5 @@
 import loadGoogleAnalyticsScript from "$vendor/google_analytics_4";
+import $ from "jquery";
 
 import { AnalyticsConfig, ProductAnalyticsEvent, ProductEventsTitles } from "$app/utils/user_analytics";
 
