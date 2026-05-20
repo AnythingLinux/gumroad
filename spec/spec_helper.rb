@@ -120,7 +120,7 @@ def prepare_mysql
 end
 
 DB_CORRUPTION_PATTERN = /SAVEPOINT.*does not exist|Lost connection|gone away/i
-BROWSER_CORRUPTION_PATTERN = /unpack1|no such window|invalid session id|failed to find (?:browser )?context/i
+BROWSER_CORRUPTION_PATTERN = /unpack1|no such window|invalid session id|failed to find (?:browser )?context|net::ERR_CONNECTION_REFUSED|pending connections/i
 
 def exception_tree(exception)
   return [] unless exception

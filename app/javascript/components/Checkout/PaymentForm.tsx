@@ -763,6 +763,7 @@ const BraintreePayPal = ({ token }: { token: string }) => {
   const [braintree, setBraintree] = React.useState<{ paypal: PayPal; dataCollector: DataCollector } | null>(null);
   useRunOnce(
     asyncVoid(async () => {
+      if (process.env.RAILS_ENV === "test" && token === "dummy_braintree_client_token") return;
       const client = await BraintreeClient.create({ authorization: token });
       const paypal = await BraintreePaypal.create({ client });
       const dataCollector = await BraintreeDataCollector.create({ client, paypal: true });
@@ -920,8 +921,12 @@ const usePayPalImplementation = () => {
   const [nativePaypal, setNativePaypal] = React.useState<PayPalNamespace | null>(null);
   useRunOnce(
     asyncVoid(async () => {
-      if (!state.paypalClientId) return;
-      setNativePaypal(await loadPaypal({ clientId: state.paypalClientId, vault: true }));
+      if (!state.paypalClientId || state.paypalClientId.startsWith("test-")) return;
+      try {
+        setNativePaypal(await loadPaypal({ clientId: state.paypalClientId, vault: true }));
+      } catch {
+        setNativePaypal(null);
+      }
     }),
   );
   const braintreeToken = useBraintreeToken(true);

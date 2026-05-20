@@ -357,6 +357,7 @@ jobs:
             -e IN_DOCKER \
             -e CHROME_URL \
             -e APP_HOST \
+            -e VITE_RUBY_AUTO_BUILD \
             $WEB_REPO:${{ needs.build.outputs.test_image_tag }} \
             /usr/local/bin/gosu app bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --format progress]"
           TEST_EXIT=$?
@@ -386,8 +387,9 @@ jobs:
           KNAPSACK_PRO_FIXED_QUEUE_SPLIT: true
           CI: true
           IN_DOCKER: true
-          CHROME_URL: ws://chrome:3000
+          CHROME_URL: ws://chrome:3000?launch=eyJhcmdzIjpbIi0taG9zdC1yZXNvbHZlci1ydWxlcz1NQVAgKi50ZXN0Lmd1bXJvYWQuY29tIHRlc3QtYXBwLE1BUCB0ZXN0Lmd1bXJvYWQuY29tIHRlc3QtYXBwLEVYQ0xVREUgbG9jYWxob3N0Il19
           APP_HOST: test-app
+          VITE_RUBY_AUTO_BUILD: "false"
           WEB_REPO: gumroadteam/web
       - name: Archive flaky specs log
         if: always()
@@ -561,6 +563,7 @@ jobs:
             -e IN_DOCKER \
             -e CHROME_URL \
             -e APP_HOST \
+            -e VITE_RUBY_AUTO_BUILD \
             $WEB_REPO:${{ needs.build.outputs.test_image_tag }} \
             /usr/local/bin/gosu app bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --format progress]"
           TEST_EXIT=$?
@@ -589,8 +592,9 @@ jobs:
           KNAPSACK_PRO_FIXED_QUEUE_SPLIT: true
           CI: true
           IN_DOCKER: true
-          CHROME_URL: ws://chrome:3000
+          CHROME_URL: ws://chrome:3000?launch=eyJhcmdzIjpbIi0taG9zdC1yZXNvbHZlci1ydWxlcz1NQVAgKi50ZXN0Lmd1bXJvYWQuY29tIHRlc3QtYXBwLE1BUCB0ZXN0Lmd1bXJvYWQuY29tIHRlc3QtYXBwLEVYQ0xVREUgbG9jYWxob3N0Il19
           APP_HOST: test-app
+          VITE_RUBY_AUTO_BUILD: "false"
           WEB_REPO: gumroadteam/web
       - name: Cancel workflow on failure
         if: failure()
