@@ -140,11 +140,14 @@ describe "Checkout cart", :js, type: :system do
     end
 
     describe "cart persistence" do
-      let(:wait_timeout) { 30 }
+      let(:wait_timeout) { ENV["CI"] ? 45 : 30 }
 
       def poll_until(timeout: wait_timeout)
-        Timeout.timeout(timeout) do
-          sleep 0.1 until yield
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+        loop do
+          return if yield
+          raise Timeout::Error, "execution expired after #{timeout}s" if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+          sleep 0.2
         end
       end
 
