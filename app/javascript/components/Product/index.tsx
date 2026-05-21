@@ -136,6 +136,12 @@ export type Product = {
   analytics: AnalyticsData;
   has_third_party_analytics: boolean;
   ppp_details: PurchasingPowerParityDetails | null;
+  buyer_local_price?: {
+    currency_code: CurrencyCode;
+    price_cents: number;
+    exchange_rate: number;
+    suggested_price_cents: number | null;
+  } | null;
   can_edit: boolean;
   refund_policy: RefundPolicy | null;
   bundle_products: {
@@ -390,6 +396,7 @@ export const Product = ({
                 isPayWhatYouWant={!!product.pwyw}
                 isSalesLimited={product.is_sales_limited}
                 creatorName={product.seller?.name}
+                buyerLocalPrice={product.buyer_local_price}
               />
             </div>
           ) : null}
