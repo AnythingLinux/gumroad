@@ -932,6 +932,7 @@ describe("Download Page", type: :system, js: true) do
     let!(:global_affiliate_product) { create(:product, name: "Global Affiliate Product") }
 
     it "recommends the correct set of products" do
+      SalesRelatedProductsInfo.update_sales_counts(product_id: product.id, related_product_ids: [other_product.id], increment: 1000)
       SalesRelatedProductsInfo.update_sales_counts(product_id: product.id, related_product_ids: [affiliate_product.id], increment: 1000)
       SalesRelatedProductsInfo.update_sales_counts(product_id: product.id, related_product_ids: [global_affiliate_product.id], increment: 1000)
       rebuild_srpis_cache
