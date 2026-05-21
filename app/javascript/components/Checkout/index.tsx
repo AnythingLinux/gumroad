@@ -77,8 +77,7 @@ function formatPrice(price: number) {
 // Format a price in the buyer's local currency.
 // When smartRoundedCents is provided (from server-side smart rounding), use it directly
 // to ensure the displayed price matches the actual Stripe charge amount.
-// When only exchangeRate is available (PWYW/variant-adjusted prices), use approximate
-// conversion with "≈" prefix since the server will smart-round the final charge.
+// When only exchangeRate is available (PWYW/variant-adjusted prices), convert dynamically.
 function formatLocalPrice(
   usdCents: number,
   buyerCurrency?: CurrencyCode | null,
@@ -94,10 +93,10 @@ function formatLocalPrice(
     }
     if (exchangeRate) {
       const localCents = Math.round(usdCents * exchangeRate);
-      return `≈ ${formatPriceCentsWithCurrencySymbol(buyerCurrency, localCents, {
+      return formatPriceCentsWithCurrencySymbol(buyerCurrency, localCents, {
         symbolFormat: "long",
         noCentsIfWhole: true,
-      })}`;
+      });
     }
   }
   return formatPrice(usdCents);
@@ -719,14 +718,12 @@ const CartItemComponent = ({
       </CartItemMain>
       <CartItemEnd>
         <span className="current-price text-base font-bold sm:text-lg" aria-label="Price">
-          {item.product.buyer_local_price?.exchange_rate
-            ? formatLocalPrice(
-                convertToUSD(item, price),
-                item.product.buyer_local_price.currency_code,
-                item.product.buyer_local_price.exchange_rate,
-                item.product.buyer_local_price.price_cents,
-              )
-            : formatPrice(convertToUSD(item, price))}
+          {formatLocalPrice(
+            convertToUSD(item, price),
+            item.product.buyer_local_price?.currency_code,
+            item.product.buyer_local_price?.exchange_rate,
+            item.product.buyer_local_price?.price_cents,
+          )}
         </span>
         {hasFreeTrial(item, isGift) && item.product.free_trial ? (
           <>

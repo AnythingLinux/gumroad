@@ -43,7 +43,10 @@ export const PriceTag = ({
   tooltipPosition = "right",
   buyerLocalPrice,
 }: Props) => {
-  const formattedAmount = formatPriceCentsWithCurrencySymbol(currencyCode, price, { symbolFormat: "long" });
+  // When buyer local price is available, display that instead of USD
+  const displayCurrency = buyerLocalPrice?.currency_code ?? currencyCode;
+  const displayPrice = buyerLocalPrice?.price_cents ?? price;
+  const formattedAmount = formatPriceCentsWithCurrencySymbol(displayCurrency, displayPrice, { symbolFormat: "long" });
 
   const recurrenceLabel = recurrence
     ? formatRecurrenceWithDuration(recurrence.id, recurrence.duration_in_months)
@@ -54,7 +57,7 @@ export const PriceTag = ({
     <>
       {oldPrice != null ? (
         <>
-          <s>{formatPriceCentsWithCurrencySymbol(currencyCode, oldPrice, { symbolFormat: "long" })}</s>{" "}
+          <s>{formatPriceCentsWithCurrencySymbol(displayCurrency, buyerLocalPrice ? Math.round(oldPrice * (buyerLocalPrice.price_cents / price)) : oldPrice, { symbolFormat: "long" })}</s>{" "}
         </>
       ) : null}
       {formattedAmount}
@@ -71,7 +74,7 @@ export const PriceTag = ({
           <div
             className="bg-accent px-2 py-1 text-accent-foreground"
             itemProp="price"
-            content={formatPriceCentsWithoutCurrencySymbolAndComma(currencyCode, price)}
+            content={formatPriceCentsWithoutCurrencySymbolAndComma(displayCurrency, displayPrice)}
           >
             {priceTag}
           </div>
@@ -84,13 +87,8 @@ export const PriceTag = ({
         {`https://schema.org/${isSalesLimited ? "LimitedAvailability" : "InStock"}`}
       </div>
       <div itemProp="priceCurrency" className="hidden">
-        {currencyCode}
+        {displayCurrency}
       </div>
-      {buyerLocalPrice ? (
-        <span className="ml-2 text-xs text-muted">
-          ≈ {formatPriceCentsWithCurrencySymbol(buyerLocalPrice.currency_code, buyerLocalPrice.price_cents, { symbolFormat: "long" })}
-        </span>
-      ) : null}
       {creatorName ? (
         <div itemProp="seller" itemType="https://schema.org/Person" className="hidden">
           <div itemProp="name" className="hidden">
