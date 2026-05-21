@@ -3,7 +3,7 @@
 class DominicanRepublicBankAccount < BankAccount
   BANK_ACCOUNT_TYPE = "DO"
 
-  BANK_CODE_FORMAT_REGEX = /^\d{1,3}$/
+  BANK_CODE_FORMAT_REGEX = /^\d{3}$/
   ACCOUNT_NUMBER_FORMAT_REGEX = /^\d{1,28}$/
   private_constant :BANK_CODE_FORMAT_REGEX, :ACCOUNT_NUMBER_FORMAT_REGEX
 
@@ -16,7 +16,7 @@ class DominicanRepublicBankAccount < BankAccount
   validates :account_number, presence: true
 
   def routing_number
-    branch_code.present? ? "#{bank_code}-#{branch_code}" : "#{bank_code}"
+    bank_code
   end
 
   def bank_account_type

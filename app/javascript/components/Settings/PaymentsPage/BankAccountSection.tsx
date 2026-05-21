@@ -1734,36 +1734,24 @@ const BankAccountSection = ({
                   />
                 </Fieldset>
               ) : user.country_code === "DO" ? (
-                <>
-                  <Fieldset state={errorFieldNames.has("bank_code") ? "danger" : undefined}>
-                    <FieldsetTitle>
-                      <Label htmlFor={`${uid}-bank-code`}>Bank code</Label>
-                    </FieldsetTitle>
-                    <Input
-                      type="text"
-                      id={`${uid}-bank-code`}
-                      placeholder="021"
-                      maxLength={3}
-                      required
-                      disabled={isFormDisabled}
-                      aria-invalid={errorFieldNames.has("bank_code")}
-                      onChange={(evt) => updateBankAccount({ bank_code: evt.target.value })}
-                    />
-                  </Fieldset>
-                  <Fieldset state={errorFieldNames.has("branch_code") ? "danger" : undefined}>
-                    <FieldsetTitle>
-                      <Label htmlFor={`${uid}-branch-code`}>Branch code (optional)</Label>
-                    </FieldsetTitle>
-                    <Input
-                      type="text"
-                      id={`${uid}-branch-code`}
-                      placeholder="4232"
-                      maxLength={5}
-                      disabled={isFormDisabled}
-                      onChange={(evt) => updateBankAccount({ branch_code: evt.target.value })}
-                    />
-                  </Fieldset>
-                </>
+                <Fieldset state={errorFieldNames.has("bank_code") ? "danger" : undefined}>
+                  <FieldsetTitle>
+                    <Label htmlFor={`${uid}-bank-code`}>Bank code</Label>
+                  </FieldsetTitle>
+                  <Input
+                    type="text"
+                    id={`${uid}-bank-code`}
+                    placeholder="021"
+                    pattern="\d{3}"
+                    inputMode="numeric"
+                    minLength={3}
+                    maxLength={3}
+                    required
+                    disabled={isFormDisabled}
+                    aria-invalid={errorFieldNames.has("bank_code")}
+                    onChange={(evt) => updateBankAccount({ bank_code: evt.target.value })}
+                  />
+                </Fieldset>
               ) : user.country_code === "UZ" ? (
                 <>
                   <Fieldset state={errorFieldNames.has("bank_code") ? "danger" : undefined}>

@@ -79,7 +79,7 @@ class UpdatePayoutMethod
     LaosBankAccount.name => { class: LaosBankAccount, permitted_params: [:bank_code] },
     MozambiqueBankAccount.name => { class: MozambiqueBankAccount, permitted_params: [:bank_code] },
     OmanBankAccount.name => { class: OmanBankAccount, permitted_params: [:bank_code] },
-    DominicanRepublicBankAccount.name => { class: DominicanRepublicBankAccount, permitted_params: [:bank_code, :branch_code] },
+    DominicanRepublicBankAccount.name => { class: DominicanRepublicBankAccount, permitted_params: [:bank_code] },
     UzbekistanBankAccount.name => { class: UzbekistanBankAccount, permitted_params: [:bank_code, :branch_code] },
     BoliviaBankAccount.name => { class: BoliviaBankAccount, permitted_params: [:bank_code] },
     TunisiaBankAccount.name => { class: TunisiaBankAccount, permitted_params: [] },
