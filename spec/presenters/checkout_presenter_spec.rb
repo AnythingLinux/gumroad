@@ -36,6 +36,7 @@ describe CheckoutPresenter do
         paypal_client_id: PAYPAL_PARTNER_CLIENT_ID,
         max_allowed_cart_products: Cart::MAX_ALLOWED_CART_PRODUCTS,
         cart_save_debounce_ms: CheckoutPresenter::CART_SAVE_DEBOUNCE_DURATION_IN_SECONDS.in_milliseconds,
+        buyer_currency: "usd",
         tip_options: [5, 15, 25],
         default_tip_option: 15,
       )
@@ -145,6 +146,7 @@ describe CheckoutPresenter do
             is_quantity_enabled: false,
             is_tiered_membership: false,
             price_cents: 100,
+            buyer_local_price: nil,
             pwyw: nil,
             installment_plan: nil,
             recurrences: nil,
@@ -194,6 +196,7 @@ describe CheckoutPresenter do
         }],
         max_allowed_cart_products: Cart::MAX_ALLOWED_CART_PRODUCTS,
         cart_save_debounce_ms: CheckoutPresenter::CART_SAVE_DEBOUNCE_DURATION_IN_SECONDS.in_milliseconds,
+        buyer_currency: "usd",
         tip_options: [5, 15, 25],
         default_tip_option: 15,
       )
