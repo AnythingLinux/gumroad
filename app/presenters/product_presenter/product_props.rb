@@ -13,6 +13,7 @@ class ProductPresenter::ProductProps
   end
 
   def props(seller_custom_domain_url:, request:, pundit_user:, recommended_by: nil, discount_code: nil, quantity: 1, layout: nil)
+    @request_ip = request.remote_ip
     {
       product: {
         id: product.external_id,
@@ -38,6 +39,7 @@ class ProductPresenter::ProductProps
         description_html: product.html_safe_description,
         currency_code: product.price_currency_type.downcase,
         price_cents: product.price_cents,
+        buyer_local_price: buyer_local_price_props,
         rental_price_cents: product.rental_price_cents,
         pwyw: product.customizable_price ? { suggested_price_cents: product.suggested_price_cents } : nil,
         **ProductPresenter::InstallmentPlanProps.new(product:).props,
@@ -161,5 +163,27 @@ class ProductPresenter::ProductProps
       else
         nil
       end
+    end
+
+    def buyer_local_price_props
+      buyer_currency = BuyerCurrencyService.detect_currency(@request_ip)
+      return nil if buyer_currency.blank?
+      seller_currency = product.price_currency_type.downcase
+      return nil if buyer_currency == seller_currency
+
+      {
+        currency_code: buyer_currency,
+        price_cents: BuyerCurrencyService.convert_price(
+          product.price_cents,
+          from_currency: seller_currency,
+          to_currency: buyer_currency
+        ),
+        suggested_price_cents: product.customizable_price && product.suggested_price_cents.to_i > 0 ?
+          BuyerCurrencyService.convert_price(
+            product.suggested_price_cents,
+            from_currency: seller_currency,
+            to_currency: buyer_currency
+          ) : nil,
+      }
     end
 end

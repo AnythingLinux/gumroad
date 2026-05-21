@@ -1897,7 +1897,22 @@ class Purchase < ApplicationRecord
     self.displayed_price_currency_type = link.price_currency_type
     self.price_cents = displayed_price_usd_cents
     self.rate_converted_to_usd = get_rate(displayed_price_currency_type)
-    self.total_transaction_cents = self.price_cents
+
+    # Multi-currency: if a buyer_currency was detected (from IP geolocation),
+    # convert the seller's price into the buyer's local currency for Stripe presentment.
+    # The USD amount (price_cents) remains the canonical internal accounting value.
+    if buyer_currency.present? && buyer_currency != "usd"
+      self.buyer_currency_amount_cents = BuyerCurrencyService.convert_price(
+        displayed_price_cents,
+        from_currency: displayed_price_currency_type,
+        to_currency: buyer_currency
+      )
+      self.buyer_currency_exchange_rate = get_rate(buyer_currency)
+      self.total_transaction_cents = buyer_currency_amount_cents
+    else
+      self.total_transaction_cents = self.price_cents
+    end
+
     self.affiliate_credit_cents = determine_affiliate_balance_cents
     self.tax_cents = 0
     self.gumroad_tax_cents = 0

@@ -16,6 +16,7 @@ class CheckoutPresenter
   def initialize(logged_in_user:, ip:)
     @logged_in_user = logged_in_user
     @ip = ip
+    @buyer_currency = BuyerCurrencyService.detect_currency(ip)
   end
 
   def checkout_props(params:, browser_guid:)
@@ -40,6 +41,7 @@ class CheckoutPresenter
       **add_single_product_props(params:, user:),
       **checkout_wishlist_props(params:),
       **checkout_wishlist_gift_props(params:),
+      buyer_currency: @buyer_currency,
       max_allowed_cart_products: Cart::MAX_ALLOWED_CART_PRODUCTS,
       cart_save_debounce_ms: CART_SAVE_DEBOUNCE_DURATION_IN_SECONDS.in_milliseconds,
       tip_options: TipOptionsService.get_tip_options,
@@ -314,6 +316,7 @@ class CheckoutPresenter
         } : nil,
         currency_code: product.price_currency_type.downcase,
         price_cents: product.price_cents,
+        buyer_local_price: buyer_local_price_for(product),
         supports_paypal: supports_paypal(product),
         custom_fields: product.custom_field_descriptors,
         exchange_rate: get_rate(product.price_currency_type).to_f / (is_currency_type_single_unit?(product.price_currency_type) ? 100 : 1),
@@ -341,6 +344,29 @@ class CheckoutPresenter
       elsif product.user.pay_with_paypal_enabled?
         "braintree"
       end
+    end
+
+    # Returns buyer-local pricing for a product if the buyer's detected currency
+    # differs from the seller's. Used for Apple-style localized price display.
+    def buyer_local_price_for(product)
+      return nil if @buyer_currency.blank?
+      seller_currency = product.price_currency_type.downcase
+      return nil if @buyer_currency == seller_currency
+
+      {
+        currency_code: @buyer_currency,
+        price_cents: BuyerCurrencyService.convert_price(
+          product.price_cents,
+          from_currency: seller_currency,
+          to_currency: @buyer_currency
+        ),
+        suggested_price_cents: product.customizable_price && product.suggested_price_cents.to_i > 0 ?
+          BuyerCurrencyService.convert_price(
+            product.suggested_price_cents,
+            from_currency: seller_currency,
+            to_currency: @buyer_currency
+          ) : nil,
+      }
     end
 
     def purchases

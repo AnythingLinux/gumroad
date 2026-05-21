@@ -36,6 +36,8 @@ class Charge::CreateService
     end
 
     charge_intent = with_charge_processor_error_handler do
+      # Determine charge currency: use buyer's local currency if set, else USD
+      charge_currency = determine_charge_currency
       ChargeProcessor.create_payment_intent_or_charge!(merchant_account,
                                                        chargeable,
                                                        amount_cents,
@@ -47,7 +49,8 @@ class Charge::CreateService
                                                        off_session:,
                                                        setup_future_charges:,
                                                        metadata: StripeMetadata.build_metadata_large_list(purchases.map(&:external_id), key: :purchases, separator: ","),
-                                                       mandate_options:)
+                                                       mandate_options:,
+                                                       currency: charge_currency)
     end
 
     if charge_intent.present?
@@ -143,6 +146,18 @@ class Charge::CreateService
       PurchaseErrorCode::STRIPE_UNAVAILABLE
     else
       PurchaseErrorCode::PAYPAL_UNAVAILABLE
+    end
+  end
+
+  # Determine the Stripe charge currency. If all purchases in this charge group
+  # share the same buyer_currency (set from IP geolocation), charge in that
+  # currency for local presentment. Otherwise fall back to USD.
+  def determine_charge_currency
+    buyer_currencies = purchases.filter_map(&:buyer_currency).uniq
+    if buyer_currencies.size == 1 && buyer_currencies.first.present?
+      buyer_currencies.first
+    else
+      "usd"
     end
   end
 end

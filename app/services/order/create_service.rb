@@ -160,7 +160,8 @@ class Order::CreateService
           ip_country: GeoIp.lookup(params[:ip_address]).try(:country_name),
           ip_state: GeoIp.lookup(params[:ip_address]).try(:region_name),
           is_mobile: params[:is_mobile],
-          browser_guid: params[:browser_guid]
+          browser_guid: params[:browser_guid],
+          buyer_currency: BuyerCurrencyService.detect_currency(params[:ip_address])
         )
       end
 
