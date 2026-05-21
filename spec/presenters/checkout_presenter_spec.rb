@@ -662,6 +662,7 @@ describe CheckoutPresenter do
                                  }],
                                  pwyw: nil,
                                  price_cents: 0,
+                                 buyer_local_price: nil,
                                  installment_plan: nil,
                                  is_tiered_membership: true,
                                  is_legacy_subscription: false,

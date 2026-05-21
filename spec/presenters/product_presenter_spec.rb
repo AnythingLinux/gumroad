@@ -91,6 +91,7 @@ describe ProductPresenter do
           product: {
             id: product.external_id,
             price_cents: 100,
+            buyer_local_price: nil,
             **ProductPresenter::InstallmentPlanProps.new(product:).props,
             covers: [],
             currency_code: Currency::USD,

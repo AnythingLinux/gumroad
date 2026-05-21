@@ -48,6 +48,7 @@ describe ProductPresenter::ProductProps do
             product: {
               id: product.external_id,
               price_cents: 0,
+              buyer_local_price: nil,
               **ProductPresenter::InstallmentPlanProps.new(product:).props,
               covers: [product.asset_previews.first.as_json],
               currency_code: Currency::USD,
@@ -281,6 +282,7 @@ describe ProductPresenter::ProductProps do
             product: {
               id: product.external_id,
               price_cents: 200,
+              buyer_local_price: nil,
               **ProductPresenter::InstallmentPlanProps.new(product:).props,
               covers: [],
               currency_code: Currency::USD,
