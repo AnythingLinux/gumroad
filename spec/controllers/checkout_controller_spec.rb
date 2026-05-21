@@ -27,6 +27,7 @@ describe CheckoutController, type: :controller, inertia: true do
                                                ca_provinces: Compliance::Countries.subdivisions_for_select(Compliance::Countries::CAN.alpha2).map(&:first),
                                                cart_save_debounce_ms: CheckoutPresenter::CART_SAVE_DEBOUNCE_DURATION_IN_SECONDS.in_milliseconds,
                                                clear_cart: false,
+                                               buyer_currency: nil,
                                                countries: Compliance::Countries.for_select.to_h,
                                                country: nil,
                                                default_tip_option: 0,
