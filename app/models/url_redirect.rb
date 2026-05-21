@@ -289,7 +289,7 @@ class UrlRedirect < ApplicationRecord
   # Mobile specific methods
 
   def product_file_json_data_for_mobile
-    alive_product_files.map do |file|
+    alive_product_files.includes(:link, :media_locations).map do |file|
       mobile_product_file_json_data(file)
     end
   end

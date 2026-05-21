@@ -306,9 +306,13 @@ class ProductFile < ApplicationRecord
 
   def latest_media_location_for(purchase)
     return nil if link.nil? || installment.present? || purchase.nil?
-    latest_media_location = media_locations.where(purchase_id: purchase.id).order("consumed_at").last
+    latest_media_location = if media_locations.loaded?
+      media_locations.select { |ml| ml.purchase_id == purchase.id }.max_by(&:consumed_at)
+    else
+      media_locations.where(purchase_id: purchase.id).order("consumed_at").last
+    end
 
-    latest_media_location.as_json
+    latest_media_location&.as_json
   end
 
   def content_length
