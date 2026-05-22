@@ -507,7 +507,7 @@ def find_and_click(selector, options = {})
 end
 
 def expect_alert_message(text)
-  expect(page).to have_selector("[role=alert]", text:, visible: :all)
+  expect(page).to have_alert(text:, visible: :all)
 end
 
 def expect_404_response(response)
