@@ -105,10 +105,6 @@ RSpec.configure do |config|
   config.filter_gems_from_backtrace("capybara", "playwright", "capybara-playwright-driver")
 
   # Install JS error collector on each new Playwright page
-  config.after(:each, type: :system, js: true) do
-    clear_external_redirects if respond_to?(:clear_external_redirects)
-  end
-
   config.before(:each, type: :system, js: true) do
     if page.driver.respond_to?(:with_playwright_page)
       page.driver.with_playwright_page do |pw_page|
