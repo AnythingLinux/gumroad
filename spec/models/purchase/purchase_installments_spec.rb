@@ -497,6 +497,46 @@ describe "PurchaseInstallments", :vcr do
         expect(new_purchase.update_json_data_for_mobile.map { |post| post[:external_id] }).to match_array [post_1.external_id, post_2.external_id]
       end
     end
+
+    context "eager loading" do
+      it "batch-loads url_redirects, product_files, and email_infos instead of querying per-installment" do
+        product = create(:membership_product)
+        subscription = create(:subscription, link: product)
+        purchase = create(:membership_purchase, link: product, subscription:)
+        subscription.reload
+
+        posts = 3.times.map do |i|
+          post = create(:installment, link: product, published_at: (i + 1).days.ago)
+          create(:product_file, installment: post, link: product)
+          url_redirect = post.generate_url_redirect_for_purchase(purchase)
+          create(:creator_contacting_customers_email_info_sent, purchase:, installment: post, sent_at: i.hours.ago)
+          post
+        end
+
+        purchase.reload
+
+        result = nil
+        queries = []
+        callback = lambda do |_name, _start, _finish, _id, payload|
+          sql = payload[:sql]
+          queries << sql if sql.present? && !sql.start_with?("EXPLAIN")
+        end
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+          result = purchase.update_json_data_for_mobile
+        end
+
+        expect(result.size).to eq(3)
+        expect(result.map { |p| p[:external_id] }).to match_array(posts.map(&:external_id))
+
+        per_installment_url_redirect_queries = queries.count { |q| q.include?("url_redirects") && q.include?("installment_id") && !q.include?("IN") }
+        per_installment_product_file_queries = queries.count { |q| q.include?("product_files") && q.include?("installment_id") && !q.include?("IN") }
+        per_installment_email_info_queries = queries.count { |q| q.include?("email_infos") && q.include?("installment_id") && !q.include?("IN") }
+
+        expect(per_installment_url_redirect_queries).to eq(0)
+        expect(per_installment_product_file_queries).to eq(0)
+        expect(per_installment_email_info_queries).to eq(0)
+      end
+    end
   end
 
   describe "#schedule_workflows" do

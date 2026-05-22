@@ -2298,8 +2298,36 @@ class Purchase < ApplicationRecord
     all_purchases_of_product = link.sales.for_displaying_installments(email:)
 
     posts = self.class.product_installments(purchase_ids: all_purchases_of_product.pluck(:id))
+    return [] if posts.blank?
 
-    posts.map { |post| post.installment_mobile_json_data(purchase: self) }.compact
+    post_ids = posts.map(&:id)
+
+    url_redirects_by_installment_id = UrlRedirect
+      .where(purchase_id: id, installment_id: post_ids)
+      .index_by(&:installment_id)
+
+    product_files_by_installment_id = ProductFile
+      .where(installment_id: post_ids)
+      .alive
+      .in_order
+      .group_by(&:installment_id)
+
+    email_infos_by_installment_id = CreatorContactingCustomersEmailInfo
+      .where(installment_id: post_ids, purchase_id: original_purchase.id)
+      .order(:id)
+      .index_by(&:installment_id)
+
+    posts.each do |post|
+      post.cached_alive_product_files = product_files_by_installment_id[post.id] || []
+    end
+
+    posts.map do |post|
+      post.installment_mobile_json_data(
+        purchase: self,
+        preloaded_purchase_url_redirect: url_redirects_by_installment_id[post.id],
+        preloaded_purchase_email_info: email_infos_by_installment_id[post.id]
+      )
+    end.compact
   end
 
   # Public: Return all installments the customer should see on the content page for a given purchase.
