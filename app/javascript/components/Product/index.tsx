@@ -397,6 +397,7 @@ export const Product = ({
                 isSalesLimited={product.is_sales_limited}
                 creatorName={product.seller?.name}
                 buyerLocalPrice={product.buyer_local_price}
+                basePriceCents={basePriceCents}
               />
             </div>
           ) : null}
