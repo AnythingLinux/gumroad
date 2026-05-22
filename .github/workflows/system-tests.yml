@@ -19,8 +19,19 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request_target' || github.ref != 'refs/heads/main' }}
 
 jobs:
+  ci_gate:
+    name: CI Gate${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && ' (internal PR noop)' || '' }}
+    # Mirrors the gate in tests.yml: fork PRs require manual approval before
+    # any job running with pull_request_target can see secrets. Internal PRs
+    # noop here because the `push` event already covers them.
+    runs-on: ubuntu-22.04
+    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'ci-protected' || '' }}
+    steps:
+      - run: true
+
   test_system:
     name: System Tests${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && ' (internal PR noop)' || '' }}
+    needs: ci_gate
     # Skip on internal PRs that already get covered by the push event on the
     # branch (matches the pattern used in tests.yml).
     if: ${{ github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name != github.repository }}

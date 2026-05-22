@@ -42,16 +42,27 @@ module SystemTests
       @page = @context.new_page
     end
 
+    # Each cleanup step is independent — a Playwright crash closing the page
+    # must not skip the DatabaseCleaner reset, otherwise the next test starts
+    # with leftover rows. `super` is called last so its failure can't strand
+    # the browser context or skip the DB clean either.
     def teardown
+      safely { @page&.close }
+      safely { @context&.close }
+      safely { DatabaseCleaner.clean }
       super
-      @page&.close
-      @context&.close
-      DatabaseCleaner.clean
     end
 
     def url_for(path)
       raise ArgumentError, "path must start with /" unless path.start_with?("/")
       "#{Server.base_url}#{path}"
     end
+
+    private
+      def safely
+        yield
+      rescue StandardError => e
+        Rails.logger.warn("[SystemTestCase teardown] #{e.class}: #{e.message}") if defined?(Rails)
+      end
   end
 end
