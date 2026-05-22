@@ -50,6 +50,12 @@ group :test do
                                        ref: "161b8c5b1a0a5408af914d7544956372e9da2c9e"
   gem "puffing-billy", "~> 4.0.0", require: "billy/capybara/rspec"
   gem "super_diff", "~> 0.12.0", require: false
+
+  # New Minitest + Playwright system-test suite (test/system). Will replace
+  # the RSpec + Capybara + Selenium suite as tests are migrated. No Capybara,
+  # no rspec-rails — Playwright is driven directly via playwright-ruby-client.
+  gem "playwright-ruby-client", "~> 1.60"
+  gem "database_cleaner-active_record", "~> 2.2"
 end
 
 group :deployer do
