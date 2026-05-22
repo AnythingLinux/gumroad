@@ -2,10 +2,14 @@
 
 require_relative "test_helper"
 
-# Login flow — drives the real /login page, including the React form rendered
-# by Vite (autoBuild: true in config/vite.json). No precompile step: Vite
-# builds the login chunk on first request, caches on disk for the rest of the
-# suite. First test in a fresh process is ~5-10s slower; the rest are fast.
+# Login flow — drives the real /login page rendered by React (Inertia).
+# Vite autoBuild compiles the login chunk on first request; cached on disk
+# for the rest of the suite. First test in a fresh process is ~5-10s slower;
+# the rest are fast.
+#
+# Selectors target type-based attributes (type="email"/type="password")
+# because the React form components don't emit name= attributes — they
+# track state via React's useForm hook, not via form-encoded POST fields.
 class LoginTest < SystemTests::SystemTestCase
   PASSWORD = "test-password-123!"
 
@@ -13,8 +17,8 @@ class LoginTest < SystemTests::SystemTestCase
     user = users(:basic_user)
 
     page.goto(url_for("/login"))
-    page.fill('input[name="user[login_identifier]"]', user.email)
-    page.fill('input[name="user[password]"]', PASSWORD)
+    page.fill('input[type="email"]', user.email)
+    page.fill('input[type="password"]', PASSWORD)
     page.click('button[type="submit"]')
 
     # Login redirects to login_path_for(user); the post-login URL varies by
@@ -28,8 +32,8 @@ class LoginTest < SystemTests::SystemTestCase
     user = users(:basic_user)
 
     page.goto(url_for("/login"))
-    page.fill('input[name="user[login_identifier]"]', user.email)
-    page.fill('input[name="user[password]"]', "this-is-not-the-password")
+    page.fill('input[type="email"]', user.email)
+    page.fill('input[type="password"]', "this-is-not-the-password")
     page.click('button[type="submit"]')
 
     page.wait_for_load_state(state: "networkidle")

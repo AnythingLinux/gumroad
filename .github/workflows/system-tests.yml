@@ -99,24 +99,28 @@ jobs:
 
       - name: Install npm dependencies
         # Required because Vite (config/vite.json: autoBuild: true for the
-        # `test` env) lazy-compiles assets on first request. We pre-build
-        # below so the first system test doesn't pay 30-60s of cold compile.
+        # `test` env) lazy-compiles assets on first request. Tests pay a
+        # one-time ~30s cost for the first React route hit; subsequent
+        # hits use the disk cache. Kept identical to dev mode on purpose.
         run: npm ci
 
-      - name: Build Vite assets (test)
-        # Lazy autoBuild on first request takes longer than Playwright's nav
-        # timeout in CI. Pre-building once here makes all tests deterministic
-        # and the JS bundle stays cached on disk for the rest of the job.
-        run: bundle exec bin/vite build --mode=test
+      - name: Prepare database
+        run: bundle exec rake db:prepare
+
+      - name: Generate JS routes + JSON schemas
+        # `rake js:export` (also wrapped by `npm run setup`) generates
+        # app/javascript/utils/routes.js + routes.d.ts and the JSON-schema
+        # TS shims. Both are gitignored, so Vite cold-starts without them
+        # and dies on the first /signup or /login hit ("can't find
+        # entrypoints/design.ts in the manifests" → Vite build fails on
+        # missing utils/routes import). Needs DB ready first.
+        run: bundle exec rake js:export
         env:
           RAILS_ENV: test
 
       - name: Install Playwright Chromium
         timeout-minutes: 5
         run: npx --yes playwright@1.60.0 install --with-deps chromium
-
-      - name: Prepare database
-        run: bundle exec rake db:prepare
 
       - name: Run system tests
         timeout-minutes: 10
