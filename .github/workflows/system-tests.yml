@@ -1,0 +1,102 @@
+name: System Tests (Minitest + Playwright)
+
+# New test/system/ suite. Runs in parallel with the existing RSpec workflow
+# until parity is reached and the old RSpec system suite is deleted.
+
+on:
+  push:
+    branches:
+      - "**"
+    tags-ignore:
+      - "production-*"
+  pull_request_target:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request_target' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request_target' || github.ref != 'refs/heads/main' }}
+
+jobs:
+  test_system:
+    name: System Tests${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && ' (internal PR noop)' || '' }}
+    # Skip on internal PRs that already get covered by the push event on the
+    # branch (matches the pattern used in tests.yml).
+    if: ${{ github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name != github.repository }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: gumroad_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+      elasticsearch:
+        image: elasticsearch:7.17.18
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+        ports:
+          - 9200:9200
+
+    env:
+      RAILS_ENV: test
+      DATABASE_NAME: gumroad_test
+      DATABASE_HOST: 127.0.0.1
+      DATABASE_PORT: 3306
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: ""
+      REDIS_URL: redis://127.0.0.1:6379/0
+      RACK_ATTACK_REDIS_HOST: 127.0.0.1:6379
+      ELASTICSEARCH_URL: http://127.0.0.1:9200
+      BUNDLE_GEMS__CONTRIBSYS__COM: ${{ secrets.BUNDLE_GEMS__CONTRIBSYS__COM }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright Chromium
+        timeout-minutes: 5
+        run: npx --yes playwright@1.60.0 install --with-deps chromium
+
+      - name: Prepare database
+        run: bundle exec rake db:prepare
+
+      - name: Run system tests
+        timeout-minutes: 10
+        run: bin/test-system
+
+      - name: Archive test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-tests-logs-attempt-${{ github.run_attempt }}
+          path: log/
+          retention-days: 7
+          if-no-files-found: ignore
