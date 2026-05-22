@@ -280,13 +280,21 @@ Capybara.modify_selector(:disclosure_button) do
   describe_expression_filters
 end
 
-# Override select_disclosure/toggle_disclosure to handle Radix Popover re-renders.
-# Without forceMount, Radix may re-render content after initial mount (for positioning),
-# invalidating the `within` scope reference. We retry once with a fresh reference.
-# On the second StaleElementReferenceError (from popover closing during the block),
-# the block action already completed, so we can safely continue.
 module CapybaraAccessibleSelectors
+  module PlaywrightRetryableAccessibilityError
+    private
+      def _retryable_accessibility_error?(error)
+        return true if error.is_a?(Capybara::ElementNotFound) || error.is_a?(Capybara::ExpectationNotMet)
+        return true if defined?(Capybara::Playwright::Node::StaleReferenceError) && error.is_a?(Capybara::Playwright::Node::StaleReferenceError)
+        return false unless defined?(Playwright::Error) && error.is_a?(Playwright::Error)
+
+        error.message.match?(/Element is not attached to the DOM|Execution context was destroyed|Cannot find context with specified id|Unable to adopt element handle|Target page, context or browser has been closed/)
+      end
+  end
+
   module Actions
+    include PlaywrightRetryableAccessibilityError
+
     def select_disclosure(name = nil, **find_options, &block)
       button = _locate_disclosure_button(name, **find_options)
       _toggle_disclosure_button(button, true)
@@ -320,10 +328,31 @@ module CapybaraAccessibleSelectors
           block_executed = false
           wrapped_block = proc { block.call; block_executed = true }
           Capybara.page.within(disclosure, &wrapped_block)
-        rescue Capybara::ExpectationNotMet
+        rescue StandardError => e
+          raise unless _retryable_accessibility_error?(e)
           retry if !block_executed && attempts == 1
+          raise unless block_executed
         end
       end
+  end
+
+  module Session
+    include PlaywrightRetryableAccessibilityError
+
+    def within_section(*args, **options, &block)
+      attempts = 0
+      block_executed = false
+      begin
+        attempts += 1
+        section = find(:section, *args, **options)
+        wrapped_block = proc { block_executed = true; block.call }
+        within(section, &wrapped_block)
+      rescue StandardError => e
+        raise unless _retryable_accessibility_error?(e)
+        retry if !block_executed && attempts == 1
+        raise
+      end
+    end
   end
 end
 
