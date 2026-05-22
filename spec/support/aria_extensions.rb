@@ -349,7 +349,7 @@ Capybara.modify_selector(:disclosure_button) do
     # so an additional `XPath.string.n.contains(name)` clause is redundant and would broaden
     # matching (e.g. searching for "Save" would also match buttons labeled "Save changes").
     match_name = XPath.string.n.is(name.to_s) | XPath.attr(:'aria-label').equals(name.to_s)
-    disclosure_state = XPath.attr(:'aria-expanded') | XPath.attr(:'aria-label').equals(name.to_s)
+    disclosure_state = XPath.attr(:'aria-expanded')
     XPath.descendant[[
       (XPath.self(:button) | (XPath.attr(:role) == "button")),
       disclosure_state,
