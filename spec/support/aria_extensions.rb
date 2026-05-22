@@ -463,7 +463,10 @@ module CapybaraAccessibleSelectors
     include PlaywrightRetryableAccessibilityError
 
     def within_modal(...)
-      Capybara.page.within(:modal, ...)
+      # Use page.document.find to escape any within() scope — portaled modals
+      # won't be found inside the scoped parent (e.g. a <section>).
+      modal = Capybara.page.document.find(:modal, ...)
+      Capybara.page.within(modal) { yield }
     end
 
     def within_section(*args, **options, &block)

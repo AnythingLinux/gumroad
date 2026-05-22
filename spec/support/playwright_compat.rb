@@ -290,11 +290,6 @@ module PlaywrightElementHandleCompat
     else result
     end
   end
-      return result
-    rescue StandardError
-      nil
-    end
-  end
 
   # Selenium exposes `css_value(prop)` for computed styles. Playwright doesn't
   # have this method — bridge it via JS getComputedStyle.
