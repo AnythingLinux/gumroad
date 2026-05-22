@@ -89,7 +89,10 @@ end
 
 Capybara.modify_selector(:alert) do
   xpath do |*|
-    XPath.anywhere[XPath.attr(:role) == "alert"]
+    XPath.anywhere[
+      (XPath.attr(:role) == "alert") |
+      ((XPath.attr(:role) == "status") & XPath.ancestor[XPath.attr(:id) == "flash-toast"])
+    ]
   end
 
   visible do |options|
@@ -190,8 +193,8 @@ end
 # support any element with `aria-role` - the default implementation enforces this to be an `input` element
 # replace aria-disabled with inert
 Capybara.modify_selector(:combo_box) do
-  xpath do |locator, **options|
-    xpath = XPath.descendant[XPath.attr(:role) == "combobox"]
+  xpath do |locator, allow_self: nil, **options|
+    xpath = XPath.axis(allow_self ? :"descendant-or-self" : :descendant)[XPath.attr(:role) == "combobox"]
     locate_field(xpath, locator, **options)
   end
 
@@ -280,6 +283,15 @@ Capybara.modify_selector(:combo_box) do
   end
 end
 
+Capybara.modify_selector(:list_box_option) do
+  expression_filter(:disabled, :boolean) do |expr, value|
+    disabled = (XPath.attr(:"aria-disabled") == "true") | XPath.attr(:inert)
+    next expr[disabled] if value
+
+    expr[~disabled]
+  end
+end
+
 # override table_row selector to support colspan
 class Capybara::Selector
   # TODO: This appears not to work - see the empty header workaround in ProductsTable and MembershipsTable. We should investigate and fix the XPath.
@@ -334,9 +346,10 @@ end
 Capybara.modify_selector(:disclosure_button) do
   xpath do |name, **|
     match_name = XPath.string.n.is(name.to_s) | XPath.attr(:'aria-label').equals(name.to_s) | XPath.string.n.contains(name.to_s)
+    disclosure_state = XPath.attr(:'aria-expanded') | XPath.attr(:'aria-label').equals(name.to_s)
     XPath.descendant[[
       (XPath.self(:button) | (XPath.attr(:role) == "button")),
-      XPath.attr(:'aria-expanded'),
+      disclosure_state,
       match_name
     ].reduce(:&)] + XPath.descendant(:summary)[match_name]
   end
@@ -384,6 +397,36 @@ module CapybaraAccessibleSelectors
       button
     end
 
+    def select_combo_box_option(
+      with = nil,
+      from: nil,
+      currently_with: nil,
+      search: with,
+      fill_options: {},
+      **find_options
+    )
+      find_options[:with] = currently_with if currently_with
+      find_options[:allow_self] = true if from.nil?
+      find_option_options = extract_find_option_options(find_options)
+      input = find(:combo_box, from, **find_options)
+
+      if search
+        begin
+          input.set(search, **fill_options)
+        rescue Capybara::NotSupportedByDriverError, Playwright::Error
+          input.click
+        end
+      else
+        input.click
+      end
+
+      listbox = find(:combo_box_list_box, input, **{ wait: find_options[:wait] }.compact)
+      option = listbox.find(:list_box_option, with, disabled: false, **find_option_options)
+      option = option.find(:css, "td", match: :first) if option.tag_name == "tr"
+      option.click
+      input
+    end
+
     private
       def _run_in_disclosure(name, **find_options, &block)
         attempts = 0
@@ -392,11 +435,22 @@ module CapybaraAccessibleSelectors
           disclosure = if is_a?(Capybara::Node::Element) && name.nil?
             _locate_disclosure(name, **find_options)
           else
-            Capybara.page.find(:disclosure, name, **find_options)
+            # Use page.document to escape any within() scope — portaled content
+            # won't be found inside the scoped parent (e.g. a <tr>).
+            Capybara.page.document.find(:disclosure, name, **find_options)
           end
           block_executed = false
           wrapped_block = proc { block.call; block_executed = true }
           Capybara.page.within(disclosure, &wrapped_block)
+        rescue Capybara::ElementNotFound
+          # Radix Popover/DropdownMenu portals don't use aria-controls linking,
+          # so the standard :disclosure selector can't find the content element.
+          # Fall back to the currently-open popover/menu content rendered in a portal.
+          raise if attempts > 1
+          popover = Capybara.page.document.find(:css, "[data-radix-popper-content-wrapper] [role='menu'], [data-radix-popper-content-wrapper] [role='listbox'], [data-radix-popper-content-wrapper]", match: :first, wait: 2)
+          block_executed = false
+          wrapped_block = proc { block.call; block_executed = true }
+          Capybara.page.within(popover, &wrapped_block)
         rescue StandardError => e
           raise unless _retryable_accessibility_error?(e)
           retry if !block_executed && attempts == 1
