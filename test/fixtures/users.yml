@@ -3,10 +3,37 @@
 # the fixture so tests can submit it.
 #
 # Plain passwords (for test submission):
-#   basic_user → "test-password-123!"
+#   basic_user        → "test-password-123!"
+#   suspended_user    → "test-password-123!"  (suspended for TOS violation)
+#   deleted_user      → "test-password-123!"  (soft-deleted account)
 
 basic_user:
   email: basic@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+suspended_user:
+  email: suspended@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: suspended_for_tos_violation
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+deleted_user:
+  email: deleted@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  deleted_at: <%= 2.days.ago %>
+  created_at: <%= 30.days.ago %>
+  updated_at: <%= 2.days.ago %>
+
+referrer_user:
+  email: referrer@example.com
+  username: referrer
+  name: I am a referrer
   encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
   confirmed_at: <%= Time.current %>
   created_at: <%= Time.current %>
