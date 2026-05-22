@@ -56,6 +56,12 @@ group :test do
   # no rspec-rails — Playwright is driven directly via playwright-ruby-client.
   gem "playwright-ruby-client", "~> 1.60"
   gem "database_cleaner-active_record", "~> 2.2"
+
+  # Pin minitest to 5.x. The rubygems index has a stub `minitest 6.0.6` with
+  # no actual code (just metadata + a `bin/minitest` script), and bundler
+  # happily resolves to it for any `>= 5.x` constraint from transitive deps,
+  # which breaks `require "minitest/mock"` and friends.
+  gem "minitest", "~> 5.27"
 end
 
 group :deployer do
