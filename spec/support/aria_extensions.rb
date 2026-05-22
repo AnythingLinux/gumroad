@@ -349,6 +349,8 @@ Capybara.modify_selector(:disclosure_button) do
     # so an additional `XPath.string.n.contains(name)` clause is redundant and would broaden
     # matching (e.g. searching for "Save" would also match buttons labeled "Save changes").
     match_name = XPath.string.n.is(name.to_s) | XPath.attr(:'aria-label').equals(name.to_s)
+    # Require aria-expanded so we only match true disclosure buttons (not arbitrary
+    # buttons that happen to carry a matching aria-label).
     disclosure_state = XPath.attr(:'aria-expanded')
     XPath.descendant[[
       (XPath.self(:button) | (XPath.attr(:role) == "button")),
@@ -478,7 +480,7 @@ module CapybaraAccessibleSelectors
       begin
         attempts += 1
         section = find(:section, *args, **options)
-        wrapped_block = proc { block_executed = true; block.call }
+        wrapped_block = proc { block.call; block_executed = true }
         within(section, &wrapped_block)
       rescue StandardError => e
         raise unless _retryable_accessibility_error?(e)
@@ -488,6 +490,11 @@ module CapybaraAccessibleSelectors
     end
   end
 end
+
+# Re-apply the Session module include so the gem picks up methods (within_section,
+# within_modal) added after the gem's own `Capybara::Session.include` ran at load time.
+Capybara::Session.include(CapybaraAccessibleSelectors::Session)
+Capybara::DSL.include(CapybaraAccessibleSelectors::Session)
 
 module Capybara
   module Node

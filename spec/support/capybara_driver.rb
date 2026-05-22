@@ -68,7 +68,7 @@ Capybara.register_driver :playwright_billy do |app|
     headless: PLAYWRIGHT_HEADLESS,
     launch_options: PLAYWRIGHT_LAUNCH_OPTS.merge(
       proxy: {
-        server: "#{Billy.proxy.host}:#{Billy.proxy.port}",
+        server: "http://#{Billy.proxy.host}:#{Billy.proxy.port}",
       },
     ),
     browser_context_options: {

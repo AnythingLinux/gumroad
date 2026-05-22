@@ -31,11 +31,14 @@ module ProductFileListHelpers
       begin
         page.scroll_to row, align: :center
         row.find("h4").hover
-      rescue Capybara::Playwright::Node::StaleReferenceError
-        # React re-renders the embed during upload progress, causing stale references
-        raise Capybara::ElementNotFound, "Embed element went stale during upload, retrying"
-      rescue Capybara::ExpectationNotMet => e
-        raise if e.message.exclude?("stale") && e.message.exclude?("detached")
+      rescue StandardError => e
+        # React re-renders the embed during upload progress, causing stale references.
+        # Guard the Playwright constant so non-Playwright drivers don't NameError.
+        is_pw_stale = defined?(Capybara::Playwright::Node::StaleReferenceError) &&
+                      e.is_a?(Capybara::Playwright::Node::StaleReferenceError)
+        is_expect_stale = e.is_a?(Capybara::ExpectationNotMet) &&
+                          (e.message.include?("stale") || e.message.include?("detached"))
+        raise unless is_pw_stale || is_expect_stale
         raise Capybara::ElementNotFound, "Embed element went stale during upload, retrying"
       end
       raise Capybara::ElementNotFound, "Upload still in progress" if row.has_selector?("[role='progressbar']", wait: 0)
@@ -68,8 +71,7 @@ module ProductFileListHelpers
 
   def expect_focused(active_el)
     if page.driver.respond_to?(:with_playwright_page)
-      page.driver.with_playwright_page do |pw_page|
-        focused = pw_page.evaluate("document.activeElement")
+      page.driver.with_playwright_page do |_pw_page|
         expect(active_el.native.evaluate("el => el === document.activeElement")).to be true
       end
     else
