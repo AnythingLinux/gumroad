@@ -3005,7 +3005,14 @@ class Purchase < ApplicationRecord
             usd_cents_to_currency(seller_currency, extra_cents_usd, rate_converted_to_usd).round : 0
           self.buyer_currency_amount_cents = displayed_price_cents + extra_cents_local
         else
-          self.buyer_currency_amount_cents = BuyerCurrencyService.convert_price(
+          # Use raw conversion (no smart rounding) for the tax-inclusive total so that:
+          # 1. The Stripe charge matches the frontend display, which converts the USD
+          #    total via the same raw USD→buyer exchange rate (Checkout/index.tsx).
+          # 2. We do not snap a tax-inclusive amount to a .99 / round price point,
+          #    which would silently under- or over-charge tax (compliance issue).
+          # Smart rounding still applies to the per-item displayed product price in
+          # set_price_and_rate — that is the correct surface for psychological pricing.
+          self.buyer_currency_amount_cents = BuyerCurrencyService.convert_price_raw(
             total_transaction_cents,
             from_currency: "usd",
             to_currency: buyer_currency
