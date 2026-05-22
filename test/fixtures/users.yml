@@ -1,0 +1,13 @@
+# Seed users for the test/system suite. Add new entries here as flows need
+# them. Passwords are bcrypt-hashed via Devise; plain text mirrored in
+# the fixture so tests can submit it.
+#
+# Plain passwords (for test submission):
+#   basic_user → "test-password-123!"
+
+basic_user:
+  email: basic@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

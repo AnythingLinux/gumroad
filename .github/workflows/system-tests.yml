@@ -95,6 +95,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      - name: Install npm dependencies
+        # Required because Vite (config/vite.json: autoBuild: true for the
+        # `test` env) lazy-compiles assets on first request. No precompile
+        # step — Vite caches built chunks on disk after the first hit.
+        run: npm ci
 
       - name: Install Playwright Chromium
         timeout-minutes: 5

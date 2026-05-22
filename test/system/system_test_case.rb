@@ -18,6 +18,12 @@ module SystemTests
   class SystemTestCase < ActiveSupport::TestCase
     self.use_transactional_tests = false
 
+    # Use Rails fixtures (DHH-style) instead of FactoryBot. Loaded once per
+    # process; survive DatabaseCleaner truncation because fixture tables are
+    # added to the cleaner's `except` list (see boot_dependencies!).
+    FIXTURE_PATH = Rails.root.join("test", "fixtures")
+    fixtures :all if FIXTURE_PATH.directory? && Dir[FIXTURE_PATH.join("*.yml")].any?
+
     attr_reader :page, :context
 
     # `@booted` on the class itself would live on each concrete subclass
@@ -29,7 +35,13 @@ module SystemTests
       return if SystemTestCase.instance_variable_get(:@boot_dependencies_done)
       Server.boot
       PlaywrightDriver.boot
-      DatabaseCleaner.strategy = :truncation, { except: %w[ar_internal_metadata schema_migrations] }
+      # Keep fixture tables out of the truncate list so the rows loaded once
+      # by `fixtures :all` survive between tests. Schema tables are also
+      # preserved (Rails' default).
+      fixture_tables = Dir[FIXTURE_PATH.join("*.yml")].map { |f| File.basename(f, ".yml") }
+      DatabaseCleaner.strategy = :truncation, {
+        except: %w[ar_internal_metadata schema_migrations] + fixture_tables,
+      }
       SystemTestCase.instance_variable_set(:@boot_dependencies_done, true)
     end
 
