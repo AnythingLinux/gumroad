@@ -70,5 +70,8 @@ RUN mkdir -p /tmp/test-results/ \
 # Install Playwright browsers (chromium) for system specs.
 # Set PLAYWRIGHT_BROWSERS_PATH so browsers are shared across users (root builds, app runs tests).
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN npx playwright install --with-deps chromium
+# Pin Playwright CLI version to match playwright-ruby-client (Gemfile.lock: 1.60.0)
+# so the installed Chromium revision matches what the Ruby client drives.
+# Mismatched revisions can cause subtle protocol errors at runtime.
+RUN npx --yes playwright@1.60.0 install --with-deps chromium
 

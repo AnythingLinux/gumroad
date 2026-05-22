@@ -485,7 +485,10 @@ module CapybaraAccessibleSelectors
       rescue StandardError => e
         raise unless _retryable_accessibility_error?(e)
         retry if !block_executed && attempts == 1
-        raise
+        # If the block already executed successfully and the error came from
+        # within()'s scope-exit cleanup, swallow it — the test work is done.
+        # Mirrors _run_in_disclosure's `raise unless block_executed` semantics.
+        raise unless block_executed
       end
     end
   end

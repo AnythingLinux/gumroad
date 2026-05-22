@@ -148,15 +148,31 @@ module CapybaraHelpers
           "offline" => false, "latency" => 0,
           "downloadThroughput" => throughput, "uploadThroughput" => throughput })
       end
-      yield
-      cdp_client&.send_message("Network.emulateNetworkConditions", params: {
-        "offline" => false, "latency" => 0,
-        "downloadThroughput" => -1, "uploadThroughput" => -1 })
+      begin
+        yield
+      ensure
+        # Must restore in ensure — otherwise an exception in the block leaks throttling
+        # into subsequent tests (Greptile finding).
+        begin
+          cdp_client&.send_message("Network.emulateNetworkConditions", params: {
+            "offline" => false, "latency" => 0,
+            "downloadThroughput" => -1, "uploadThroughput" => -1 })
+        rescue StandardError => e
+          Rails.logger.warn("[with_throttled_network] Failed to restore Playwright throttle: #{e.class}: #{e.message}")
+        end
+      end
     else
       page.driver.browser.execute_cdp("Network.enable")
       page.driver.browser.execute_cdp("Network.emulateNetworkConditions", offline: false, latency: 0, downloadThroughput: throughput, uploadThroughput: throughput)
-      yield
-      page.driver.browser.execute_cdp("Network.emulateNetworkConditions", offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1)
+      begin
+        yield
+      ensure
+        begin
+          page.driver.browser.execute_cdp("Network.emulateNetworkConditions", offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1)
+        rescue StandardError => e
+          Rails.logger.warn("[with_throttled_network] Failed to restore Selenium throttle: #{e.class}: #{e.message}")
+        end
+      end
     end
   end
 
@@ -214,7 +230,15 @@ end
     if page.driver.respond_to?(:with_playwright_page)
       page.driver.with_playwright_page do |pw_page|
         current_url = pw_page.url
-        domain = URI.parse(current_url).host rescue "127.0.0.1"
+        # URI.parse("about:blank").host returns nil (no exception). Playwright's
+        # add_cookies requires a non-nil domain (or a url). Fall back to 127.0.0.1
+        # when current_url is about:blank or otherwise non-http(s).
+        parsed = URI.parse(current_url) rescue nil
+        domain = if parsed && parsed.host && %w[http https].include?(parsed.scheme)
+          parsed.host
+        else
+          "127.0.0.1"
+        end
         pw_page.context.add_cookies([{
           name: name,
           value: value,

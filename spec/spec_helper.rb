@@ -120,7 +120,7 @@ def prepare_mysql
 end
 
 DB_CORRUPTION_PATTERN = /SAVEPOINT.*does not exist|Lost connection|gone away/i
-BROWSER_CORRUPTION_PATTERN = /unpack1|no such window|invalid session id/i
+BROWSER_CORRUPTION_PATTERN = /unpack1|no such window|invalid session id|Target (?:page, context or browser )?has been closed|Browser has been closed|Connection closed|Target closed|browserContext\.close|Playwright connection closed/i
 
 def reset_db_connection(example)
   return unless example.exception&.message&.match?(DB_CORRUPTION_PATTERN)
@@ -352,6 +352,9 @@ RSpec.configure do |config|
       raise unless e.message.include?("unpack1")
 
       Rails.logger.warn("[RSpec] Browser session corrupted during reset: #{e.class}: #{e.message}. Restarting driver.")
+      force_browser_restart!
+    rescue Playwright::Error, Capybara::Playwright::Node::StaleReferenceError => e
+      Rails.logger.warn("[RSpec] Playwright session corrupted during reset: #{e.class}: #{e.message}. Restarting driver.")
       force_browser_restart!
     end
     WebMock.allow_net_connect!
