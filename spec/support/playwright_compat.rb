@@ -64,7 +64,7 @@ module PlaywrightChooseFallback
   private
     def click_deepest_text_match(text, **options)
       candidates = all(:css, "*", text:, exact_text: true, **options.except(:match))
-      candidate = candidates.reverse.find do |element|
+      candidate = candidates.to_a.reverse.find do |element|
         element.text(:all).gsub(/[[:space:]]+/, " ").strip == text &&
           element.all(:css, "*", text:, exact_text: true, wait: false).empty?
       end
@@ -113,8 +113,21 @@ module PlaywrightElementHandleCompat
 
   # Selenium uses `attribute(name)`, Playwright uses `get_attribute(name)`.
   # Bridge the gap so specs calling `.attribute` work with both drivers.
+  # Selenium's `attribute` also returns DOM properties (e.g. `validationMessage`,
+  # `checked`, `value`) when no HTML attribute exists. Playwright's `get_attribute`
+  # only returns HTML attributes. Fall back to JS property access for compat.
   def attribute(name)
-    get_attribute(name)
+    val = get_attribute(name)
+    return val unless val.nil?
+
+    # Try DOM property access (covers validationMessage, checked, value, etc.)
+    evaluate("el => { const v = el[el.__propName]; return v === undefined ? null : String(v) }".sub("el.__propName", "el['#{name}']")) rescue nil
+  end
+
+  # Selenium exposes `css_value(prop)` for computed styles. Playwright doesn't
+  # have this method — bridge it via JS getComputedStyle.
+  def css_value(property)
+    evaluate("el => getComputedStyle(el).getPropertyValue('#{property}')") rescue nil
   end
 end
 
