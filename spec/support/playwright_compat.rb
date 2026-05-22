@@ -107,26 +107,30 @@ module PlaywrightFillInCompat
     field = find(:fillable_field, locator, **find_options)
     value = playwright_fill_value(field, with)
 
-    if playwright_type_fill?(field, value, fill_options)
-      playwright_type_fill(field, value)
-    else
-      begin
-        field.set(value, **fill_options)
-      rescue Playwright::Error => e
-        raise unless playwright_temporal_input?(field) && e.message.match?(/malformed/i)
-
-        playwright_type_fill(field, value)
-      end
-    end
+    perform_playwright_fill(field, value, fill_options)
   rescue Capybara::Playwright::Node::StaleReferenceError
     # React re-render detached the field — re-find and retry once
     sleep 0.15
     field = find(:fillable_field, locator, **find_options)
     value = playwright_fill_value(field, with)
-    field.set(value, **fill_options)
+    perform_playwright_fill(field, value, fill_options)
   end
 
   private
+    def perform_playwright_fill(field, value, fill_options)
+      if playwright_type_fill?(field, value, fill_options)
+        playwright_type_fill(field, value)
+      else
+        begin
+          field.set(value, **fill_options)
+        rescue Playwright::Error => e
+          raise unless playwright_temporal_input?(field) && e.message.match?(/malformed/i)
+
+          playwright_type_fill(field, value)
+        end
+      end
+    end
+
     def playwright_driver?
       Capybara.current_session.driver.respond_to?(:with_playwright_page)
     end
