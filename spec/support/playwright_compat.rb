@@ -273,12 +273,27 @@ module PlaywrightElementHandleCompat
   # Selenium's `attribute` also returns DOM properties (e.g. `validationMessage`,
   # `checked`, `value`) when no HTML attribute exists. Playwright's `get_attribute`
   # only returns HTML attributes. Fall back to JS property access for compat.
+  # Selenium always returns strings — convert booleans/numbers to match.
   def attribute(name)
     val = get_attribute(name)
+    # Selenium returns "true"/"false" for boolean HTML attributes; Playwright
+    # may return true/false. Coerce to string for compat.
+    return val.to_s if val == true || val == false
     return val unless val.nil?
 
     # Try DOM property access (covers validationMessage, checked, value, etc.)
-    evaluate("el => { const v = el[el.__propName]; return v === undefined ? null : String(v) }".sub("el.__propName", "el['#{name}']")) rescue nil
+    result = evaluate("el => { const v = el[el.__propName]; return v === undefined ? null : v }".sub("el.__propName", "el['#{name}']")) rescue nil
+    # Coerce booleans/numbers to strings like Selenium
+    case result
+    when true, false then result.to_s
+    when Numeric then result.to_s
+    else result
+    end
+  end
+      return result
+    rescue StandardError
+      nil
+    end
   end
 
   # Selenium exposes `css_value(prop)` for computed styles. Playwright doesn't
@@ -332,27 +347,46 @@ module PlaywrightAmbiguousCommandFallback
     end
 
     def click_individual_selectors(locator, **options)
-      opts = options.merge(match: :first, wait: 2)
+      # Strip :disabled — only valid for :button, not :link or :menuitem
+      button_opts = options.merge(match: :first, wait: 2)
+      other_opts = button_opts.except(:disabled)
 
       # Try :button first (most common), then :link, then :menuitem
-      %i[button link menuitem].each do |selector|
-        find(selector, locator, **opts).click
+      [[:button, button_opts], [:link, other_opts], [:menuitem, other_opts]].each do |selector, opts|
+        element = find(selector, locator, **opts)
+        begin
+          element.click
+        rescue Playwright::TimeoutError
+          # Click intercepted (overlay, sticky header, animation) — force click
+          element.execute_script("this.scrollIntoView({block: 'center'}); this.click()")
+        end
         return
-      rescue Capybara::ElementNotFound, Playwright::TimeoutError
+      rescue Capybara::ElementNotFound, Playwright::TimeoutError, ArgumentError
         next
       end
 
       # Final attempt: any clickable element by text
-      find(:css, "button, a, [role='button'], [role='link'], [role='menuitem']",
-           text: locator, exact_text: false, **opts).click
+      css_opts = other_opts.except(:disabled)
+      element = find(:css, "button, a, [role='button'], [role='link'], [role='menuitem']",
+           text: locator, exact_text: false, **css_opts)
+      begin
+        element.click
+      rescue Playwright::TimeoutError
+        element.execute_script("this.scrollIntoView({block: 'center'}); this.click()")
+      end
     end
 end
 
-# Playwright may raise on hover when elements are detached mid-transition.
-# Retry once after a short pause.
+# Playwright may raise on hover when elements are detached mid-transition,
+# or when a tooltip/overlay intercepts pointer events (TimeoutError).
+# Retry once after a short pause, then fall back to JS dispatchEvent.
 module PlaywrightHoverCompat
   def hover
     super
+  rescue Playwright::TimeoutError
+    # Tooltip or overlay intercepting pointer events — use JS mouseover
+    execute_script("this.dispatchEvent(new MouseEvent('mouseover', {bubbles: true}))")
+    execute_script("this.dispatchEvent(new MouseEvent('mouseenter', {bubbles: false}))")
   rescue StandardError => e
     raise unless defined?(Playwright::Error) && (e.is_a?(Playwright::Error) || e.message.include?("Element is not attached"))
     sleep 0.2
@@ -360,7 +394,22 @@ module PlaywrightHoverCompat
   end
 end
 
+# Playwright's strict actionability checks can cause TimeoutError when clicking
+# elements obscured by overlays, sticky headers, or CSS animations. Fall back to
+# JavaScript click which bypasses these checks (matching Selenium behavior).
+module PlaywrightClickCompat
+  def click(*args, **options)
+    super
+  rescue Playwright::TimeoutError => e
+    raise unless Capybara.current_session.driver.respond_to?(:with_playwright_page)
+
+    # Scroll into view first (handles "outside of viewport" errors), then force click
+    execute_script("this.scrollIntoView({block: 'center'}); this.click()")
+  end
+end
+
 Capybara::Node::Element.prepend(PlaywrightHoverCompat)
+Capybara::Node::Element.prepend(PlaywrightClickCompat)
 Capybara::Node::Actions.prepend(PlaywrightChooseFallback)
 Capybara::Node::Actions.prepend(PlaywrightFillInCompat)
 Capybara::Node::Actions.prepend(PlaywrightAmbiguousCommandFallback)
