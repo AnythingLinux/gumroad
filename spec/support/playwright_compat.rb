@@ -15,9 +15,11 @@ module PlaywrightChooseFallback
   def choose(locator = nil, **options)
     super
   rescue Playwright::Error, Playwright::TimeoutError => e
-    raise if e.is_a?(Playwright::Error) && !(e.message.include?("not an <input>") ||
-                 e.message.include?("role allowing") ||
-                 e.message.include?("contenteditable"))
+    raise if e.is_a?(Playwright::Error) &&
+             !e.is_a?(Playwright::TimeoutError) &&
+             !(e.message.include?("not an <input>") ||
+               e.message.include?("role allowing") ||
+               e.message.include?("contenteditable"))
 
     raise ArgumentError, "choose fallback requires a locator" unless locator
 
