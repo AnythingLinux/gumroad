@@ -2,7 +2,6 @@
 
 require_relative "../test_helper"
 require "playwright"
-require "rack/handler/puma"
 require "database_cleaner/active_record"
 require "factory_bot"
 

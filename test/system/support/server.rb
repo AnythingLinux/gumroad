@@ -26,15 +26,16 @@ module SystemTests
       end
 
       def port
-        @port ||= find_free_port
+        @port ||= @server&.connected_ports&.first
       end
 
       private
+        # Bind to port 0 inside Puma so the kernel picks a free port and Puma
+        # immediately holds the socket — no TOCTOU window between "pick port" and
+        # "listen on it." After Puma binds, `connected_ports` tells us what it got.
         def start
-          # Puma 6 dropped Puma::Events; use LogWriter.null to silence the
-          # server's own output (Rails logs still flow to log/test.log).
           @server = Puma::Server.new(Rails.application, nil, log_writer: Puma::LogWriter.null)
-          @server.add_tcp_listener(HOST, port)
+          @server.add_tcp_listener(HOST, 0)
           @thread = Thread.new { @server.run.join }
           wait_until_ready
         end
@@ -44,20 +45,18 @@ module SystemTests
           @thread&.join(5)
         end
 
+        # Rescue every transient socket error we've seen during the Puma boot
+        # window, not just ECONNREFUSED — under load we've hit EADDRNOTAVAIL,
+        # ETIMEDOUT, and even ECONNRESET as the accept loop starts up.
         def wait_until_ready
           deadline = Time.now + 10
           loop do
             TCPSocket.new(HOST, port).close
             return
-          rescue Errno::ECONNREFUSED
+          rescue Errno::ECONNREFUSED, Errno::EADDRNOTAVAIL, Errno::ETIMEDOUT, Errno::ECONNRESET, IO::TimeoutError
             raise "Test server failed to start on #{HOST}:#{port}" if Time.now > deadline
             sleep 0.05
           end
-        end
-
-        def find_free_port
-          server = TCPServer.new(HOST, 0)
-          server.addr[1].tap { server.close }
         end
     end
   end

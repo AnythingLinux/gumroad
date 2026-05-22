@@ -20,14 +20,17 @@ module SystemTests
 
     attr_reader :page, :context
 
-    class << self
-      def boot_dependencies!
-        return if @booted
-        Server.boot
-        PlaywrightDriver.boot
-        DatabaseCleaner.strategy = :truncation, { except: %w[ar_internal_metadata schema_migrations] }
-        @booted = true
-      end
+    # `@booted` on the class itself would live on each concrete subclass
+    # (FooTest, BarTest), so the body would run once per test class instead
+    # of once per process. Track it module-side so it's truly global.
+    @boot_dependencies_done = false
+
+    def self.boot_dependencies!
+      return if SystemTestCase.instance_variable_get(:@boot_dependencies_done)
+      Server.boot
+      PlaywrightDriver.boot
+      DatabaseCleaner.strategy = :truncation, { except: %w[ar_internal_metadata schema_migrations] }
+      SystemTestCase.instance_variable_set(:@boot_dependencies_done, true)
     end
 
     def setup
