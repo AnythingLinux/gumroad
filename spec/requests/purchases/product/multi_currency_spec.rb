@@ -57,7 +57,9 @@ describe "Multi-currency checkout", type: :system, js: true do
         allow_any_instance_of(ActionDispatch::Request).to receive(:remote_ip).and_return("81.2.69.142") # UK → GBP
         stub_currency_conversion("usd", "gbp", rate: 0.79)
 
-        visit checkout_path(product.unique_permalink)
+        visit short_link_path(product.unique_permalink)
+        add_to_cart(product)
+        visit checkout_path
         expect(page).to have_text("£")
       end
     end
@@ -65,7 +67,9 @@ describe "Multi-currency checkout", type: :system, js: true do
     context "when multi_currency_checkout flag is disabled" do
       it "shows USD on checkout regardless of buyer location" do
         allow_any_instance_of(ActionDispatch::Request).to receive(:remote_ip).and_return("81.2.69.142") # UK
-        visit checkout_path(product.unique_permalink)
+        visit short_link_path(product.unique_permalink)
+        add_to_cart(product)
+        visit checkout_path
         expect(page).to have_text("$100")
       end
     end
