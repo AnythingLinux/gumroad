@@ -4,13 +4,30 @@ require("spec_helper")
 
 describe("Product checkout - with affiliate", type: :system, js: true) do
   def set_affiliate_cookie
-    browser = Capybara.current_session.driver.browser
-    browser.manage.add_cookie(name: CGI.escape(affiliate.cookie_key), value: {
+    cookie_name = CGI.escape(affiliate.cookie_key)
+    cookie_value = {
       value: Time.current.to_i,
       expires: affiliate.class.cookie_lifetime.from_now,
       httponly: true,
       domain: :all
-    }.to_json)
+    }.to_json
+
+    driver = Capybara.current_session.driver
+    if driver.respond_to?(:with_playwright_page)
+      # Playwright: use browser_context.add_cookies
+      driver.with_playwright_page do |pw_page|
+        pw_page.context.add_cookies([{
+          name: cookie_name,
+          value: cookie_value,
+          domain: Capybara.current_session.server&.host || "127.0.0.1",
+          path: "/"
+        }])
+      end
+    else
+      # Selenium fallback
+      browser = driver.browser
+      browser.manage.add_cookie(name: cookie_name, value: cookie_value)
+    end
   end
 
   shared_examples "credits the affiliate via a query param in the URL" do

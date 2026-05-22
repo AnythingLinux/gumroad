@@ -11,10 +11,10 @@
 module PlaywrightChooseFallback
   def choose(locator = nil, **options)
     super
-  rescue Playwright::Error => e
-    raise unless e.message.include?("not an <input>") ||
+  rescue Playwright::Error, Playwright::TimeoutError => e
+    raise if e.is_a?(Playwright::Error) && !(e.message.include?("not an <input>") ||
                  e.message.include?("role allowing") ||
-                 e.message.include?("contenteditable")
+                 e.message.include?("contenteditable"))
 
     raise ArgumentError, "choose fallback requires a locator" unless locator
 
@@ -85,7 +85,17 @@ module PlaywrightFillInCompat
       field.execute_script("this.focus(); this.select();")
       field.send_keys(:backspace, with.to_s)
     else
-      field.set(with, **fill_options)
+      begin
+        field.set(with, **fill_options)
+      rescue Playwright::Error => e
+        raise unless e.message.include?("Malformed") || e.message.include?("malformed")
+
+        # Playwright rejects values for date/time/datetime-local inputs that
+        # don't match the expected format. Fall back to clearing and typing
+        # the value via keyboard, which lets the browser parse it naturally.
+        field.execute_script("this.focus(); this.select();")
+        field.send_keys(:backspace, with.to_s)
+      end
     end
   end
 
@@ -144,6 +154,13 @@ module PlaywrightAmbiguousCommandFallback
     raise unless playwright_driver?
 
     click_first_command(locator, **options)
+  rescue Playwright::TimeoutError
+    raise unless playwright_driver?
+
+    # The union :command selector (button+link+menuitem+tab_button) can be
+    # slow in Playwright, causing timeouts. Try individual selectors which
+    # are faster and more targeted.
+    click_individual_selectors(locator, **options)
   end
 
   def click_on(locator = nil, **options)
@@ -152,6 +169,10 @@ module PlaywrightAmbiguousCommandFallback
     raise unless playwright_driver?
 
     click_first_command(locator, **options)
+  rescue Playwright::TimeoutError
+    raise unless playwright_driver?
+
+    click_individual_selectors(locator, **options)
   end
 
   private
@@ -161,6 +182,24 @@ module PlaywrightAmbiguousCommandFallback
 
     def click_first_command(locator, **options)
       find(:command, locator, **options.merge(match: :first)).click
+    end
+
+    def click_individual_selectors(locator, **options)
+      opts = options.merge(match: :first, wait: 2)
+
+      # Try :button first (most common), then :link, then :menuitem
+      %i[button link menuitem].each do |selector|
+        begin
+          find(selector, locator, **opts).click
+          return
+        rescue Capybara::ElementNotFound, Playwright::TimeoutError
+          next
+        end
+      end
+
+      # Final attempt: any clickable element by text
+      find(:css, "button, a, [role='button'], [role='link'], [role='menuitem']",
+           text: locator, exact_text: false, **opts).click
     end
 end
 
