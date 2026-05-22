@@ -238,6 +238,19 @@ export const Checkout = ({
     if (!buyerCurrency || buyerCurrency === "usd" || !buyerCurrencyUsdExchangeRate) return null;
     return Math.round(total * buyerCurrencyUsdExchangeRate);
   })();
+  // Format a breakdown amount in the same currency as the Total row. When the
+  // buyer is paying in a non-USD currency with a known exchange rate, scale the
+  // USD cents by the same rate used for `localTotal` so the breakdown matches
+  // what the buyer will be charged. Otherwise fall back to USD formatting.
+  const formatBreakdownPrice = (usdCents: number) => {
+    if (localTotal != null && buyerCurrency && buyerCurrencyUsdExchangeRate) {
+      return formatPriceCentsWithCurrencySymbol(buyerCurrency, Math.round(usdCents * buyerCurrencyUsdExchangeRate), {
+        symbolFormat: "long",
+        noCentsIfWhole: true,
+      });
+    }
+    return formatPrice(usdCents);
+  };
   const visibleDiscounts = cart.discountCodes.filter(
     (code) =>
       !code.fromUrl ||
@@ -410,18 +423,20 @@ export const Checkout = ({
                       <div className="grid gap-4 border-t border-border p-4">
                         <CartPriceItem
                           title="Payment today"
-                          price={formatPrice(total - commissionCompletionTotal - futureInstallmentsWithoutTipsTotal)}
+                          price={formatBreakdownPrice(
+                            total - commissionCompletionTotal - futureInstallmentsWithoutTipsTotal,
+                          )}
                         />
                         {commissionCompletionTotal > 0 ? (
                           <CartPriceItem
                             title="Payment after completion"
-                            price={formatPrice(commissionCompletionTotal)}
+                            price={formatBreakdownPrice(commissionCompletionTotal)}
                           />
                         ) : null}
                         {futureInstallmentsWithoutTipsTotal > 0 ? (
                           <CartPriceItem
                             title="Future installments"
-                            price={formatPrice(futureInstallmentsWithoutTipsTotal)}
+                            price={formatBreakdownPrice(futureInstallmentsWithoutTipsTotal)}
                           />
                         ) : null}
                       </div>
