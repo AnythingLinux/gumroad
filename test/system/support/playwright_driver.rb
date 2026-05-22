@@ -22,7 +22,11 @@ module SystemTests
 
       def boot
         @boot ||= begin
-          @playwright = Playwright.create(playwright_cli_executable_path: cli_path).playwright
+          # Hold the Execution object (`@playwright_execution`) separately from
+          # the API root (`@playwright`). `.stop` is implemented on the
+          # Execution; calling it on the API root raises NotImplementedError.
+          @playwright_execution = Playwright.create(playwright_cli_executable_path: cli_path)
+          @playwright = @playwright_execution.playwright
           @browser = @playwright.chromium.launch(headless: HEADLESS, slowMo: SLOW_MO_MS)
           at_exit { teardown }
           true
@@ -32,7 +36,7 @@ module SystemTests
       private
         def teardown
           @browser&.close
-          @playwright&.stop
+          @playwright_execution&.stop
         end
 
         def cli_path
