@@ -37,6 +37,10 @@ RSpec.configure do |config|
         "192.206.151.131" => { country: "Canada", code: "CA", region: "ON", city: "Toronto", postal: "M5H 2N2" },
         "104.163.219.131" => { country: "Canada", code: "CA", region: "QC", city: "Montreal", postal: "H1A 0A1" },
 
+        # Common test IPs
+        "8.8.8.8" => { country: "United States", code: "US", region: "CA", city: "Mountain View", postal: "94035" },
+        "81.2.69.142" => { country: "United Kingdom", code: "GB", region: "ENG", city: "London", postal: "SE1 8XX" },
+
         # Europe
         "2.47.255.255" => { country: "Italy", code: "IT", region: "RM", city: "Rome", postal: "00100" },
         "93.99.163.13" => { country: "Czechia", code: "CZ", region: "10", city: "Prague", postal: "11000" },
