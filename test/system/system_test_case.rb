@@ -35,6 +35,13 @@ module SystemTests
       return if SystemTestCase.instance_variable_get(:@boot_dependencies_done)
       Server.boot
       PlaywrightDriver.boot
+      # Disable client-side recaptcha gates so the React forms don't try to
+      # load Google's grecaptcha JS (which would hang the page in CI).
+      # Server-side `valid_recaptcha_response?` already returns true in
+      # Rails.env.test? (see ValidateRecaptcha concern), so this only flips
+      # the frontend off. Matches the login pattern that already exists.
+      Feature.activate(:disable_login_recaptcha)
+      Feature.activate(:disable_signup_recaptcha)
       # Keep fixture tables out of the truncate list so the rows loaded once
       # by `fixtures :all` survive between tests. Schema tables are also
       # preserved (Rails' default).

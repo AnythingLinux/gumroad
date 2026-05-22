@@ -6,19 +6,32 @@ require_relative "test_helper"
 # Vite builds the signup chunk on first request (autoBuild: true in
 # config/vite.json).
 #
-# We only test the existing-email branch because the happy-path signup is
-# gated by reCAPTCHA verification in test env (RECAPTCHA_SIGNUP_SITE_KEY
-# is set; controller bypasses captcha only in development with a blank
-# key). Existing RSpec coverage stubs this via VCR cassettes; system
-# tests can't reach inside the controller without RSpec mocks. The
-# existing-email branch exercises the full form round-trip (Inertia
-# render → React form → POST → controller bounce) without needing a
-# valid captcha response.
+# This test only covers the email+password happy path. The full signup
+# controller can also accept card data + referral params, but those branches
+# require Stripe + worker-side execution and aren't smoke-test material.
+#
+# Captcha: SystemTestCase enables the :disable_signup_recaptcha feature
+# flag, which makes AuthPresenter return recaptcha_site_key: nil. The
+# React form's handleSubmit skips recaptcha.execute() when the key is
+# nil, so no Google JS gets loaded and the form POSTs directly. The
+# server-side check (ValidateRecaptcha) already short-circuits to true
+# in Rails.env.test?, so the controller accepts the request without a
+# token. Matches how login already works in test.
 #
 # Selectors target type-based attributes (type="email"/type="password")
 # because the React form components don't emit name= attributes — they
 # track state via React's useForm hook, not via form-encoded POST fields.
 class SignupTest < SystemTests::SystemTestCase
+  def test_new_user_signs_up_successfully
+    page.goto(url_for("/signup"))
+    page.fill('input[type="email"]', "new-user-#{SecureRandom.hex(4)}@example.com")
+    page.fill('input[type="password"]', "newpass-#{SecureRandom.hex(6)}!")
+    page.click('button[type="submit"]')
+
+    page.wait_for_load_state(state: "networkidle")
+    refute_match %r{/signup\b}, page.url, "expected redirect away from /signup after successful signup, got #{page.url}"
+  end
+
   def test_signup_with_existing_email_redirects_back_with_error
     existing = users(:basic_user)
 
