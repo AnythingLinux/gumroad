@@ -124,21 +124,14 @@ jobs:
 
       - name: Start Vite dev server
         # Long-running dev daemon — matches local dev (`foreman start`).
-        # autoBuild=true (config/vite.json test env) spawns a fresh build
-        # subprocess per request; under CI's pipe semantics those subprocesses
-        # close their stdout mid-stream and the vite_ruby IO threads die with
-        # "stream closed in another thread", which knocks out subsequent
-        # requests and times out Playwright. A persistent `bin/vite dev`
-        # keeps the pipes open and serves chunks incrementally, exactly like
-        # local development. vite_ruby auto-detects the running dev server
-        # on port 3037 and routes asset URLs through it.
+        # The binstub execs node_modules/.bin/vite directly for dev mode so
+        # stderr reaches this log and the long-running Vite process owns the
+        # background PID. A persistent dev server avoids vite_ruby autoBuild's
+        # per-request subprocesses and keeps system tests aligned with local
+        # development mode.
         run: |
           mkdir -p log tmp
-          # stdbuf forces line-buffered stdout/stderr so npm/vite progress hits
-          # the log file immediately (without a TTY they default to fully
-          # buffered, which makes the log appear empty even while Vite is
-          # mid-startup — pre-bundling deps on a cold runner can take 60-120s).
-          nohup stdbuf -oL -eL bin/vite dev --mode test --host 127.0.0.1 \
+          nohup stdbuf -oL -eL bin/vite dev --mode test --host 127.0.0.1 --clearScreen false \
             > log/vite-dev.log 2>&1 &
           echo $! > tmp/vite-dev.pid
           for i in $(seq 1 180); do
@@ -147,6 +140,12 @@ jobs:
               echo "=== vite-dev.log ==="
               cat log/vite-dev.log
               exit 0
+            fi
+            if ! kill -0 "$(cat tmp/vite-dev.pid)" 2>/dev/null; then
+              echo "vite dev exited before becoming ready after ${i}s"
+              echo "=== vite-dev.log ==="
+              cat log/vite-dev.log
+              exit 1
             fi
             # Print progress every 30s so a hung startup is debuggable.
             if [ $((i % 30)) -eq 0 ]; then
@@ -164,10 +163,15 @@ jobs:
           exit 1
         env:
           RAILS_ENV: test
+          VITE_RUBY_HOST: 127.0.0.1
+          VITE_RUBY_TEST_DEV_SERVER: "true"
 
       - name: Run system tests
         timeout-minutes: 10
         run: bin/test-system
+        env:
+          VITE_RUBY_HOST: 127.0.0.1
+          VITE_RUBY_TEST_DEV_SERVER: "true"
 
       - name: Archive test logs
         if: always()
