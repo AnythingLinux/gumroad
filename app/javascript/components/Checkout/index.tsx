@@ -740,10 +740,15 @@ const CartItemComponent = ({
             convertToUSD(item, price),
             item.product.buyer_local_price?.currency_code,
             item.product.buyer_local_price?.exchange_rate,
-            // buyer_local_price.price_cents is the per-unit smart-rounded price;
-            // multiply by quantity to get the line-item total. Skip the
-            // smart-rounded path when free-trial zeros the price.
-            item.product.buyer_local_price?.price_cents != null && !hasFreeTrial(item, isGift)
+            // buyer_local_price.price_cents is the per-unit smart-rounded base
+            // price. Only reuse it when the line price matches the base — i.e.
+            // no variant/PWYW/discount adjustment. Otherwise pass null so
+            // formatLocalPrice falls back to Math.round(usdCents * exchangeRate),
+            // matching the PriceTag isDiscounted logic. Also skip when free-trial
+            // zeros the price.
+            item.product.buyer_local_price?.price_cents != null &&
+              !hasFreeTrial(item, isGift) &&
+              item.price === item.product.price_cents
               ? item.product.buyer_local_price.price_cents * item.quantity
               : null,
           )}
