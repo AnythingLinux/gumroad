@@ -80,6 +80,7 @@ type CheckoutIndexPageProps = {
     add_products: ProductToAdd[];
     address: { street: string | null; city: string | null; zip: string | null } | null;
     buyer_currency: CurrencyCode | null;
+    buyer_currency_usd_exchange_rate: number | null;
     ca_provinces: string[];
     cart_save_debounce_ms: number;
     clear_cart: boolean;
@@ -164,6 +165,7 @@ const CheckoutIndexPage = () => {
       tip_options,
       default_tip_option,
       buyer_currency,
+      buyer_currency_usd_exchange_rate,
     },
     ...props
   } = typia.assert<CheckoutIndexPageProps>(usePage().props);
@@ -682,6 +684,7 @@ const CheckoutIndexPage = () => {
           updateCart={(updated) => cartForm.setData((prev) => ({ cart: { ...prev.cart, ...updated } }))}
           recommendedProducts={props.recommended_products ?? null}
           buyerCurrency={buyer_currency}
+          buyerCurrencyUsdExchangeRate={buyer_currency_usd_exchange_rate}
         />
       )}
       {currentOffer && surchargesIfAccepted ? (

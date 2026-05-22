@@ -286,6 +286,7 @@ const CtaBar = ({
           currencyCode={product.currency_code}
           oldPrice={discountedPriceCents < priceCents ? priceCents : undefined}
           price={discountedPriceCents}
+          basePriceCents={priceCents}
           url={product.long_url}
           recurrence={
             product.recurrences

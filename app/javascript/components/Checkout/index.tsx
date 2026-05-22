@@ -132,12 +132,14 @@ export const Checkout = ({
   updateCart,
   recommendedProducts,
   buyerCurrency,
+  buyerCurrencyUsdExchangeRate,
 }: {
   discoverUrl: string;
   cart: CartState;
   updateCart: (updated: Partial<CartState>) => void;
   recommendedProducts?: CardProduct[] | null;
   buyerCurrency?: CurrencyCode | null;
+  buyerCurrencyUsdExchangeRate?: number | null;
 }) => {
   const [state] = useState();
   const [newDiscountCode, setNewDiscountCode] = React.useState("");
@@ -226,19 +228,15 @@ export const Checkout = ({
 
   const total = getTotalPrice(state);
 
-  // Compute local-currency total by summing smart-rounded local prices per item.
-  // This ensures the total matches the sum of displayed line-item prices.
+  // Compute local-currency total by converting the full USD total at the
+  // USD→buyer exchange rate. This automatically includes discounts, taxes,
+  // shipping, and tips, since those are all baked into `total`. Using a single
+  // USD-to-buyer rate (rather than per-item smart-rounded prices) ensures the
+  // displayed total matches the actual Stripe charge amount computed server
+  // side from total_transaction_cents.
   const localTotal = (() => {
-    const exchangeRate = cart.items[0]?.product.buyer_local_price?.exchange_rate;
-    if (!buyerCurrency || buyerCurrency === "usd" || !exchangeRate) return null;
-    return cart.items.reduce((sum, item) => {
-      const localPrice = item.product.buyer_local_price;
-      if (localPrice?.price_cents != null) {
-        return sum + localPrice.price_cents * item.quantity;
-      }
-      // Fallback: convert USD price at exchange rate for items without smart-rounded price
-      return sum + Math.round(convertToUSD(item, item.price) * exchangeRate) * item.quantity;
-    }, 0) + Math.round(computeTip(state) * exchangeRate);
+    if (!buyerCurrency || buyerCurrency === "usd" || !buyerCurrencyUsdExchangeRate) return null;
+    return Math.round(total * buyerCurrencyUsdExchangeRate);
   })();
   const visibleDiscounts = cart.discountCodes.filter(
     (code) =>
@@ -394,15 +392,18 @@ export const Checkout = ({
                     <footer className="grid gap-4 border-t border-border p-4 sm:px-5">
                       <CartPriceItem
                         title="Total"
-                        price={localTotal != null && buyerCurrency
-                          ? formatPriceCentsWithCurrencySymbol(buyerCurrency, localTotal, { symbolFormat: "long", noCentsIfWhole: true })
-                          : formatPrice(total)}
+                        price={
+                          localTotal != null && buyerCurrency
+                            ? formatPriceCentsWithCurrencySymbol(buyerCurrency, localTotal, {
+                                symbolFormat: "long",
+                                noCentsIfWhole: true,
+                              })
+                            : formatPrice(total)
+                        }
                         variant="large"
                       />
                       {localTotal != null && buyerCurrency && buyerCurrency !== "usd" ? (
-                        <p className="text-xs text-muted">
-                          You&apos;ll be charged in {buyerCurrency.toUpperCase()}.
-                        </p>
+                        <p className="text-xs text-muted">You&apos;ll be charged in {buyerCurrency.toUpperCase()}.</p>
                       ) : null}
                     </footer>
                     {commissionCompletionTotal > 0 || futureInstallmentsWithoutTipsTotal > 0 ? (
@@ -739,7 +740,12 @@ const CartItemComponent = ({
             convertToUSD(item, price),
             item.product.buyer_local_price?.currency_code,
             item.product.buyer_local_price?.exchange_rate,
-            item.product.buyer_local_price?.price_cents,
+            // buyer_local_price.price_cents is the per-unit smart-rounded price;
+            // multiply by quantity to get the line-item total. Skip the
+            // smart-rounded path when free-trial zeros the price.
+            item.product.buyer_local_price?.price_cents != null && !hasFreeTrial(item, isGift)
+              ? item.product.buyer_local_price.price_cents * item.quantity
+              : null,
           )}
         </span>
         {hasFreeTrial(item, isGift) && item.product.free_trial ? (

@@ -25,10 +25,19 @@ type Props = {
   isSalesLimited: boolean;
   creatorName?: string | undefined;
   tooltipPosition?: "top" | "right";
-  buyerLocalPrice?: {
-    currency_code: CurrencyCode;
-    price_cents: number;
-  } | null;
+  buyerLocalPrice?:
+    | {
+        currency_code: CurrencyCode;
+        price_cents: number;
+        exchange_rate: number;
+      }
+    | null
+    | undefined;
+  // Base (undiscounted) price in seller currency cents. When provided and it
+  // differs from `price`, we treat `price` as discounted and apply the
+  // exchange rate to it for buyer-local display, instead of using the
+  // pre-converted (full-price) `buyerLocalPrice.price_cents`.
+  basePriceCents?: number;
 };
 
 export const PriceTag = ({
@@ -42,22 +51,38 @@ export const PriceTag = ({
   creatorName,
   tooltipPosition = "right",
   buyerLocalPrice,
+  basePriceCents,
 }: Props) => {
-  // When buyer local price is available, display that instead of USD
+  // When buyer-local pricing is available, show it instead of the seller's
+  // USD/seller-currency price. If a discount is active, apply the exchange
+  // rate to the current (discounted) `price` rather than reusing the
+  // pre-converted base price — otherwise the buyer sees the full price.
   const displayCurrency = buyerLocalPrice?.currency_code ?? currencyCode;
-  const displayPrice = buyerLocalPrice?.price_cents ?? price;
+  const isDiscounted = buyerLocalPrice != null && basePriceCents != null && basePriceCents !== price;
+  const displayPrice = buyerLocalPrice
+    ? isDiscounted
+      ? Math.round(price * buyerLocalPrice.exchange_rate)
+      : buyerLocalPrice.price_cents
+    : price;
   const formattedAmount = formatPriceCentsWithCurrencySymbol(displayCurrency, displayPrice, { symbolFormat: "long" });
 
   const recurrenceLabel = recurrence
     ? formatRecurrenceWithDuration(recurrence.id, recurrence.duration_in_months)
     : null;
 
+  // Convert old (strikethrough) price to buyer currency using the exchange
+  // rate. Avoids the previous ratio approach (oldPrice * price_cents/price),
+  // which breaks when smart-rounding happens to keep the numeric value
+  // identical (ratio collapses to 1.0) and when `price` is a discounted value.
+  const oldPriceDisplay =
+    oldPrice != null ? (buyerLocalPrice ? Math.round(oldPrice * buyerLocalPrice.exchange_rate) : oldPrice) : null;
+
   // Should match CurrencyHelper#product_card_formatted_price
   const priceTag = (
     <>
-      {oldPrice != null ? (
+      {oldPriceDisplay != null ? (
         <>
-          <s>{formatPriceCentsWithCurrencySymbol(displayCurrency, buyerLocalPrice && price > 0 ? Math.round(oldPrice * (buyerLocalPrice.price_cents / price)) : oldPrice, { symbolFormat: "long" })}</s>{" "}
+          <s>{formatPriceCentsWithCurrencySymbol(displayCurrency, oldPriceDisplay, { symbolFormat: "long" })}</s>{" "}
         </>
       ) : null}
       {formattedAmount}

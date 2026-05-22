@@ -37,6 +37,7 @@ describe CheckoutPresenter do
         max_allowed_cart_products: Cart::MAX_ALLOWED_CART_PRODUCTS,
         cart_save_debounce_ms: CheckoutPresenter::CART_SAVE_DEBOUNCE_DURATION_IN_SECONDS.in_milliseconds,
         buyer_currency: nil,
+        buyer_currency_usd_exchange_rate: nil,
         tip_options: [5, 15, 25],
         default_tip_option: 15,
       )
@@ -197,6 +198,7 @@ describe CheckoutPresenter do
         max_allowed_cart_products: Cart::MAX_ALLOWED_CART_PRODUCTS,
         cart_save_debounce_ms: CheckoutPresenter::CART_SAVE_DEBOUNCE_DURATION_IN_SECONDS.in_milliseconds,
         buyer_currency: nil,
+        buyer_currency_usd_exchange_rate: nil,
         tip_options: [5, 15, 25],
         default_tip_option: 15,
       )

@@ -42,6 +42,8 @@ class CheckoutPresenter
       **checkout_wishlist_props(params:),
       **checkout_wishlist_gift_props(params:),
       buyer_currency: @buyer_currency,
+      buyer_currency_usd_exchange_rate: @buyer_currency.present? && @buyer_currency != "usd" ?
+        BuyerCurrencyService.exchange_rate(from_currency: "usd", to_currency: @buyer_currency) : nil,
       max_allowed_cart_products: Cart::MAX_ALLOWED_CART_PRODUCTS,
       cart_save_debounce_ms: CART_SAVE_DEBOUNCE_DURATION_IN_SECONDS.in_milliseconds,
       tip_options: TipOptionsService.get_tip_options,
