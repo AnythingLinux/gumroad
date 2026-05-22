@@ -437,16 +437,15 @@ module PlaywrightClickCompat
 
     # Scroll into view first (handles "outside of viewport" errors), then force click
     execute_script("this.scrollIntoView({block: 'center'}); this.click()")
-  rescue Capybara::Playwright::Node::StaleReferenceError
+  rescue Capybara::Playwright::Node::StaleReferenceError, Playwright::Error => e
     raise unless Capybara.current_session.driver.respond_to?(:with_playwright_page)
+    raise unless e.message.include?("not attached") || e.is_a?(Capybara::Playwright::Node::StaleReferenceError)
 
-    # Element was detached by React re-render — brief wait for DOM to settle, then
-    # JS click on the handle (Playwright may still resolve it via frame reference)
-    sleep 0.15
+    # Element was detached by React re-render — brief wait for DOM to settle
+    sleep 0.2
     begin
       execute_script("this.scrollIntoView({block: 'center'}); this.click()")
     rescue StandardError
-      # Handle fully detached — re-raise original stale error
       raise Capybara::Playwright::Node::StaleReferenceError, "Element is not attached to the DOM"
     end
   end
