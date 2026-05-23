@@ -6,6 +6,8 @@ class SignedUrlHelperTest < ActiveSupport::TestCase
   include SignedUrlHelper
 
   PDF_PATH = "attachments/23b2d41ac63a40b5afa1a99bf38a0982/original/nyt.pdf"
+  TEST_S3_BUCKET = "gumroad-specs"
+  TEST_S3_BASE_URL = "https://s3.amazonaws.com/gumroad-specs/"
 
   setup do
     @file = product_files(:signed_url_helper_pdf)
@@ -64,12 +66,10 @@ class SignedUrlHelperTest < ActiveSupport::TestCase
 
   # --- non-minio path ---
 
-  def with_non_minio
+  def with_non_minio(&block)
     with_const(:USING_MINIO, false) do
       with_const(:CLOUDFRONT_DOWNLOAD_DISTRIBUTION_URL, "https://cloudfront.net/") do
-        with_const(:FILE_DOWNLOAD_DISTRIBUTION_URL, "https://staging-files.gumroad.com/") do
-          yield
-        end
+        with_const(:FILE_DOWNLOAD_DISTRIBUTION_URL, "https://staging-files.gumroad.com/", &block)
       end
     end
   end
@@ -100,34 +100,40 @@ class SignedUrlHelperTest < ActiveSupport::TestCase
 
   test "contains the cache_key parameter for files with specific extensions" do
     with_non_minio do
-      @s3_object.define_singleton_method(:content_length) { 1_000_000_000 }
-      url = signed_download_url_for_s3_key_and_filename(@file.s3_key, @file.s3_filename)
-      refute_includes url, "cache_key=caIWHGT4Qhqo6KoxDMNXwQ"
+      with_const(:S3_BUCKET, TEST_S3_BUCKET) do
+        with_const(:S3_BASE_URL, TEST_S3_BASE_URL) do
+          @s3_object.define_singleton_method(:content_length) { 1_000_000_000 }
+          url = signed_download_url_for_s3_key_and_filename(@file.s3_key, @file.s3_filename)
+          assert_not_includes url, "cache_key=caIWHGT4Qhqo6KoxDMNXwQ"
 
-      %w(jpg jpeg png epub brushset scrivtemplate zip).each do |extension|
-        file_path = "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachments/23b2d41ac63a40b5afa1a99bf38a0982/original/nyt.#{extension}"
-        file = ProductFile.create!(link_id: @file.link_id, url: file_path)
-        ext_url = signed_download_url_for_s3_key_and_filename(file.s3_key, file.s3_filename)
-        assert_match(/staging-files\.gumroad\.com.*cache_key=caIWHGT4Qhqo6KoxDMNXwQ.*/, ext_url)
+          %w(jpg jpeg png epub brushset scrivtemplate zip).each do |extension|
+            file_path = "#{TEST_S3_BASE_URL}attachments/23b2d41ac63a40b5afa1a99bf38a0982/original/nyt.#{extension}"
+            file = ProductFile.create!(link_id: @file.link_id, url: file_path)
+            ext_url = signed_download_url_for_s3_key_and_filename(file.s3_key, file.s3_filename)
+            assert_match(/staging-files\.gumroad\.com.*cache_key=caIWHGT4Qhqo6KoxDMNXwQ.*/, ext_url)
+          end
+        end
       end
     end
   end
 
   test "raises a descriptive exception if the S3 object doesn't exist" do
     with_non_minio do
-      # Restore real Aws::S3 lookups so this hits the real (mocked-out) path.
-      Aws::S3::Resource.singleton_class.send(:remove_method, :new) rescue nil
-      Aws::S3::Resource.define_singleton_method(:new, @original_s3_resource_new)
-      Aws::S3::Client.singleton_class.send(:remove_method, :new) rescue nil
-      Aws::S3::Client.define_singleton_method(:new, @original_s3_client_new)
+      with_const(:S3_BUCKET, TEST_S3_BUCKET) do
+        # Restore real Aws::S3 lookups so this hits the real (mocked-out) path.
+        Aws::S3::Resource.singleton_class.send(:remove_method, :new) rescue nil
+        Aws::S3::Resource.define_singleton_method(:new, @original_s3_resource_new)
+        Aws::S3::Client.singleton_class.send(:remove_method, :new) rescue nil
+        Aws::S3::Client.define_singleton_method(:new, @original_s3_client_new)
 
-      WebMock.stub_request(:any, /amazonaws\.com/).to_return(status: 404, body: "")
-      WebMock.stub_request(:any, %r{localhost:9000}).to_return(status: 404, body: "")
+        WebMock.stub_request(:any, /amazonaws\.com/).to_return(status: 404, body: "")
+        WebMock.stub_request(:any, %r{localhost:9000}).to_return(status: 404, body: "")
 
-      err = assert_raises(Aws::S3::Errors::NotFound) do
-        signed_download_url_for_s3_key_and_filename("attachments/missing.txt", "filename")
+        err = assert_raises(Aws::S3::Errors::NotFound) do
+          signed_download_url_for_s3_key_and_filename("attachments/missing.txt", "filename")
+        end
+        assert_match(/Key = attachments\/missing.txt/, err.message)
       end
-      assert_match(/Key = attachments\/missing.txt/, err.message)
     end
   end
 
@@ -138,7 +144,7 @@ class SignedUrlHelperTest < ActiveSupport::TestCase
   end
 
   test "file_needs_cache_key? returns false when cache key is not needed" do
-    with_non_minio { refute send(:file_needs_cache_key?, "file.mp3") }
+    with_non_minio { assert_not send(:file_needs_cache_key?, "file.mp3") }
   end
 
   test "cf_worker_cache_extensions_and_keys returns a hash" do
