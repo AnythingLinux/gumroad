@@ -4,6 +4,7 @@ require "test_helper"
 
 class LogSendgridEventWorkerTest < ActiveSupport::TestCase
   setup do
+    EmailEvent.delete_all
     @email = "example@example.com"
     @email_digest = Digest::SHA1.hexdigest(@email).first(12)
     @event_timestamp = 5.minutes.from_now
