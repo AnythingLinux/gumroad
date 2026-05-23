@@ -156,13 +156,19 @@ class Order::CreateService
         purchase_params.delete(:price_range)
       else
         geo = GeoIp.lookup(params[:ip_address])
+        detected_buyer_currency = BuyerCurrencyService::COUNTRY_TO_CURRENCY[geo&.country_code&.upcase] if Flipper.enabled?(:multi_currency_checkout)
+        stripe_merchant_account = product.user&.merchant_account(StripeChargeProcessor.charge_processor_id) ||
+          MerchantAccount.gumroad(StripeChargeProcessor.charge_processor_id)
+        buyer_currency = if MultiCurrency::MerchantCompatibility.supports_buyer_currency?(stripe_merchant_account, detected_buyer_currency)
+          detected_buyer_currency
+        end
         purchase_params.merge!(
           session_id: params[:session_id],
           ip_country: geo.try(:country_name),
           ip_state: geo.try(:region_name),
           is_mobile: params[:is_mobile],
           browser_guid: params[:browser_guid],
-          buyer_currency: Flipper.enabled?(:multi_currency_checkout) ? BuyerCurrencyService::COUNTRY_TO_CURRENCY[geo&.country_code&.upcase] : nil
+          buyer_currency:
         )
       end
 
