@@ -29,20 +29,26 @@ end
 # Load shared test-support modules.
 Dir[Rails.root.join("test", "support", "**", "*.rb")].sort.each { |f| require f }
 
-# Stub Vite helpers so mailer/view tests don't depend on a built Vite manifest.
-# CI builds no JS bundle (Minitest suite is Ruby-only), so we return empty tags.
-# If a test needs the real Vite output, override these in the test class.
-module ViteTestStubs
-  def vite_javascript_tag(*_args, **_kwargs); "".html_safe; end
-  def vite_typescript_tag(*_args, **_kwargs); "".html_safe; end
-  def vite_stylesheet_tag(*_args, **_kwargs); "".html_safe; end
-  def vite_entrypoint_stylesheet_tag(*_args, **_kwargs); "".html_safe; end
-  def vite_client_tag(*_args, **_kwargs); "".html_safe; end
-  def vite_react_refresh_tag(*_args, **_kwargs); "".html_safe; end
-  def vite_asset_path(name, *_args, **_kwargs); "/vite-test/#{name}"; end
-  def vite_asset_url(name, *_args, **_kwargs); "/vite-test/#{name}"; end
-  def vite_image_tag(name, *_args, **_kwargs); image_tag("/vite-test/#{name}"); end
-end
+# Stub Vite manifest lookups so mailer/view tests don't depend on a built
+# Vite manifest. CI skips the JS build for speed (Minitest is Ruby-only),
+# so we monkey-patch ViteRuby::Manifest to return empty/synthetic responses
+# instead of raising "Vite Ruby can't find entrypoints/X in the manifests."
+require "vite_ruby"
+module ViteManifestTestStub
+  def resolve_entries(*_names, **_kwargs)
+    { scripts: [], stylesheets: [], imports: [] }
+  end
 
-ActionMailer::Base.helper(ViteTestStubs)
-ActionView::Base.send(:include, ViteTestStubs) if defined?(ActionView::Base)
+  def lookup!(name, **_kwargs)
+    { "file" => "/vite-test/#{name}", "src" => name }
+  end
+
+  def lookup(name, **_kwargs)
+    { "file" => "/vite-test/#{name}", "src" => name }
+  end
+
+  def path_for(name, **_kwargs)
+    "/vite-test/#{name}"
+  end
+end
+ViteRuby::Manifest.prepend(ViteManifestTestStub)
