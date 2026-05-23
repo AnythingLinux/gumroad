@@ -1,0 +1,13 @@
+# Comment fixtures for mailer tests.
+#
+# `commentable` is polymorphic — short-form `commentable: published_post (Installment)`
+# is supported by Rails for polymorphic columns.
+
+named_seller_comment_on_published_post:
+  commentable: published_post (Installment)
+  author_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  author_name: Seller
+  comment_type: <%= Comment::COMMENT_TYPE_USER_SUBMITTED %>
+  content: "Their -> they're"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
