@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-describe SearchIndexModelCommon do
-  before do
+require "test_helper"
+
+class SearchIndexModelCommonTest < ActiveSupport::TestCase
+  setup do
     @klass = Class.new(User)
     @klass.class_eval <<-RUBY, __FILE__, __LINE__ + 1
       include SearchIndexModelCommon
@@ -31,25 +33,25 @@ describe SearchIndexModelCommon do
     RUBY
   end
 
-  describe ".search_fields" do
-    it "returns a list of search fields for the index" do
-      expect(@klass.search_fields).to match_array([
-                                                    "first_name", "is_active_with_name", "last_name", "email", "active", "has_amex"
-                                                  ])
-    end
+  test ".search_fields returns a list of search fields for the index" do
+    assert_equal(
+      ["first_name", "is_active_with_name", "last_name", "email", "active", "has_amex"].sort,
+      @klass.search_fields.sort
+    )
   end
 
-  describe "#as_indexed_json" do
-    it "returns json versions" do
-      instance = @klass.new
-      expect(instance.as_indexed_json).to eq(
+  test "#as_indexed_json returns json versions" do
+    instance = @klass.new
+    assert_equal(
+      {
         "first_name" => "first_name value",
         "is_active_with_name" => "is_active_with_name value",
         "last_name" => "last_name value",
         "email" => "email value",
         "active" => "active value",
         "has_amex" => "has_amex value",
-      )
-    end
+      },
+      instance.as_indexed_json
+    )
   end
 end
