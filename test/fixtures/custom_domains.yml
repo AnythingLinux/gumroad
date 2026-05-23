@@ -31,3 +31,11 @@ user_domain_another_seller:
   state: verified
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by SslCertificates::LetsEncryptTest and SslCertificates::GenerateTest.
+ssl_www_example:
+  domain: www.example.com
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  state: verified
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
