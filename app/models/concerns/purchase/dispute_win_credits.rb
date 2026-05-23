@@ -29,14 +29,15 @@ module Purchase::DisputeWinCredits
   def create_credit_for_dispute_won_for_seller!(flow_of_funds, amount_cents:)
     return unless charged_using_gumroad_merchant_account?
 
+    issued_net_cents = issued_net_cents_for_flow_of_funds(amount_cents, flow_of_funds)
     seller_issued_amount = BalanceTransaction::Amount.create_issued_amount_for_seller(
         flow_of_funds:,
-        issued_net_cents: amount_cents
+        issued_net_cents:
     )
 
     seller_holding_amount = BalanceTransaction::Amount.create_holding_amount_for_seller(
         flow_of_funds:,
-        issued_net_cents: amount_cents
+        issued_net_cents:
     )
 
     Credit.create_for_dispute_won!(
