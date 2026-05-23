@@ -92,3 +92,12 @@ another_seller_owner:
   role: owner
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Owner self-membership for invited_user so InviteMailer/TeamMailer tests can
+# create non-owner memberships for them on named_seller's team.
+invited_user_owner:
+  user: invited_user
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:invited_user) %>
+  role: owner
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

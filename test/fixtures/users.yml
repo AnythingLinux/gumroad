@@ -156,6 +156,16 @@ community_buyer:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
+# Invited user used by InviteMailer tests.
+invited_user:
+  email: invited@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
 # Used as the affiliate_user on a Collaborator for named_seller's product.
 collaborating_user:
   email: collaborator@example.com
