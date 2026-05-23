@@ -37,6 +37,27 @@ Object.const_set(:EsClient, fake_es)
 # etc.). Set it to the fake too.
 Elasticsearch::Model.client = fake_es if defined?(Elasticsearch::Model)
 
+# Disable Makara connection blacklisting in tests. CI sometimes hits transient
+# connection issues (especially during shutdown) that blacklist primary, which
+# then crashes teardown's disable_query_cache! callback with
+# Makara::Errors::AllConnectionsBlacklisted. We never test failover; treat
+# every connection as fresh.
+if defined?(Makara::Pool)
+  Makara::Pool.class_eval do
+    def connection_made?
+      true
+    end
+  end
+  Makara::ConnectionWrapper.class_eval do
+    def _makara_blacklist!
+      # no-op in test env
+    end
+    def _makara_blacklisted?
+      false
+    end
+  end if defined?(Makara::ConnectionWrapper)
+end
+
 module ActiveSupport
   class TestCase
     # Reuse the existing fixture files we share with the RSpec suite for
