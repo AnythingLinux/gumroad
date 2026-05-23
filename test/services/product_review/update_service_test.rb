@@ -26,7 +26,7 @@ class ProductReview::UpdateServiceTest < ActiveSupport::TestCase
   test "#update creates a new video and deletes existing pending-review videos" do
     existing_pending_video = product_review_videos(:named_seller_product_review_video)
     blob = active_storage_blob
-    video_url = "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/video.mp4"
+    video_url = "#{S3_BASE_URL}video.mp4"
 
     assert_difference -> { @product_review.videos.count }, 1 do
       ProductReview::UpdateService.new(
