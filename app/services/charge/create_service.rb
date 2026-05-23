@@ -36,27 +36,19 @@ class Charge::CreateService
     end
 
     charge_intent = with_charge_processor_error_handler do
-      # Determine charge currency: use buyer's local currency if set, else USD
       charge_currency = determine_charge_currency
-      charge_amount = determine_charge_amount_cents
-      # Convert Gumroad fee to charge currency — Stripe requires application_fee_amount
-      # and transfer_data.amount in the same currency as the charge.
-      # Use convert_price_raw (no smart rounding) since fees are internal amounts,
-      # not consumer-facing price points.
-      fee_amount = if charge_currency != "usd"
-                     BuyerCurrencyService.convert_price_raw(
-                       gumroad_amount_cents,
-                       from_currency: "usd",
-                       to_currency: charge_currency
-                     )
-                   else
-                     gumroad_amount_cents
-                   end
+      charge_amount = determine_charge_amount_cents(charge_currency:)
+      fee_amount = determine_charge_gumroad_amount_cents(charge_currency:)
 
-      # Update charge record to reflect the actual Stripe charge amounts so
-      # DB values match what Stripe receives (for reconciliation).
-      if charge_currency != "usd"
-        charge.update!(amount_cents: charge_amount, gumroad_amount_cents: fee_amount)
+      if charge_currency != Currency::USD
+        charge.update_buyer_currency_amount!(
+          buyer_currency: charge_currency,
+          buyer_currency_amount_cents: charge_amount,
+          buyer_currency_gumroad_amount_cents: fee_amount,
+          buyer_currency_exchange_rate: buyer_currency_exchange_rate(charge_currency)
+        )
+      elsif charge.buyer_currency_amount.present?
+        charge.buyer_currency_amount.destroy!
       end
 
       ChargeProcessor.create_payment_intent_or_charge!(merchant_account,
@@ -170,45 +162,40 @@ class Charge::CreateService
     end
   end
 
-  # Determine the Stripe charge currency. If all purchases in this charge group
-  # share the same buyer_currency (set from IP geolocation), charge in that
-  # currency for local presentment. Otherwise fall back to USD.
-  #
-  # Uses `.map` (not `.filter_map`) so that any purchase with a nil buyer_currency
-  # forces the fallback to USD — otherwise a mixed group (one EUR + one nil)
-  # would charge `EUR_cents + USD_cents` denominated as EUR.
   def determine_charge_currency
-    return "usd" unless Flipper.enabled?(:multi_currency_checkout)
+    return Currency::USD unless Flipper.enabled?(:multi_currency_checkout)
 
     buyer_currencies = purchases.map(&:buyer_currency).uniq
-    if buyer_currencies.size == 1 && buyer_currencies.first.present?
+    if buyer_currencies.size == 1 &&
+        MultiCurrency::MerchantCompatibility.supports_buyer_currency?(merchant_account, buyer_currencies.first)
       buyer_currencies.first
     else
-      "usd"
+      Currency::USD
     end
   end
 
-  # Compute the charge amount in the buyer's currency.
-  # When charging in a non-USD buyer currency, sum buyer_currency_amount_cents
-  # (which includes the converted price + taxes + shipping in buyer currency).
-  # Falls back to the USD total_transaction_cents when buyer currency is USD or unavailable.
-  def determine_charge_amount_cents
-    charge_currency = determine_charge_currency
-    if charge_currency != "usd"
-      # Guard against nil buyer_currency_amount_cents on individual purchases — falling back
-      # to total_transaction_cents (USD cents) here would silently mix USD with local-currency
-      # cents in the sum. Convert the USD total to the charge currency at the current rate
-      # using raw conversion (no smart rounding, matches the frontend display math).
+  def determine_charge_amount_cents(charge_currency: determine_charge_currency)
+    if charge_currency != Currency::USD
       purchases.sum do |p|
-        p.buyer_currency_amount_cents ||
-          BuyerCurrencyService.convert_price_raw(
-            p.total_transaction_cents,
-            from_currency: "usd",
-            to_currency: charge_currency
-          )
+        p.buyer_currency_amount_cents || buyer_currency_amount_for_purchase_usd_cents(p, p.total_transaction_cents, charge_currency)
       end
     else
       amount_cents
     end
+  end
+
+  def determine_charge_gumroad_amount_cents(charge_currency: determine_charge_currency)
+    return gumroad_amount_cents if charge_currency == Currency::USD
+
+    purchases.sum { |purchase| buyer_currency_amount_for_purchase_usd_cents(purchase, purchase.total_transaction_amount_for_gumroad_cents, charge_currency) }
+  end
+
+  def buyer_currency_amount_for_purchase_usd_cents(purchase, usd_cents, _charge_currency)
+    purchase.buyer_currency_amount_for_usd_cents(usd_cents)
+  end
+
+  def buyer_currency_exchange_rate(charge_currency)
+    purchases.find { _1.buyer_currency_exchange_rate.present? }&.buyer_currency_exchange_rate ||
+      BuyerCurrencyService.exchange_rate(from_currency: Currency::USD, to_currency: charge_currency)
   end
 end

@@ -50,10 +50,29 @@ module Charge::Chargeable
     is_a?(Charge) ? super : update!(processor_fee_cents:)
   end
 
-  def charged_amount_cents
+  def charged_amount_cents(**options)
+    audience = options.fetch(:for, :seller)
+    if audience.to_sym == :buyer
+      buyer_amount_cents = buyer_currency_amount_cents
+      return buyer_amount_cents if buyer_amount_cents.present?
+    end
+
     # Cannot use Charge#amount_cents because it is calculated before the purchases are being charged, so it may
     # include purchases that are not successful
     is_a?(Charge) ? successful_purchases.sum(&:total_transaction_cents) : total_transaction_cents
+  end
+
+  def charged_currency(**options)
+    audience = options.fetch(:for, :seller)
+    return Currency::USD unless audience.to_sym == :buyer
+
+    buyer_amount_cents = buyer_currency_amount_cents
+    buyer_currency.present? && buyer_amount_cents.present? ? buyer_currency : Currency::USD
+  end
+
+  def formatted_charged_amount(**options)
+    audience = options.fetch(:for, :buyer)
+    Money.new(charged_amount_cents(for: audience), charged_currency(for: audience)).format(no_cents_if_whole: true)
   end
 
   def charged_gumroad_amount_cents

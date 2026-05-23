@@ -224,13 +224,11 @@ describe Charge::CreateService, :vcr do
   describe "#determine_charge_currency" do
     let(:service) do
       Charge::CreateService.new(
-        order: build_stubbed(:order), seller: seller_1, merchant_account: build_stubbed(:merchant_account),
+        order: build_stubbed(:order), seller: seller_1, merchant_account: build_stubbed(:merchant_account, user: nil),
         chargeable: nil, purchases:, amount_cents: 1000, gumroad_amount_cents: 100,
         setup_future_charges: false, off_session: false, statement_description: nil
       )
     end
-    # Lightweight purchase stub — avoids the Purchase factory's derived
-    # total_transaction_cents which requires non-nil price_cents/gumroad_tax_cents.
     let(:fake_purchase) { ->(buyer_currency) { instance_double(Purchase, buyer_currency:) } }
 
     context "when multi_currency_checkout flag is enabled" do
@@ -276,25 +274,27 @@ describe Charge::CreateService, :vcr do
   describe "#determine_charge_amount_cents" do
     let(:fake_purchase) do
       ->(buyer_currency:, buyer_currency_amount_cents:, total_transaction_cents:) do
-        instance_double(
+        purchase = instance_double(
           Purchase,
           buyer_currency:,
           buyer_currency_amount_cents:,
-          total_transaction_cents:
+          total_transaction_cents:,
+          total_transaction_amount_for_gumroad_cents: total_transaction_cents / 10,
+          buyer_currency_exchange_rate: 0.92
         )
+        allow(purchase).to receive(:buyer_currency_amount_for_usd_cents) { |usd_cents| (usd_cents * 0.92).round }
+        purchase
       end
     end
     let(:service) do
       Charge::CreateService.new(
-        order: build_stubbed(:order), seller: seller_1, merchant_account: build_stubbed(:merchant_account),
+        order: build_stubbed(:order), seller: seller_1, merchant_account: build_stubbed(:merchant_account, user: nil),
         chargeable: nil, purchases:, amount_cents: 1000, gumroad_amount_cents: 100,
         setup_future_charges: false, off_session: false, statement_description: nil
       )
     end
 
     context "when charge_currency is non-USD and one purchase has nil buyer_currency_amount_cents" do
-      # Regression for Cursor Bugbot finding: falling back to total_transaction_cents (USD cents)
-      # silently mixed USD cents with EUR cents in the sum. Guard now converts via convert_price_raw.
       before { Flipper.enable(:multi_currency_checkout) }
       after { Flipper.disable(:multi_currency_checkout) }
 
@@ -305,12 +305,24 @@ describe Charge::CreateService, :vcr do
         ]
       end
 
-      it "uses convert_price_raw on the USD total instead of mixing USD cents into the local-currency sum" do
-        expect(BuyerCurrencyService).to receive(:convert_price_raw)
-          .with(500, from_currency: "usd", to_currency: "eur")
-          .and_return(460)
-
+      it "uses the purchase's locked buyer-currency rate instead of mixing USD cents into the local-currency sum" do
         expect(service.send(:determine_charge_amount_cents)).to eq(920 + 460)
+      end
+    end
+
+    context "when converting Gumroad fees for a non-USD charge" do
+      before { Flipper.enable(:multi_currency_checkout) }
+      after { Flipper.disable(:multi_currency_checkout) }
+
+      let(:purchases) do
+        [
+          fake_purchase.call(buyer_currency: "eur", buyer_currency_amount_cents: 920, total_transaction_cents: 1000),
+          fake_purchase.call(buyer_currency: "eur", buyer_currency_amount_cents: 460, total_transaction_cents: 500),
+        ]
+      end
+
+      it "sums fee amounts using the locked buyer-currency rate" do
+        expect(service.send(:determine_charge_gumroad_amount_cents, charge_currency: "eur")).to eq(92 + 46)
       end
     end
 

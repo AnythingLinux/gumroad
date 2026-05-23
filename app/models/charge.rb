@@ -12,6 +12,7 @@ class Charge < ApplicationRecord
   has_many :charge_purchases, dependent: :destroy
   has_many :purchases, through: :charge_purchases, dependent: :destroy
   has_many :refunds, through: :purchases
+  has_one :buyer_currency_amount, class_name: "ChargeBuyerCurrencyAmount", dependent: :destroy, inverse_of: :charge, autosave: true
 
   attr_accessor :charge_intent, :setup_future_charges
 
@@ -49,6 +50,31 @@ class Charge < ApplicationRecord
         purchase.update!(processor_fee_cents: purchase_processor_fee_cents)
       end
     end
+  end
+
+  def buyer_currency
+    buyer_currency_amount&.buyer_currency
+  end
+
+  def buyer_currency_amount_cents
+    buyer_currency_amount&.buyer_currency_amount_cents
+  end
+
+  def buyer_currency_gumroad_amount_cents
+    buyer_currency_amount&.buyer_currency_gumroad_amount_cents
+  end
+
+  def buyer_currency_exchange_rate
+    buyer_currency_amount&.buyer_currency_exchange_rate
+  end
+
+  def update_buyer_currency_amount!(buyer_currency:, buyer_currency_amount_cents:, buyer_currency_gumroad_amount_cents:, buyer_currency_exchange_rate:)
+    (buyer_currency_amount || build_buyer_currency_amount).update!(
+      buyer_currency:,
+      buyer_currency_amount_cents:,
+      buyer_currency_gumroad_amount_cents:,
+      buyer_currency_exchange_rate:
+    )
   end
 
   def upload_invoice_pdf(pdf)
