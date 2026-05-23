@@ -1,292 +1,265 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "test_helper"
 
-describe Compliance do
-  describe Countries do
-    describe ".mapping" do
-      it "returns a Hash of country codes to countries" do
-        expect(Compliance::Countries.mapping).to eq(mapping_expected)
-      end
-    end
-
-    describe ".find_by_name" do
-      it "returns the country for a country whose name is the same for `countries` gem and `iso_country_codes` gem" do
-        expect(Compliance::Countries.find_by_name("Mexico")).to eq(Compliance::Countries::MEX)
-      end
-
-      it "returns the country for a country whose name is different for `countries` gem and `iso_country_codes` gem" do
-        expect(Compliance::Countries.find_by_name("South Korea")).to eq(Compliance::Countries::KOR)
-        expect(Compliance::Countries.find_by_name("Korea, Republic of")).to eq(Compliance::Countries::KOR)
-      end
-
-      it "returns the country for a country whose name is different for `countries` gem and `maxmind/geoip2`" do
-        expect(Compliance::Countries.find_by_name("Micronesia, Federated States of")).to eq(Compliance::Countries::FSM)
-        expect(Compliance::Countries.find_by_name("Federated States of Micronesia")).to eq(Compliance::Countries::FSM)
-      end
-
-      it "returns nil for a nil country name" do
-        expect(Compliance::Countries.find_by_name(nil)).to be_nil
-      end
-
-      it "returns nil for an empty country name" do
-        expect(Compliance::Countries.find_by_name("")).to be_nil
-      end
-    end
-
-    describe ".historical_names" do
-      it "returns an empty array for a nil country name" do
-        expect(Compliance::Countries.historical_names(nil)).to eq([])
-      end
-
-      it "returns the common name and gumroad historical names" do
-        expected_historical_names = ["United States"]
-
-        expect(Compliance::Countries.historical_names("United States")).to eq(expected_historical_names)
-      end
-
-      it "returns the common name and gumroad historical names for a country whose name is different for `countries` gem and `iso_country_codes` gem" do
-        expected_historical_names = ["South Korea", "Korea, Republic of"]
-
-        expect(Compliance::Countries.historical_names("South Korea")).to eq(expected_historical_names)
-        expect(Compliance::Countries.historical_names("Korea, Republic of")).to eq(expected_historical_names)
-      end
-
-      it "returns the known names for a country whose name is different for `countries` gem and `maxmind/geoip2`" do
-        expected_historical_names = ["Micronesia, Federated States of", "Federated States of Micronesia"]
-
-        expect(Compliance::Countries.historical_names("Micronesia, Federated States of")).to eq(expected_historical_names)
-        expect(Compliance::Countries.historical_names("Federated States of Micronesia")).to eq(expected_historical_names)
-      end
-    end
-
-    describe ".blocked?" do
-      it "returns false for United States" do
-        expect(Compliance::Countries.blocked?("US")).to be false
-      end
-
-      it "returns true for Afghanistan" do
-        expect(Compliance::Countries.blocked?("AF")).to be true
-      end
-
-      it "returns true for Cuba" do
-        expect(Compliance::Countries.blocked?("CU")).to be true
-      end
-
-      it "returns true for Congo, the Democratic Republic of the" do
-        expect(Compliance::Countries.blocked?("CD")).to be true
-      end
-
-      it "returns true for Côte d'Ivoire" do
-        expect(Compliance::Countries.blocked?("CI")).to be true
-      end
-
-      it "returns true for Iraq" do
-        expect(Compliance::Countries.blocked?("IQ")).to be true
-      end
-
-      it "returns true for Iran" do
-        expect(Compliance::Countries.blocked?("IR")).to be true
-      end
-
-      it "returns true for Lebanon" do
-        expect(Compliance::Countries.blocked?("LB")).to be true
-      end
-
-      it "returns true for Liberia" do
-        expect(Compliance::Countries.blocked?("LR")).to be true
-      end
-
-      it "returns true for Libya" do
-        expect(Compliance::Countries.blocked?("LY")).to be true
-      end
-
-      it "returns true for Myanmar" do
-        expect(Compliance::Countries.blocked?("MM")).to be true
-      end
-
-      it "returns true for North Korea" do
-        expect(Compliance::Countries.blocked?("KP")).to be true
-      end
-
-      it "returns true for Somalia" do
-        expect(Compliance::Countries.blocked?("SO")).to be true
-      end
-
-      it "returns true for Sudan" do
-        expect(Compliance::Countries.blocked?("SD")).to be true
-      end
-
-      it "returns true for Syrian Arab Republic" do
-        expect(Compliance::Countries.blocked?("SY")).to be true
-      end
-
-      it "returns true for Yemen" do
-        expect(Compliance::Countries.blocked?("YE")).to be true
-      end
-
-      it "returns true for Zimbabwe" do
-        expect(Compliance::Countries.blocked?("ZW")).to be true
-      end
-    end
-
-    describe ".for_select" do
-      it "returns a sorted array of country names and codes" do
-        expect(Compliance::Countries.for_select).to eq(for_select_expected)
-      end
-    end
-
-    describe ".country_with_flag_by_name" do
-      context "for a valid country name" do
-        it "returns a country with its corresponding flag" do
-          expect(Compliance::Countries.country_with_flag_by_name("United States")).to eq("🇺🇸 United States")
-        end
-      end
-
-      context "for an invalid country name" do
-        it "returns 'Elsewhere'" do
-          expect(Compliance::Countries.country_with_flag_by_name("Mordor")).to eq("🌎 Elsewhere")
-        end
-      end
-
-      context "when country name is nil" do
-        it "returns 'Elsewhere'" do
-          expect(Compliance::Countries.country_with_flag_by_name(nil)).to eq("🌎 Elsewhere")
-        end
-      end
-    end
-
-    describe ".elsewhere_with_flag" do
-      it "returns 'Elsewhere' with globe emoji" do
-        expect(Compliance::Countries.elsewhere_with_flag).to eq("🌎 Elsewhere")
-      end
-    end
-
-    describe ".subdivisions_for_select" do
-      it "returns expected subdivisions for united states" do
-        expect(Compliance::Countries.subdivisions_for_select(Compliance::Countries::USA.alpha2)).to eq(united_states_subdivisions_for_select_expected)
-      end
-
-      it "returns expected subdivisions for canada" do
-        expect(Compliance::Countries.subdivisions_for_select(Compliance::Countries::CAN.alpha2)).to eq(canada_subdivisions_for_select_expected)
-      end
-
-      it "returns expected subdivisions for australia" do
-        expect(Compliance::Countries.subdivisions_for_select(Compliance::Countries::AUS.alpha2)).to eq(australia_subdivisions_for_select_expected)
-      end
-
-      it "returns expected subdivisions for united arab emirates" do
-        expect(Compliance::Countries.subdivisions_for_select(Compliance::Countries::ARE.alpha2)).to eq(united_arab_emirates_subdivisions_for_select_expected)
-      end
-
-      it "returns expected subdivisions for mexico" do
-        expect(Compliance::Countries.subdivisions_for_select(Compliance::Countries::MEX.alpha2)).to eq(mexico_subdivisions_for_select_expected)
-      end
-
-      it "returns expected subdivisions for ireland" do
-        expect(Compliance::Countries.subdivisions_for_select(Compliance::Countries::IRL.alpha2)).to eq(ireland_subdivisions_for_select_expected)
-      end
-
-      it "raises an ArgumentError for a country we haven't added subdivision support for yet" do
-        expect do
-          Compliance::Countries.subdivisions_for_select(Compliance::Countries::QAT.alpha2)
-        end.to raise_error(ArgumentError).with_message("Country subdivisions not supported")
-      end
-    end
-
-    describe ".japan_prefectures_for_select" do
-      it "returns all 47 Japan prefectures" do
-        prefectures = Compliance::Countries.japan_prefectures_for_select
-        expect(prefectures.length).to eq(47)
-      end
-
-      it "includes value, label, and kana for each prefecture" do
-        prefectures = Compliance::Countries.japan_prefectures_for_select
-        prefectures.each do |prefecture|
-          expect(prefecture).to have_key(:value)
-          expect(prefecture).to have_key(:label)
-          expect(prefecture).to have_key(:kana)
-          expect(prefecture[:value]).to eq(prefecture[:label])
-        end
-      end
-
-      it "has kana mappings for all prefectures from ISO3166" do
-        iso_prefectures = Compliance::Countries::JPN.subdivisions.values.map { |s| s.translations["ja"] }
-
-        iso_prefectures.each do |prefecture_kanji|
-          kana = Compliance::Countries.japan_prefecture_kana(prefecture_kanji)
-          expect(kana).to be_present,
-                          "Missing kana mapping for prefecture: #{prefecture_kanji}"
-        end
-      end
-    end
-
-    describe ".japan_prefecture_kana" do
-      it "returns the kana reading for a valid prefecture" do
-        expect(Compliance::Countries.japan_prefecture_kana("東京都")).to eq("トウキョウト")
-        expect(Compliance::Countries.japan_prefecture_kana("北海道")).to eq("ホッカイドウ")
-        expect(Compliance::Countries.japan_prefecture_kana("大阪府")).to eq("オオサカフ")
-      end
-
-      it "returns nil for an invalid prefecture" do
-        expect(Compliance::Countries.japan_prefecture_kana("Invalid")).to be_nil
-      end
-    end
-
-    describe ".find_subdivision_code" do
-      it "returns the subdivision code for a valid subdivision code" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "CA")).to eq("CA")
-      end
-
-      it "returns the subdivision code for a valid subdivision name" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "California")).to eq("CA")
-      end
-
-      it "returns a subdivision code for a valid subdivision name with more than one word" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "North Dakota")).to eq("ND")
-      end
-
-      it "returns a subdivision code for a valid but mixed case subdivision name" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "caliFornia")).to eq("CA")
-      end
-
-      it "returns a subdivision code for a valid but mixed case subdivision name with more than one word" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "north dakota")).to eq("ND")
-      end
-
-      it "returns a subdivision code for mixed case District of Columbia" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "distriCt of columbiA")).to eq("DC")
-      end
-
-      it "returns nil for an invalid subdivision name" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, nil)).to eq(nil)
-      end
-
-      it "returns nil for a nil country code" do
-        expect(Compliance::Countries.find_subdivision_code(nil, "California")).to eq(nil)
-      end
-
-      it "returns nil for a mismatched country and subdivision combination" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::AUS.alpha2, "California")).to eq(nil)
-      end
-
-      it "returns a subdivision code for mixed case Newfoundland and Labrador" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::CAN.alpha2, "newfoundlanD and labraDor")).to eq("NL")
-      end
-
-      it "returns nil for a country without any subdivisions" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::PRI.alpha2, "Puerto Rico")).to eq(nil)
-      end
-
-      it "returns the expected subdivision code for a subdivision name given in the `countries` gem" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::ARE.alpha2, "Dubayy")).to eq("DU")
-      end
-
-      it "returns the expected subdivision code for a subdivision name's English translation in the `countries` gem" do
-        expect(Compliance::Countries.find_subdivision_code(Compliance::Countries::ARE.alpha2, "Dubai")).to eq("DU")
-      end
-    end
+class ComplianceTest < ActiveSupport::TestCase
+  test ".mapping returns a Hash of country codes to countries" do
+          assert_equal mapping_expected, Compliance::Countries.mapping
   end
+
+  test ".find_by_name returns the country for a country whose name is the same for `countries` gem and `iso_country_codes` gem" do
+          assert_equal Compliance::Countries::MEX, Compliance::Countries.find_by_name("Mexico")
+  end
+
+  test ".find_by_name returns the country for a country whose name is different for `countries` gem and `iso_country_codes` gem" do
+          assert_equal Compliance::Countries::KOR, Compliance::Countries.find_by_name("South Korea")
+          assert_equal Compliance::Countries::KOR, Compliance::Countries.find_by_name("Korea, Republic of")
+  end
+
+  test ".find_by_name returns the country for a country whose name is different for `countries` gem and `maxmind/geoip2`" do
+          assert_equal Compliance::Countries::FSM, Compliance::Countries.find_by_name("Micronesia, Federated States of")
+          assert_equal Compliance::Countries::FSM, Compliance::Countries.find_by_name("Federated States of Micronesia")
+  end
+
+  test ".find_by_name returns nil for a nil country name" do
+          assert_nil Compliance::Countries.find_by_name(nil)
+  end
+
+  test ".find_by_name returns nil for an empty country name" do
+          assert_nil Compliance::Countries.find_by_name("")
+  end
+
+  test ".historical_names returns an empty array for a nil country name" do
+          assert_equal [], Compliance::Countries.historical_names(nil)
+  end
+
+  test ".historical_names returns the common name and gumroad historical names" do
+          expected_historical_names = ["United States"]
+
+          assert_equal expected_historical_names, Compliance::Countries.historical_names("United States")
+  end
+
+  test ".historical_names returns the common name and gumroad historical names for a country whose name is different for `countries` gem and `iso_country_codes` gem" do
+          expected_historical_names = ["South Korea", "Korea, Republic of"]
+
+          assert_equal expected_historical_names, Compliance::Countries.historical_names("South Korea")
+          assert_equal expected_historical_names, Compliance::Countries.historical_names("Korea, Republic of")
+  end
+
+  test ".historical_names returns the known names for a country whose name is different for `countries` gem and `maxmind/geoip2`" do
+          expected_historical_names = ["Micronesia, Federated States of", "Federated States of Micronesia"]
+
+          assert_equal expected_historical_names, Compliance::Countries.historical_names("Micronesia, Federated States of")
+          assert_equal expected_historical_names, Compliance::Countries.historical_names("Federated States of Micronesia")
+  end
+
+  test ".blocked? returns false for United States" do
+          assert_equal false, Compliance::Countries.blocked?("US")
+  end
+
+  test ".blocked? returns true for Afghanistan" do
+          assert_equal true, Compliance::Countries.blocked?("AF")
+  end
+
+  test ".blocked? returns true for Cuba" do
+          assert_equal true, Compliance::Countries.blocked?("CU")
+  end
+
+  test ".blocked? returns true for Congo, the Democratic Republic of the" do
+          assert_equal true, Compliance::Countries.blocked?("CD")
+  end
+
+  test ".blocked? returns true for Côte d'Ivoire" do
+          assert_equal true, Compliance::Countries.blocked?("CI")
+  end
+
+  test ".blocked? returns true for Iraq" do
+          assert_equal true, Compliance::Countries.blocked?("IQ")
+  end
+
+  test ".blocked? returns true for Iran" do
+          assert_equal true, Compliance::Countries.blocked?("IR")
+  end
+
+  test ".blocked? returns true for Lebanon" do
+          assert_equal true, Compliance::Countries.blocked?("LB")
+  end
+
+  test ".blocked? returns true for Liberia" do
+          assert_equal true, Compliance::Countries.blocked?("LR")
+  end
+
+  test ".blocked? returns true for Libya" do
+          assert_equal true, Compliance::Countries.blocked?("LY")
+  end
+
+  test ".blocked? returns true for Myanmar" do
+          assert_equal true, Compliance::Countries.blocked?("MM")
+  end
+
+  test ".blocked? returns true for North Korea" do
+          assert_equal true, Compliance::Countries.blocked?("KP")
+  end
+
+  test ".blocked? returns true for Somalia" do
+          assert_equal true, Compliance::Countries.blocked?("SO")
+  end
+
+  test ".blocked? returns true for Sudan" do
+          assert_equal true, Compliance::Countries.blocked?("SD")
+  end
+
+  test ".blocked? returns true for Syrian Arab Republic" do
+          assert_equal true, Compliance::Countries.blocked?("SY")
+  end
+
+  test ".blocked? returns true for Yemen" do
+          assert_equal true, Compliance::Countries.blocked?("YE")
+  end
+
+  test ".blocked? returns true for Zimbabwe" do
+          assert_equal true, Compliance::Countries.blocked?("ZW")
+  end
+
+  test ".for_select returns a sorted array of country names and codes" do
+          assert_equal for_select_expected, Compliance::Countries.for_select
+  end
+
+  test ".country_with_flag_by_name for a valid country name returns a country with its corresponding flag" do
+            assert_equal "🇺🇸 United States", Compliance::Countries.country_with_flag_by_name("United States")
+  end
+
+  test ".country_with_flag_by_name for an invalid country name returns 'Elsewhere'" do
+            assert_equal "🌎 Elsewhere", Compliance::Countries.country_with_flag_by_name("Mordor")
+  end
+
+  test ".country_with_flag_by_name when country name is nil returns 'Elsewhere'" do
+            assert_equal "🌎 Elsewhere", Compliance::Countries.country_with_flag_by_name(nil)
+  end
+
+  test ".elsewhere_with_flag returns 'Elsewhere' with globe emoji" do
+          assert_equal "🌎 Elsewhere", Compliance::Countries.elsewhere_with_flag
+  end
+
+  test ".subdivisions_for_select returns expected subdivisions for united states" do
+          assert_equal united_states_subdivisions_for_select_expected, Compliance::Countries.subdivisions_for_select(Compliance::Countries::USA.alpha2)
+  end
+
+  test ".subdivisions_for_select returns expected subdivisions for canada" do
+          assert_equal canada_subdivisions_for_select_expected, Compliance::Countries.subdivisions_for_select(Compliance::Countries::CAN.alpha2)
+  end
+
+  test ".subdivisions_for_select returns expected subdivisions for australia" do
+          assert_equal australia_subdivisions_for_select_expected, Compliance::Countries.subdivisions_for_select(Compliance::Countries::AUS.alpha2)
+  end
+
+  test ".subdivisions_for_select returns expected subdivisions for united arab emirates" do
+          assert_equal united_arab_emirates_subdivisions_for_select_expected, Compliance::Countries.subdivisions_for_select(Compliance::Countries::ARE.alpha2)
+  end
+
+  test ".subdivisions_for_select returns expected subdivisions for mexico" do
+          assert_equal mexico_subdivisions_for_select_expected, Compliance::Countries.subdivisions_for_select(Compliance::Countries::MEX.alpha2)
+  end
+
+  test ".subdivisions_for_select returns expected subdivisions for ireland" do
+          assert_equal ireland_subdivisions_for_select_expected, Compliance::Countries.subdivisions_for_select(Compliance::Countries::IRL.alpha2)
+  end
+
+  test ".subdivisions_for_select raises an ArgumentError for a country we haven't added subdivision support for yet" do
+    err = assert_raises(ArgumentError) do
+      Compliance::Countries.subdivisions_for_select(Compliance::Countries::QAT.alpha2)
+    end
+    assert_equal "Country subdivisions not supported", err.message
+  end
+
+  test ".subdivisions_for_select .japan_prefectures_for_select returns all 47 Japan prefectures" do
+          prefectures = Compliance::Countries.japan_prefectures_for_select
+          assert_equal 47, prefectures.length
+  end
+
+  test ".subdivisions_for_select .japan_prefectures_for_select includes value, label, and kana for each prefecture" do
+          prefectures = Compliance::Countries.japan_prefectures_for_select
+          prefectures.each do |prefecture|
+            assert prefecture.key?(:value)
+            assert prefecture.key?(:label)
+            assert prefecture.key?(:kana)
+            assert_equal prefecture[:label], prefecture[:value]
+          end
+  end
+
+  test ".subdivisions_for_select .japan_prefectures_for_select has kana mappings for all prefectures from ISO3166" do
+          iso_prefectures = Compliance::Countries::JPN.subdivisions.values.map { |s| s.translations["ja"] }
+
+          iso_prefectures.each do |prefecture_kanji|
+            kana = Compliance::Countries.japan_prefecture_kana(prefecture_kanji)
+            assert_predicate kana, :present?,
+                            "Missing kana mapping for prefecture: #{prefecture_kanji}"
+          end
+  end
+
+  test ".subdivisions_for_select .japan_prefecture_kana returns the kana reading for a valid prefecture" do
+          assert_equal "トウキョウト", Compliance::Countries.japan_prefecture_kana("東京都")
+          assert_equal "ホッカイドウ", Compliance::Countries.japan_prefecture_kana("北海道")
+          assert_equal "オオサカフ", Compliance::Countries.japan_prefecture_kana("大阪府")
+  end
+
+  test ".subdivisions_for_select .japan_prefecture_kana returns nil for an invalid prefecture" do
+          assert_nil Compliance::Countries.japan_prefecture_kana("Invalid")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns the subdivision code for a valid subdivision code" do
+          assert_equal "CA", Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "CA")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns the subdivision code for a valid subdivision name" do
+          assert_equal "CA", Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "California")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns a subdivision code for a valid subdivision name with more than one word" do
+          assert_equal "ND", Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "North Dakota")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns a subdivision code for a valid but mixed case subdivision name" do
+          assert_equal "CA", Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "caliFornia")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns a subdivision code for a valid but mixed case subdivision name with more than one word" do
+          assert_equal "ND", Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "north dakota")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns a subdivision code for mixed case District of Columbia" do
+          assert_equal "DC", Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, "distriCt of columbiA")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns nil for an invalid subdivision name" do
+          assert_nil Compliance::Countries.find_subdivision_code(Compliance::Countries::USA.alpha2, nil)
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns nil for a nil country code" do
+          assert_nil Compliance::Countries.find_subdivision_code(nil, "California")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns nil for a mismatched country and subdivision combination" do
+          assert_nil Compliance::Countries.find_subdivision_code(Compliance::Countries::AUS.alpha2, "California")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns a subdivision code for mixed case Newfoundland and Labrador" do
+          assert_equal "NL", Compliance::Countries.find_subdivision_code(Compliance::Countries::CAN.alpha2, "newfoundlanD and labraDor")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns nil for a country without any subdivisions" do
+          assert_nil Compliance::Countries.find_subdivision_code(Compliance::Countries::PRI.alpha2, "Puerto Rico")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns the expected subdivision code for a subdivision name given in the `countries` gem" do
+          assert_equal "DU", Compliance::Countries.find_subdivision_code(Compliance::Countries::ARE.alpha2, "Dubayy")
+  end
+
+  test ".subdivisions_for_select .find_subdivision_code returns the expected subdivision code for a subdivision name's English translation in the `countries` gem" do
+          assert_equal "DU", Compliance::Countries.find_subdivision_code(Compliance::Countries::ARE.alpha2, "Dubai")
+  end
+
+  private
 
   def mapping_expected
     {
