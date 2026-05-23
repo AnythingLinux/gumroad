@@ -27,6 +27,16 @@ describe BuyerCurrencyService do
       expect(described_class.detect_currency("5.6.7.8")).to eq("eur")
     end
 
+    it "returns nil when the merchant account cannot charge the detected currency" do
+      allow(GeoIp).to receive(:lookup).and_return(
+        GeoIp::Result.new(country_name: "Germany", country_code: "DE",
+                          region_name: nil, city_name: nil, postal_code: nil,
+                          latitude: nil, longitude: nil)
+      )
+
+      expect(described_class.detect_currency("5.6.7.8", merchant_account: build_stubbed(:merchant_account, currency: "usd"))).to be_nil
+    end
+
     it "returns jpy for Japanese IPs" do
       allow(GeoIp).to receive(:lookup).and_return(
         GeoIp::Result.new(country_name: "Japan", country_code: "JP",
@@ -139,6 +149,13 @@ describe BuyerCurrencyService do
       result = described_class.convert_price(999, from_currency: "usd", to_currency: "jpy")
       expect(result).to be > 0
       expect(result % 500).to eq(0) # should be a round JPY number
+    end
+  end
+
+  describe ".convert_usd_cents_with_exchange_rate" do
+    it "converts decimal and zero-decimal currencies using the locked USD-to-buyer rate" do
+      expect(described_class.convert_usd_cents_with_exchange_rate(1_00, to_currency: "eur", exchange_rate: 0.92)).to eq(92)
+      expect(described_class.convert_usd_cents_with_exchange_rate(1_00, to_currency: "jpy", exchange_rate: 1.55)).to eq(155)
     end
   end
 end

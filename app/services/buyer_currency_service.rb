@@ -55,6 +55,8 @@ class BuyerCurrencyService
     "CZ" => "czk",
   }.freeze
 
+  SUPPORTED_BUYER_CURRENCIES = (COUNTRY_TO_CURRENCY.values & CURRENCY_CHOICES.keys.map(&:to_s)).uniq.freeze
+
   # Apple-style rounding tiers — snap converted prices to psychologically
   # appealing price points.  Each tier lists the rounding increment (in minor
   # units) to use for prices up to that threshold.
@@ -98,13 +100,14 @@ class BuyerCurrencyService
   # Detect the buyer's preferred currency from their IP address.
   # Returns a supported currency code string or nil if we can't determine one
   # (in which case the caller should fall back to the seller's currency).
-  def self.detect_currency(ip)
+  def self.detect_currency(ip, merchant_account: nil)
     return nil if ip.blank?
 
     geo = GeoIp.lookup(ip)
     return nil if geo.nil? || geo.country_code.blank?
 
-    COUNTRY_TO_CURRENCY[geo.country_code.upcase]
+    currency = COUNTRY_TO_CURRENCY[geo.country_code.upcase]
+    currency if merchant_account.blank? || MultiCurrency::MerchantCompatibility.supports_buyer_currency?(merchant_account, currency)
   end
 
   # Get the raw exchange rate between two currencies (without rounding).
@@ -156,6 +159,13 @@ class BuyerCurrencyService
     service.usd_cents_to_currency(to_currency, usd_cents).round
   end
 
+  def self.convert_usd_cents_with_exchange_rate(amount_cents, to_currency:, exchange_rate:)
+    return amount_cents if to_currency.to_s.downcase == Currency::USD
+    return 0 if amount_cents.to_i.zero?
+
+    (BigDecimal(amount_cents.to_s) * BigDecimal(exchange_rate.to_s)).round
+  end
+
   # Build the buyer-local price props for a product, used by both the product
   # page and the checkout to render Apple-style localized pricing. Returns nil
   # when no buyer currency is detected or it matches the seller's currency
@@ -169,6 +179,9 @@ class BuyerCurrencyService
 
     seller_currency = product.price_currency_type.to_s.downcase
     return nil if buyer_currency == seller_currency
+    merchant_account = product.user&.merchant_account(StripeChargeProcessor.charge_processor_id) ||
+      MerchantAccount.gumroad(StripeChargeProcessor.charge_processor_id)
+    return nil unless MultiCurrency::MerchantCompatibility.supports_buyer_currency?(merchant_account, buyer_currency)
 
     suggested_price_cents = if product.customizable_price && product.suggested_price_cents.to_i > 0
       convert_price(product.suggested_price_cents, from_currency: seller_currency, to_currency: buyer_currency)
@@ -180,6 +193,8 @@ class BuyerCurrencyService
       exchange_rate: exchange_rate(from_currency: seller_currency, to_currency: buyer_currency),
       suggested_price_cents: suggested_price_cents,
     }
+  rescue CurrencyHelper::CurrencyRateUnavailable
+    nil
   end
 
   # Apple-style smart rounding: snap a raw converted price to the nearest
@@ -190,16 +205,17 @@ class BuyerCurrencyService
     currency = currency.to_s.downcase
     single_unit = new.is_currency_type_single_unit?(currency)
 
-    tiers = case currency
-            when "jpy" then JPY_TIERS
-            when "krw" then KRW_TIERS
-            else
-              if single_unit
-                JPY_TIERS # fallback for any future single-unit currencies
-              else
-                DECIMAL_TIERS
-              end
-            end
+    tiers =
+      case currency
+      when "jpy" then JPY_TIERS
+      when "krw" then KRW_TIERS
+      else
+        if single_unit
+          JPY_TIERS # fallback for any future single-unit currencies
+        else
+          DECIMAL_TIERS
+        end
+      end
 
     is_zero_decimal = %w[jpy krw].include?(currency) || single_unit
 
