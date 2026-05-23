@@ -43,6 +43,48 @@ support_for_named_seller_membership:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
+# Team presenter fixtures: team_presenter_seller (owner) + team_presenter_member
+# (admin) + one soft-deleted admin membership for the same pair.
+# Also: team_presenter_seller is itself a non-owner of team_presenter_other_owner's
+# team, which must NOT appear in team_presenter_seller's member_infos.
+team_presenter_seller_owner:
+  user: team_presenter_seller
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:team_presenter_seller) %>
+  role: owner
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+team_presenter_active_membership:
+  user: team_presenter_member
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:team_presenter_seller) %>
+  role: admin
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+team_presenter_deleted_membership:
+  user: team_presenter_member
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:team_presenter_seller) %>
+  role: admin
+  deleted_at: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+team_presenter_other_owner_self:
+  user: team_presenter_other_owner
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:team_presenter_other_owner) %>
+  role: owner
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# team_presenter_seller is a non-owner of team_presenter_other_owner's team —
+# should NOT show up in team_presenter_seller's own member_infos.
+team_presenter_seller_in_other_team:
+  user: team_presenter_seller
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:team_presenter_other_owner) %>
+  role: admin
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
 # Owner self-membership for another_seller (used by GumroadBlog::PostsPolicy tests).
 another_seller_owner:
   user: another_seller
