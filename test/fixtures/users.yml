@@ -602,3 +602,36 @@ tax_summary_payable_business_seller:
   recommendation_type: own_products
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by SubdomainTest — three sellers with controlled username/external_id shapes.
+subdomain_seller_old_style:
+  email: subdomain-old-style@example.com
+  username: test_user
+  external_id: "9000000001"
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+subdomain_seller_new_style:
+  email: subdomain-new-style@example.com
+  username: testuser2subdomain
+  external_id: "9000000002"
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+subdomain_seller_no_username:
+  email: subdomain-no-username@example.com
+  external_id: "9000000003"
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
