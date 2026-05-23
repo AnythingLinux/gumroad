@@ -22,6 +22,7 @@ basic_user:
   email: basic@example.com
   encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
   confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
