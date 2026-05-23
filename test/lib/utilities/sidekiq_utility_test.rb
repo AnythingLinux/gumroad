@@ -13,9 +13,6 @@ class SidekiqUtilityTest < ActiveSupport::TestCase
     @asg_double = Object.new
 
     # Stub out network/AWS calls before instantiating SidekiqUtility.
-    URI.singleton_class.define_method(:parse) do |url, _orig = method(:parse)|
-      url == SidekiqUtility::INSTANCE_ID_ENDPOINT ? :uri_sentinel : _orig.call(url)
-    end
     @original_uri_parse = URI.method(:parse)
     URI.define_singleton_method(:parse) do |url|
       url == SidekiqUtility::INSTANCE_ID_ENDPOINT ? :uri_sentinel : URI::DEFAULT_PARSER.parse(url)
