@@ -164,3 +164,19 @@ upsell_test_product:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by Subscriptions::MagicLinkPresenterTest.
+magic_link_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_seller) %>
+  name: Test product name
+  unique_permalink: mlprod
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
