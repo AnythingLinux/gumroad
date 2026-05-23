@@ -1,0 +1,33 @@
+# Seed products (the underlying table is `links`) for policy specs.
+#
+# `flags` is a bitfield managed by FlagShihTzu. The relevant bits used here:
+#   bit 5 => :archived  (value 2^4 = 16)
+# See app/models/link.rb for the full flag map.
+
+named_seller_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Named seller's product
+  unique_permalink: nspprod
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+named_seller_archived_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Named seller's archived product
+  unique_permalink: nsparch
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 16
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
