@@ -133,6 +133,8 @@ admin_user:
   encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
   confirmed_at: <%= Time.current %>
   flags: 134217728
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -153,6 +155,16 @@ community_buyer:
   encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
   confirmed_at: <%= Time.current %>
   user_risk_state: not_reviewed
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Invited user used by InviteMailer tests.
+invited_user:
+  email: invited@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
