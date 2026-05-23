@@ -180,3 +180,32 @@ magic_link_product:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
+
+# CommunityChatRecapMailerTest fixtures.
+snap_app_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:community_recap_seller) %>
+  name: Snap app
+  unique_permalink: snapapp
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 536870912
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+bubbles_app_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:community_recap_seller) %>
+  name: Bubbles app
+  unique_permalink: bubblesapp
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 536870912
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
