@@ -35,3 +35,14 @@ named_seller_comment_on_published_post:
   content: "Their -> they're"
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Comment by basic_user on the named_seller's published post — used by CommentPresenter tests
+# to verify "signed in user is the commenter" branches.
+basic_user_comment_on_published_post:
+  commentable: published_post (Installment)
+  author_id: <%= ActiveRecord::FixtureSet.identify(:basic_user) %>
+  author_name: Basic
+  comment_type: <%= Comment::COMMENT_TYPE_USER_SUBMITTED %>
+  content: "Hello there"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
