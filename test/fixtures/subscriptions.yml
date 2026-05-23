@@ -14,3 +14,12 @@ basic_user_product_subscription:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
   flags: 0
+
+# Used by Subscriptions::MagicLinkPresenterTest.
+magic_link_subscription:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_product) %>
+  user_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_user) %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  flags: 0
+

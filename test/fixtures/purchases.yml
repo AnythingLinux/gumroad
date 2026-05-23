@@ -167,3 +167,22 @@ admin_charge_policy_purchase_2:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
+# Used by Subscriptions::MagicLinkPresenterTest. Original membership purchase
+# for magic_link_subscription. is_original_subscription_purchase => flag bit 3
+# (2^2 = 4).
+magic_link_membership_purchase:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_product) %>
+  subscription_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_subscription) %>
+  email: purchase@email.com
+  price_cents: 100
+  total_transaction_cents: 100
+  displayed_price_cents: 100
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  succeeded_at: <%= Time.current %>
+  flags: 4
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+
