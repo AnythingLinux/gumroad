@@ -35,3 +35,12 @@ team_invitation_to_member:
   expires_at: <%= 7.days.from_now %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by AuthPresenterTest signup_props with a team invitation.
+auth_presenter_invitation:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  email: auth-invitee@example.com
+  role: admin
+  expires_at: <%= 7.days.from_now %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

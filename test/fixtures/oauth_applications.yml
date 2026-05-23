@@ -1,0 +1,11 @@
+# OAuth applications used by AuthPresenter tests.
+
+auth_presenter_app:
+  name: Test App
+  uid: <%= SecureRandom.hex(20) %>
+  secret: <%= SecureRandom.hex(20) %>
+  redirect_uri: https://foo
+  scopes: "edit_products view_sales mark_sales_as_shipped edit_sales revenue_share ifttt view_profile view_payouts view_tax_data account"
+  confidential: true
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
