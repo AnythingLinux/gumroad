@@ -11,3 +11,39 @@ paypal_payment_recent:
   payout_period_end_date: <%= Date.yesterday %>
   created_at: <%= 1.week.ago %>
   updated_at: <%= 1.week.ago %>
+
+payout_annual_completed_payment:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:payout_annual_seller) %>
+  state: completed
+  processor: paypal
+  correlation_id: payout-annual-completed
+  txn_id: payout-annual-completed
+  processor_fee_cents: 10
+  amount_cents: 1000
+  payout_period_end_date: 2019-01-01
+  created_at: 2019-01-01 00:00:00
+  updated_at: 2019-01-01 00:00:00
+
+payout_annual_failed_payment:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:payout_annual_seller) %>
+  state: failed
+  processor: paypal
+  correlation_id: payout-annual-failed
+  txn_id: payout-annual-failed
+  processor_fee_cents: 10
+  amount_cents: 1000
+  payout_period_end_date: 2019-01-02
+  created_at: 2019-01-02 00:00:00
+  updated_at: 2019-01-02 00:00:00
+
+payout_annual_outside_payment:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:payout_annual_seller) %>
+  state: failed
+  processor: paypal
+  correlation_id: payout-annual-outside
+  txn_id: payout-annual-outside
+  processor_fee_cents: 10
+  amount_cents: 1000
+  payout_period_end_date: 2018-12-29
+  created_at: 2018-12-29 00:00:00
+  updated_at: 2018-12-29 00:00:00
