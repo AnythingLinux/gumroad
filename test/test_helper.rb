@@ -14,23 +14,28 @@ WebMock.disable_net_connect!(allow_localhost: true)
 # request to localhost:9200, where 6 Faraday retries × N parallel test workers
 # saturates Makara's connection pool (each retry holds the AR thread inside an
 # Executor wrapper) and crashes the whole suite with AllConnectionsBlacklisted.
-if defined?(EsClient)
-  fake_es = Object.new
-  fake_es.define_singleton_method(:method_missing) do |name, *_args, **_kwargs|
-    case name
-    when :count, :search, :msearch then { "count" => 0, "hits" => { "hits" => [], "total" => { "value" => 0 } } }
-    when :indices then self
-    when :exists?, :exists then false
-    when :index, :update, :delete, :delete_by_query, :create, :put, :put_alias, :put_mapping, :put_settings then { "result" => "noop", "_shards" => { "successful" => 0 } }
-    when :transport then self
-    when :logger, :logger= then nil
-    else nil
-    end
+require "elasticsearch"
+fake_es = Object.new
+fake_es.define_singleton_method(:method_missing) do |name, *_args, **_kwargs|
+  case name
+  when :count, :search, :msearch then { "count" => 0, "hits" => { "hits" => [], "total" => { "value" => 0 } } }
+  when :indices then self
+  when :exists?, :exists then false
+  when :index, :update, :delete, :delete_by_query, :create, :put, :put_alias, :put_mapping, :put_settings, :scroll, :clear_scroll, :update_by_query then { "result" => "noop", "_shards" => { "successful" => 0 }, "hits" => { "hits" => [] } }
+  when :transport then self
+  when :logger, :logger= then nil
+  else nil
   end
-  fake_es.define_singleton_method(:respond_to_missing?) { |_n, _p = false| true }
-  Object.send(:remove_const, :EsClient)
-  Object.const_set(:EsClient, fake_es)
 end
+fake_es.define_singleton_method(:respond_to_missing?) { |_n, _p = false| true }
+if defined?(EsClient)
+  Object.send(:remove_const, :EsClient)
+end
+Object.const_set(:EsClient, fake_es)
+# Elasticsearch::Model.client is the lookup used by classes that `include
+# Elasticsearch::Model` (Purchase, ConfirmedFollowerEvent, ProductPageView,
+# etc.). Set it to the fake too.
+Elasticsearch::Model.client = fake_es if defined?(Elasticsearch::Model)
 
 module ActiveSupport
   class TestCase

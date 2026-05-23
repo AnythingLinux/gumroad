@@ -122,6 +122,7 @@ class SignedUrlHelperTest < ActiveSupport::TestCase
       Aws::S3::Client.define_singleton_method(:new, @original_s3_client_new)
 
       WebMock.stub_request(:any, /amazonaws\.com/).to_return(status: 404, body: "")
+      WebMock.stub_request(:any, %r{localhost:9000}).to_return(status: 404, body: "")
 
       err = assert_raises(Aws::S3::Errors::NotFound) do
         signed_download_url_for_s3_key_and_filename("attachments/missing.txt", "filename")
