@@ -1,0 +1,18 @@
+# CommunityChatRecapMailerTest fixtures.
+
+daily_recap_run:
+  recap_frequency: daily
+  from_date: <%= Date.parse("Mar 26, 2025").beginning_of_day %>
+  to_date: <%= Date.parse("Mar 26, 2025").end_of_day %>
+  recaps_count: 0
+  finished_at: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+weekly_recap_run:
+  recap_frequency: weekly
+  from_date: <%= Date.parse("Mar 17, 2025").beginning_of_day %>
+  to_date: <%= (Date.parse("Mar 17, 2025") + 6.days).end_of_day %>
+  recaps_count: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
