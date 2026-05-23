@@ -4,6 +4,11 @@ module CurrencyHelper
   include BasePrice::Recurrence
   # Note: To reference a currency in code, use Currency::[3-char-ref].
   # e.g. Currency::USD, Currency::CAD
+  class CurrencyRateUnavailable < StandardError; end
+
+  RATE_CACHE_TTL = 1.hour
+  MAX_STALE_RATE_AGE = 24.hours
+  UNSUPPORTED_RATE = "unsupported"
 
   def currency_namespace
     Redis::Namespace.new(:currencies, redis: $redis)
@@ -34,22 +39,28 @@ module CurrencyHelper
   end
 
   def query_rate(currency_type)
-    JSON.parse(URI.open(CURRENCY_SOURCE).read)["rates"][currency_type]
+    rate = JSON.parse(URI.open(CURRENCY_SOURCE).read)["rates"][currency_type.to_s.upcase]
+    rate.present? && rate.to_f.positive? ? rate : UNSUPPORTED_RATE
   rescue StandardError
-    currency_namespace.get(currency_type.to_s)
+    cached_rate(currency_type, allow_stale: true) || raise(CurrencyRateUnavailable, "No exchange rate for #{currency_type}")
   end
 
   def get_rate(currency_type)
     return "1.0" if currency_type.to_s == "usd" # Getting around an open exchange jankiness
     formatted_currency = currency_type.to_s.upcase
-    rate = currency_namespace.get(formatted_currency.to_s)
-    if rate && rate.to_f > 0
-      rate.to_f.to_s
-    else
-      new_rate = query_rate(formatted_currency)
-      currency_namespace.set(formatted_currency.to_s, new_rate)
-      new_rate.to_f.to_s
+    raise CurrencyRateUnavailable, "Unsupported exchange rate for #{formatted_currency}" if currency_namespace.get(formatted_currency) == UNSUPPORTED_RATE
+
+    rate = cached_rate(formatted_currency)
+    return rate.to_f.to_s if rate.present?
+
+    new_rate = query_rate(formatted_currency)
+    if new_rate == UNSUPPORTED_RATE
+      cache_rate(formatted_currency, UNSUPPORTED_RATE)
+      raise CurrencyRateUnavailable, "Unsupported exchange rate for #{formatted_currency}"
     end
+
+    cache_rate(formatted_currency, new_rate)
+    new_rate.to_f.to_s
   end
 
   def get_usd_cents(currency_type, quantity, rate: nil)
@@ -116,6 +127,34 @@ module CurrencyHelper
 
   def unit_scaling_factor(currency_type)
     is_currency_type_single_unit?(currency_type) ? 1 : 100
+  end
+
+  def cached_rate(currency_type, allow_stale: false)
+    raw_rate = currency_namespace.get(currency_type.to_s.upcase)
+    return if raw_rate.blank? || raw_rate == UNSUPPORTED_RATE
+
+    cached_rate_entry(raw_rate, allow_stale:) || (raw_rate.to_f if raw_rate.to_f.positive?)
+  end
+
+  def cached_rate_entry(raw_rate, allow_stale:)
+    entry = JSON.parse(raw_rate)
+    return unless entry.is_a?(Hash)
+    return if entry["rate"].blank? || entry["rate"].to_f <= 0
+
+    cached_at = Time.zone.at(entry["cached_at"].to_i)
+    max_age = allow_stale ? MAX_STALE_RATE_AGE : RATE_CACHE_TTL
+    entry["rate"] if cached_at >= max_age.ago
+  rescue JSON::ParserError
+    nil
+  end
+
+  def cache_rate(currency_type, rate)
+    payload = if rate == UNSUPPORTED_RATE
+      UNSUPPORTED_RATE
+    else
+      { rate:, cached_at: Time.current.to_i }.to_json
+    end
+    currency_namespace.setex(currency_type.to_s.upcase, RATE_CACHE_TTL.to_i, payload)
   end
 
   def is_currency_type_single_unit?(currency_type = "usd")

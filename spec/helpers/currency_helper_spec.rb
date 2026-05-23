@@ -8,6 +8,25 @@ describe CurrencyHelper do
       expect(get_rate("JPY")).to eq "78.3932"
       expect(get_rate("GBP")).to eq "0.652571"
     end
+
+    it "uses a stale cached rate when the upstream rate fetch fails" do
+      currency_namespace.set("EUR", { rate: 0.92, cached_at: 2.hours.ago.to_i }.to_json)
+      allow(URI).to receive(:open).and_raise(StandardError)
+
+      expect(get_rate("EUR")).to eq "0.92"
+    ensure
+      currency_namespace.del("EUR")
+    end
+
+    it "caches unsupported currencies with a sentinel instead of caching nil as zero" do
+      currency_namespace.del("ZZZ")
+      allow(URI).to receive(:open).and_return(StringIO.new({ rates: {} }.to_json))
+
+      expect { get_rate("ZZZ") }.to raise_error(CurrencyHelper::CurrencyRateUnavailable)
+      expect(currency_namespace.get("ZZZ")).to eq(CurrencyHelper::UNSUPPORTED_RATE)
+    ensure
+      currency_namespace.del("ZZZ")
+    end
   end
 
   describe "#get_usd_cents" do
