@@ -68,3 +68,16 @@ community_buyer_purchase:
   succeeded_at: <%= Time.current %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+analytics_deleted_with_sales_purchase:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:analytics_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:analytics_deleted_with_sales_product) %>
+  email: analytics-buyer@example.com
+  price_cents: 100
+  total_transaction_cents: 100
+  displayed_price_cents: 100
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  succeeded_at: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
