@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_28_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_29_000001) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name", limit: 191, null: false
     t.string "record_type", limit: 191, null: false
@@ -402,6 +402,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_28_000000) do
     t.index ["seller_id"], name: "index_blocked_customer_objects_on_seller_id"
   end
 
+  create_table "blocked_objects", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "object_type", limit: 50, null: false
+    t.string "object_value", limit: 320, null: false
+    t.datetime "blocked_at"
+    t.datetime "expires_at"
+    t.bigint "blocked_by"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["object_type", "object_value"], name: "index_blocked_objects_on_type_and_value", unique: true
+    t.index ["object_value"], name: "index_blocked_objects_on_value"
+  end
+
   create_table "bundle_product_purchases", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "bundle_purchase_id", null: false
     t.bigint "product_purchase_id", null: false
@@ -507,6 +519,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_28_000000) do
     t.index ["order_id"], name: "index_carts_on_order_id"
     t.index ["updated_at"], name: "index_carts_on_updated_at"
     t.index ["user_id"], name: "index_carts_on_user_id"
+  end
+
+  create_table "charge_buyer_currency_amounts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "charge_id", null: false
+    t.string "buyer_currency", limit: 3, null: false
+    t.bigint "buyer_currency_amount_cents"
+    t.bigint "buyer_currency_gumroad_amount_cents"
+    t.decimal "buyer_currency_exchange_rate", precision: 20, scale: 10
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["buyer_currency"], name: "index_charge_buyer_currency_amounts_on_buyer_currency"
+    t.index ["charge_id"], name: "index_charge_buyer_currency_amounts_on_charge_id", unique: true
   end
 
   create_table "charge_purchases", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1358,6 +1382,36 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_28_000000) do
     t.index ["purchaser_id"], name: "index_orders_on_purchaser_id"
   end
 
+  create_table "page_versions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "page_id", null: false
+    t.bigint "parent_id"
+    t.text "html", null: false
+    t.text "prompt", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["page_id"], name: "index_page_versions_on_page_id"
+    t.index ["parent_id"], name: "index_page_versions_on_parent_id"
+  end
+
+  create_table "pages", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "link_id"
+    t.string "title", null: false
+    t.string "slug", null: false
+    t.text "html_content"
+    t.json "json_data"
+    t.boolean "published", default: false, null: false
+    t.datetime "published_at"
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_pages_on_deleted_at"
+    t.index ["link_id"], name: "index_pages_on_link_id"
+    t.index ["user_id", "published"], name: "index_pages_on_user_id_and_published"
+    t.index ["user_id", "slug"], name: "index_pages_on_user_id_and_slug_alive", unique: true
+    t.index ["user_id"], name: "index_pages_on_user_id"
+  end
+
   create_table "payment_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "subscription_id"
     t.integer "price_id"
@@ -1404,18 +1458,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_28_000000) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["balance_id"], name: "index_payments_balances_on_balance_id"
     t.index ["payment_id"], name: "index_payments_balances_on_payment_id"
-  end
-
-  create_table "platform_blocks", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "object_type", limit: 50, null: false
-    t.string "object_value", limit: 320, null: false
-    t.datetime "blocked_at"
-    t.datetime "expires_at"
-    t.bigint "blocked_by"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["object_type", "object_value"], name: "index_platform_blocks_on_type_and_value", unique: true
-    t.index ["object_value"], name: "index_platform_blocks_on_value"
   end
 
   create_table "post_email_blasts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1663,6 +1705,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_28_000000) do
     t.index ["seller_id"], name: "index_public_files_on_seller_id"
   end
 
+  create_table "purchase_buyer_currency_amounts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "purchase_id", null: false
+    t.string "buyer_currency", limit: 3, null: false
+    t.bigint "buyer_currency_amount_cents"
+    t.decimal "buyer_currency_exchange_rate", precision: 20, scale: 10
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["buyer_currency"], name: "index_purchase_buyer_currency_amounts_on_buyer_currency"
+    t.index ["purchase_id"], name: "index_purchase_buyer_currency_amounts_on_purchase_id", unique: true
+  end
+
   create_table "purchase_custom_field_files", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "url"
     t.bigint "purchase_custom_field_id", null: false
@@ -1859,7 +1912,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_28_000000) do
     t.decimal "buyer_currency_exchange_rate", precision: 20, scale: 10
     t.index ["affiliate_id", "created_at"], name: "index_purchases_on_affiliate_id_and_created_at"
     t.index ["browser_guid"], name: "index_purchases_on_browser_guid"
-    t.index ["buyer_currency"], name: "index_purchases_on_buyer_currency"
     t.index ["card_type", "card_visual", "created_at", "stripe_fingerprint"], name: "index_purchases_on_card_type_visual_date_fingerprint"
     t.index ["card_type", "card_visual", "stripe_fingerprint"], name: "index_purchases_on_card_type_visual_fingerprint"
     t.index ["created_at"], name: "index_purchases_on_created_at"
@@ -2904,4 +2956,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_28_000000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "page_versions", "page_versions", column: "parent_id"
+  add_foreign_key "page_versions", "pages"
+  add_foreign_key "pages", "links"
+  add_foreign_key "pages", "users"
 end
