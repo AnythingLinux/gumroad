@@ -1052,3 +1052,70 @@ review_stat_test_product_d:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by SelfServiceAffiliateProductTest.
+ssap_product_1:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: SSAP Product 1
+  unique_permalink: ssap1
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+ssap_product_2:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: SSAP Product 2
+  unique_permalink: ssap2
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+ssap_product_3:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: SSAP Product 3
+  unique_permalink: ssap3
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+ssap_product_4:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: SSAP Product 4
+  unique_permalink: ssap4
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# bit 28 => is_collab (FlagShihTzu uses 1-indexed bits; 2^27 = 134217728)
+ssap_collab_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: SSAP Collab Product
+  unique_permalink: ssapcl
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 134217728
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
