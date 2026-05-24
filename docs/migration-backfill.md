@@ -18,7 +18,7 @@ Tracks the ~649 silenced test methods across ~643 files left after the bulk RSpe
 | `test/services/` | 99 | 99 |
 | `test/sidekiq/` | 77 | 77 |
 | `test/presenters/` | 62 | 67 |
-| `test/modules/` | 32 | 32 |
+| `test/modules/` | 28 | 28 |
 | `test/business/` | 25 | 25 |
 | `test/mailers/` | 0 | 0 |
 | `test/lib/` | 4 | 4 |
@@ -27,7 +27,7 @@ Tracks the ~649 silenced test methods across ~643 files left after the bulk RSpe
 | `test/policies/` | 1 | 1 |
 | `test/jobs/` | 1 | 1 |
 | `test/root/` | 1 | 1 |
-| **Total** | **639** | **645** |
+| **Total** | **635** | **641** |
 
 ## Suggested batch order
 Models first (core behavior), then services/sidekiq (business logic), then controllers/presenters (thinner orchestration), then leaves (mailers/helpers/policies).
@@ -629,7 +629,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ✅ | `test/presenters/admin/payment_presenter_test.rb` | 1 |
 | ✅ | `test/presenters/admin/merchant_account_presenter_test.rb` | 1 |
 
-## `test/modules/` (32 files, 32 skips)
+## `test/modules/` (28 files, 28 skips)
 
 | Status | File | Skips |
 |---|---|---:|
@@ -639,14 +639,14 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/modules/user/social_twitter_test.rb` | 1 |
 | ⬜ | `test/modules/user/social_google_test.rb` | 1 |
 | ⬜ | `test/modules/user/recommendations_test.rb` | 1 |
-| ⬜ | `test/modules/user/posts_test.rb` | 1 |
+| ✅ | `test/modules/user/posts_test.rb` | 0 |
 | ⬜ | `test/modules/user/ping_notification_test.rb` | 1 |
-| ⬜ | `test/modules/user/payout_schedule_test.rb` | 1 |
+| ✅ | `test/modules/user/payout_schedule_test.rb` | 0 |
 | ⬜ | `test/modules/user/payment_stats_test.rb` | 1 |
 | ⬜ | `test/modules/user/money_balance_test.rb` | 1 |
 | ⬜ | `test/modules/user/feature_status_test.rb` | 1 |
 | ⬜ | `test/modules/user/compliance_test.rb` | 1 |
-| ⬜ | `test/modules/user/async_devise_notification_test.rb` | 1 |
+| ✅ | `test/modules/user/async_devise_notification_test.rb` | 0 |
 | ⬜ | `test/modules/subscription/ping_notification_test.rb` | 1 |
 | ⬜ | `test/modules/s3_retrievable_test.rb` | 1 |
 | ⬜ | `test/modules/purchase/targeting_test.rb` | 1 |
@@ -659,7 +659,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/modules/product/searchable/name_field_search_test.rb` | 1 |
 | ⬜ | `test/modules/product/searchable/indexing_test.rb` | 1 |
 | ⬜ | `test/modules/product/searchable/filtered_search_test.rb` | 1 |
-| ⬜ | `test/modules/product/review_stat_test.rb` | 1 |
+| ✅ | `test/modules/product/review_stat_test.rb` | 0 |
 | ⬜ | `test/modules/product/recommendations_test.rb` | 1 |
 | ⬜ | `test/modules/product/prices_test.rb` | 1 |
 | ⬜ | `test/modules/product/preview_test.rb` | 1 |
