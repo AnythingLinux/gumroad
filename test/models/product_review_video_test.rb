@@ -13,7 +13,7 @@ class ProductReviewVideoTest < ActiveSupport::TestCase
     new_video.video_file = VideoFile.new(
       record: new_video,
       user: users(:purchaser),
-      url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/specs/prvt-new.mp4",
+      url: "#{S3_BASE_URL}specs/prvt-new.mp4",
       filetype: "mp4",
     )
     new_video.save!
