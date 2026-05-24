@@ -557,8 +557,8 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/sidekiq/check_payment_address_worker_test.rb` | 1 |
 | ⬜ | `test/sidekiq/charge_preorder_worker_test.rb` | 1 |
 | ✅ | `test/sidekiq/charge_declined_reminder_worker_test.rb` | 1 |
-| ⬜ | `test/sidekiq/calculate_payout_numbers_worker_test.rb` | 1 |
-| ⬜ | `test/sidekiq/cache_product_data_worker_test.rb` | 1 |
+| ✅ | `test/sidekiq/calculate_payout_numbers_worker_test.rb` | 1 |
+| ✅ | `test/sidekiq/cache_product_data_worker_test.rb` | 1 |
 | ⬜ | `test/sidekiq/block_stripe_suspected_fraudulent_payments_worker_test.rb` | 1 |
 | ⬜ | `test/sidekiq/annual_payout_export_worker_test.rb` | 1 |
 
