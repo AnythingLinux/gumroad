@@ -685,7 +685,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ✅ | `test/business/payments/charging/implementations/stripe/stripe_chargeable_payment_method_test.rb` | 0 |
 | ✅ | `test/business/payments/charging/implementations/stripe/stripe_chargeable_credit_card_test.rb` | 0 |
 | ✅ | `test/business/payments/charging/implementations/stripe/stripe_charge_radar_processor_test.rb` | 0 |
-| ⬜ | `test/business/payments/charging/implementations/stripe/stripe_charge_processor_test.rb` | 1 |
+| ✅ | `test/business/payments/charging/implementations/stripe/stripe_charge_processor_test.rb` | 0 |
 | ✅ | `test/business/payments/charging/implementations/paypal/paypal_rest_api_test.rb` | 0 |
 | ✅ | `test/business/payments/charging/implementations/paypal/paypal_charge_processor_test.rb` | 0 |
 | ⬜ | `test/business/payments/charging/implementations/braintree/braintree_chargeable_transient_customer_test.rb` | 1 |
