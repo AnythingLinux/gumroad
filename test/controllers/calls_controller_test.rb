@@ -2,15 +2,29 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during fixtures-only controller migration.
-# Original spec: spec/controllers/calls_controller_spec.rb (deleted in this commit; see git history)
-# Reason: controller request-style spec with heavy auth/session/shared_context setup
-# (FB/create/let/shared_context refs: 11). Requires fixture-based equivalents
-# for "user signed in as admin for seller" + Pundit authorization shared examples
-# + downstream factories (users, products, purchases, etc.). Out of scope for
-# mechanical migration; revisit post-deadline with manual rewrite using fixtures.
 class CallsControllerTest < ActionController::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/controllers/calls_controller_spec.rb — controller spec with shared auth/Pundit contexts"
+  include Devise::Test::ControllerHelpers
+  include ControllerSellerAuthHelpers
+
+  setup do
+    @seller = users(:named_seller)
+    @admin = users(:admin_for_named_seller)
+    @call = calls(:named_seller_call_product_call)
+    sign_in_as_seller(@admin, @seller)
+  end
+
+  teardown { restore_protect_against_forgery! }
+
+  test "PUT update updates the call and returns no content" do
+    put :update, params: { id: @call.external_id, call_url: "https://zoom.us/j/thing" }, as: :json
+    assert_response :success
+    assert_response :no_content
+    assert_equal "https://zoom.us/j/thing", @call.reload.call_url
+  end
+
+  test "PUT update raises RecordNotFound when call doesn't exist" do
+    assert_raises(ActiveRecord::RecordNotFound) do
+      put :update, params: { id: "non_existent_id" }
+    end
   end
 end
