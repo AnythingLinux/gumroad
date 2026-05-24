@@ -100,3 +100,33 @@ cdn_deleted_external_link_file:
   deleted_at: <%= Time.current %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Product files for ExpireTranscodedVideosJobTest: each backs a transcoded_video
+# row with the `is_transcoded_for_hls` flag (bit 0 => flags: 1) set so we can
+# observe the flag being cleared when the matching TranscodedVideo is expired.
+transcoded_video_pf_nil:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/transcoded-nil.mp4"
+  filetype: mp4
+  filegroup: video
+  flags: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+transcoded_video_pf_recent:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/transcoded-recent.mp4"
+  filetype: mp4
+  filegroup: video
+  flags: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+transcoded_video_pf_old:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/transcoded-old.mp4"
+  filetype: mp4
+  filegroup: video
+  flags: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
