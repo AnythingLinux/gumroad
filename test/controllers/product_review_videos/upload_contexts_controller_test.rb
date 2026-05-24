@@ -23,7 +23,7 @@ class ProductReviewVideos::UploadContextsControllerTest < ActionController::Test
     assert_equal(
       {
         "aws_access_key_id" => AWS_ACCESS_KEY,
-        "s3_url" => "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}",
+        "s3_url" => S3_BASE_URL.chomp("/"),
         "user_id" => @user.external_id,
       },
       response.parsed_body

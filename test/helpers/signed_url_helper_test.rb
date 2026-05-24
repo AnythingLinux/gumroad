@@ -11,7 +11,7 @@ class SignedUrlHelperTest < ActiveSupport::TestCase
 
   setup do
     @file = product_files(:signed_url_helper_pdf)
-    @pdf_uri = "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/#{PDF_PATH}"
+    @pdf_uri = "#{S3_BASE_URL}#{PDF_PATH}"
 
     @s3_object = Object.new
     @s3_object.define_singleton_method(:public_url) { SignedUrlHelperTest.const_get(:PDF_URI) rescue nil }

@@ -12,8 +12,8 @@ class SaveFilesServiceTest < ActiveSupport::TestCase
   end
 
   test "updates files" do
-    file_1 = ProductFile.create!(link: @product, description: "pencil", url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/pencil.png")
-    file_2 = ProductFile.create!(link: @product, description: "manual", url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/manual.pdf")
+    file_1 = ProductFile.create!(link: @product, description: "pencil", url: "#{S3_BASE_URL}attachment/pencil.png")
+    file_2 = ProductFile.create!(link: @product, description: "manual", url: "#{S3_BASE_URL}attachment/manual.pdf")
 
     SaveFilesService.perform(@product, {
                                files: [
@@ -26,7 +26,7 @@ class SaveFilesServiceTest < ActiveSupport::TestCase
                                  },
                                  {
                                    external_id: SecureRandom.uuid,
-                                   url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/book.pdf",
+                                   url: "#{S3_BASE_URL}attachment/book.pdf",
                                    display_name: "new book",
                                    description: "new book description",
                                    position: 1
@@ -51,8 +51,8 @@ class SaveFilesServiceTest < ActiveSupport::TestCase
     assert_equal 2, manual_file.position
 
     book_file = @product.product_files.alive[1].reload
-    assert_equal "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/book.pdf", book_file.url
-    assert_equal "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/book.pdf", book_file.unique_url_identifier
+    assert_equal "#{S3_BASE_URL}attachment/book.pdf", book_file.url
+    assert_equal "#{S3_BASE_URL}attachment/book.pdf", book_file.unique_url_identifier
     assert_equal "new book", book_file.display_name
     assert_equal "new book description", book_file.description
     assert_equal 1, book_file.position
@@ -118,7 +118,7 @@ class SaveFilesServiceTest < ActiveSupport::TestCase
   end
 
   test "maps 'name' param to 'display_name' for product files" do
-    file = ProductFile.create!(link: @product, url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/pencil.png")
+    file = ProductFile.create!(link: @product, url: "#{S3_BASE_URL}attachment/pencil.png")
     SaveFilesService.perform(@product, {
                                files: [{
                                  external_id: file.external_id,
@@ -130,7 +130,7 @@ class SaveFilesServiceTest < ActiveSupport::TestCase
   end
 
   test "prefers 'display_name' over 'name' when both are provided" do
-    file = ProductFile.create!(link: @product, url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/pencil.png")
+    file = ProductFile.create!(link: @product, url: "#{S3_BASE_URL}attachment/pencil.png")
     SaveFilesService.perform(@product, {
                                files: [{
                                  external_id: file.external_id,
@@ -143,7 +143,7 @@ class SaveFilesServiceTest < ActiveSupport::TestCase
   end
 
   test "maps 'file_name' param to 'display_name' for product files round trips" do
-    file = ProductFile.create!(link: @product, url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/pencil.png")
+    file = ProductFile.create!(link: @product, url: "#{S3_BASE_URL}attachment/pencil.png")
     SaveFilesService.perform(@product, {
                                files: [{
                                  external_id: file.external_id,
@@ -165,8 +165,8 @@ class SaveFilesServiceTest < ActiveSupport::TestCase
       installment_type: Installment::SELLER_TYPE,
       send_emails: true,
     )
-    file1 = ProductFile.create!(installment: installment, url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/pencil.png")
-    file2 = ProductFile.create!(installment: installment, url: "#{AWS_S3_ENDPOINT}/#{S3_BUCKET}/attachment/manual.pdf")
+    file1 = ProductFile.create!(installment: installment, url: "#{S3_BASE_URL}attachment/pencil.png")
+    file2 = ProductFile.create!(installment: installment, url: "#{S3_BASE_URL}attachment/manual.pdf")
 
     SaveFilesService.perform(installment, {
                                files: [
