@@ -740,3 +740,53 @@ restartable_buyer:
   recommendation_type: own_products
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Users for Product::CreationLimitTest.
+creation_limit_non_compliant:
+  email: creation-limit-noncompliant@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+creation_limit_compliant:
+  email: creation-limit-compliant@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: compliant
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+creation_limit_custom:
+  email: creation-limit-custom@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  json_data: '{"daily_product_creation_limit":5}'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+creation_limit_higher:
+  email: creation-limit-higher@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: compliant
+  recommendation_type: own_products
+  json_data: '{"daily_product_creation_limit":150}'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Team member (is_team_member flag bit 28 = 134217728).
+creation_limit_team_member:
+  email: creation-limit-team@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  flags: 134217728
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
