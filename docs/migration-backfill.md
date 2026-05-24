@@ -292,7 +292,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/models/rich_content_test.rb` | 1 |
 | ⬜ | `test/models/resend_event_info_test.rb` | 1 |
 | ⬜ | `test/models/purchase_test.rb` | 1 |
-| ⬜ | `test/models/purchase_custom_field_test.rb` | 1 |
+| ✅ | `test/models/purchase_custom_field_test.rb` | 1 |
 | ⬜ | `test/models/purchase/purchase_zip_test.rb` | 1 |
 | ⬜ | `test/models/purchase/purchase_taxation_test.rb` | 1 |
 | ⬜ | `test/models/purchase/purchase_subscription_test.rb` | 1 |
@@ -315,7 +315,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/models/product_affiliate_test.rb` | 1 |
 | ⬜ | `test/models/preorder_test.rb` | 1 |
 | ⬜ | `test/models/preorder_link_test.rb` | 1 |
-| ⬜ | `test/models/post_email_blast_test.rb` | 1 |
+| ✅ | `test/models/post_email_blast_test.rb` | 1 |
 | ⬜ | `test/models/payment_test.rb` | 1 |
 | ⬜ | `test/models/payment_option/installment_plan_snapshot_test.rb` | 1 |
 | ⬜ | `test/models/order_test.rb` | 1 |

@@ -1,0 +1,14 @@
+# Post email blast fixtures. Used by PostEmailBlastTest.
+# Bypasses model `before_validation` (sets seller from post); set seller_id
+# explicitly to keep YAML-only.
+
+basic_blast:
+  post_id: <%= ActiveRecord::FixtureSet.identify(:published_post) %>
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  requested_at: <%= 30.minutes.ago %>
+  started_at: <%= 25.minutes.ago %>
+  first_email_delivered_at: <%= 20.minutes.ago %>
+  last_email_delivered_at: <%= 10.minutes.ago %>
+  delivery_count: 1500
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
