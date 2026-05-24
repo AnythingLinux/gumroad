@@ -125,3 +125,16 @@ po_test_validation_subscription:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
   flags: 0
+
+# SubscriptionPlanChangeTest
+spc_tiered_subscription:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:spc_membership_product) %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  flags: 0
+
+spc_nontiered_subscription:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:spc_nontiered_product) %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  flags: 0
