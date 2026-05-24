@@ -324,6 +324,7 @@ class Purchase < ApplicationRecord
                         if: -> { is_updated_original_subscription_purchase && (link.is_physical || link.require_shipping?) && !is_recurring_subscription_charge && !is_preorder_charge? }
   end
   validates :call, presence: true, if: -> { link.native_type == Link::NATIVE_TYPE_CALL }
+  validate :import_call_errors, if: -> { call.present? && link.native_type == Link::NATIVE_TYPE_CALL }
   validates_inclusion_of :recommender_model_name, in: RecommendedProductsService::MODELS, allow_nil: true
   validates :purchaser, presence: true, if: -> { is_gift_receiver_purchase && gift&.is_recipient_hidden? }
   validates :custom_fee_per_thousand, allow_nil: true, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 1000 }
@@ -2996,6 +2997,16 @@ class Purchase < ApplicationRecord
   end
 
   private
+    def import_call_errors
+      return if call.blank? || call.valid?
+      # Rails 7.2: autosave-driven `validates_associated` adds a generic
+      # "Call is invalid" message instead of forwarding the child's
+      # `errors.full_messages`. Replace it with the actual child messages
+      # so callers (controllers, services) see the original error text.
+      errors.delete(:call)
+      call.errors.full_messages.each { |msg| errors.add(:call, msg) }
+    end
+
     def resolved_offer_code_discount_for_buyer
       if offer_code.existing_customers_only? || offer_code.tiered?
         evaluated_discount = offer_code.evaluate_for_buyer(offer_code_buyer, product: link)

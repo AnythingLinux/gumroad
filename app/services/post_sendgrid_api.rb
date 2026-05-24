@@ -231,7 +231,10 @@ class PostSendgridApi
         state: "sent",
         sent_at: Time.current,
       }
-      EmailInfo.create_with(base_attributes).insert_all!(attributes)
+      # Rails 7.2: create_with values are no longer forwarded to insert_all!,
+      # so merge them into each row explicitly to preserve STI `type`.
+      rows = attributes.map { |row| base_attributes.merge(row) }
+      EmailInfo.insert_all!(rows)
     end
 
     def upsert_email_events_documents
