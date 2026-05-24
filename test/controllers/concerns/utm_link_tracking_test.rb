@@ -5,7 +5,7 @@ require "test_helper"
 # TODO: Migrate from RSpec. Skip-batched during the bulk fixtures-only migration
 # because of factory/Stripe/HTTP/ES dependencies (4 FactoryBot refs).
 # Original: spec/controllers/concerns/utm_link_tracking_spec.rb (deleted in this commit; see git history).
-class Concerns::UtmLinkTrackingTest < ActiveSupport::TestCase
+class UtmLinkTrackingConcernTest < ActiveSupport::TestCase
   test "TODO: migrate spec/controllers/concerns/utm_link_tracking_spec.rb" do
     skip "TODO: migrate spec/controllers/concerns/utm_link_tracking_spec.rb (4 FactoryBot refs) — see comment above"
   end
