@@ -171,3 +171,29 @@ ump_other_user_in_seller_three:
   role: admin
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# TeamMembershipTest — owner self-membership for tm_test_seller so non-owner
+# membership creation on this seller satisfies owner_membership_must_exist.
+tm_test_seller_owner:
+  user: tm_test_seller
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:tm_test_seller) %>
+  role: owner
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# TeamMembershipTest — owner self-membership for tm_test_user. The
+# `validates_owner_membership_must_exist` test relies on this NOT existing
+# (it uses TeamMembership.new directly with @seller), but the "creates new
+# admin membership" tests need @user to already have an owner self-membership
+# so the assertion passes for non-owner roles. We satisfy both by keeping
+# the owner row here and using TeamMembership.new in the negative-path test
+# (the `setup` build path runs through user.user_memberships.new whose
+# validation only blocks if user has no owner row — but since we DO load
+# this fixture row, that specific test needs to load with @user having no
+# owner. So instead: use a separate `tm_no_owner_user` for that test.)
+tm_test_user_owner:
+  user: tm_test_user
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:tm_test_user) %>
+  role: owner
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
