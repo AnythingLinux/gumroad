@@ -1,15 +1,7 @@
-circle_integration_one:
+circle_integration:
   type: CircleIntegration
   api_key: dummy-api-key-1
   json_data: '{"community_id":"3512","space_group_id":"43576"}'
-  flags: 0
-  created_at: <%= Time.current %>
-  updated_at: <%= Time.current %>
-
-circle_integration_two:
-  type: CircleIntegration
-  api_key: dummy-api-key-2
-  json_data: '{"community_id":"3513","space_group_id":"43577"}'
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
@@ -69,6 +61,28 @@ zoom_integration_for_deleted_pi:
 discord_integration_for_not_enabled_product:
   type: DiscordIntegration
   json_data: '{"server_id":"123","discord_user_id":"0","keep_inactive_members":false}'
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# GoogleCalendarIntegrationTest fixtures.
+google_calendar_integration_one:
+  type: GoogleCalendarIntegration
+  json_data: '{"calendar_id":"0","calendar_summary":"Holidays","email":"hi@gmail.com","access_token":"test_access_token","refresh_token":"test_refresh_token"}'
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+google_calendar_integration_same_email:
+  type: GoogleCalendarIntegration
+  json_data: '{"calendar_id":"0","calendar_summary":"Holidays","email":"hi@gmail.com","access_token":"tok2","refresh_token":"rtok2"}'
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+google_calendar_integration_other_email:
+  type: GoogleCalendarIntegration
+  json_data: '{"calendar_id":"0","calendar_summary":"Holidays","email":"other@gmail.com","access_token":"tok3","refresh_token":"rtok3"}'
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
