@@ -1,0 +1,18 @@
+# Used by SelfServiceAffiliateProductTest.
+
+enabled_ssap_for_product_1:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  product_id: <%= ActiveRecord::FixtureSet.identify(:ssap_product_1) %>
+  enabled: true
+  affiliate_basis_points: 1000
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+enabled_ssap_for_product_2:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  product_id: <%= ActiveRecord::FixtureSet.identify(:ssap_product_2) %>
+  enabled: true
+  affiliate_basis_points: 500
+  destination_url: https://example.com
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
