@@ -863,3 +863,49 @@ ptg_product_c:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by User::AsJsonTest
+as_json_user_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:as_json_user) %>
+  name: As JSON user product
+  unique_permalink: asjnu1
+  custom_permalink: boo
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+as_json_user_with_bio_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:as_json_user_with_bio) %>
+  name: As JSON bio user product
+  unique_permalink: asjnu2
+  custom_permalink: boo
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+as_json_user_with_twitter_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:as_json_user_with_twitter) %>
+  name: As JSON twitter user product
+  unique_permalink: asjnu3
+  custom_permalink: boo
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

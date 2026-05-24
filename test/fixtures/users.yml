@@ -1017,3 +1017,42 @@ vip_non_completed_user:
   recommendation_type: own_products
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by User::AsJsonTest
+as_json_user:
+  email: as-json-user@example.com
+  name: Gumbot
+  username: asjsonuser
+  payment_address: as-json-user-payments@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+as_json_user_with_bio:
+  email: as-json-user-bio@example.com
+  name: Gumbot
+  username: asjsonbio
+  bio: A short bio
+  payment_address: as-json-user-bio-payments@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+as_json_user_with_twitter:
+  email: as-json-user-twitter@example.com
+  name: Gumbot
+  username: asjsontwitter
+  twitter_handle: gumbot
+  payment_address: as-json-user-twitter-payments@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
