@@ -73,6 +73,34 @@ reset_user:
 # Used by test/policies/*_policy_test.rb to assert which role permits which
 # action. Corresponding owner+role rows live in test/fixtures/team_memberships.yml.
 
+# Used by ProductTaggingTest — isolated tagging creator owning only product_b.
+ptg_creator:
+  email: ptg_creator@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+ptg_other_seller_a:
+  email: ptg_other_a@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+ptg_other_seller_c:
+  email: ptg_other_c@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
 named_seller:
   email: seller@example.com
   username: seller
