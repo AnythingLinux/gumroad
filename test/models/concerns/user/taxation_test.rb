@@ -1,13 +1,15 @@
 require "test_helper"
 
-# TODO: Migrate from RSpec. This spec was skip-batched during the bulk
-# fixtures-only migration because it has 31 FactoryBot/create references —
-# too coupled to factory chains to convert mechanically. Revisit post-deadline
-# with a manual rewrite using fixtures, or split into smaller test files.
+# TODO: Migrate from RSpec. User::Taxation spec (354 LOC, 31 create() refs)
+# covers tax_id / business_vat / tax_filing_jurisdiction logic across
+# multiple compliance_info revisions, payment.complete states, and uses
+# `allow_any_instance_of(User)` to stub Stripe Connect / vat-id-validation
+# external calls plus paper_trail (`versioning: true`). Out of scope for
+# mechanical model backfill.
 #
-# Original spec: spec/models/concerns/user/taxation_spec.rb (deleted in this commit; see git history)
-class TaxationTest < ActiveSupport::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/models/concerns/user/taxation_spec.rb (31 FactoryBot refs) — see comment above"
+# Original spec: spec/models/concerns/user/taxation_spec.rb
+class User::TaxationTest < ActiveSupport::TestCase
+  test "TODO: migrate — allow_any_instance_of + paper_trail + compliance_info" do
+    skip "31 create() across compliance_info revisions + allow_any_instance_of stubs + paper_trail. Out of scope for mechanical model backfill."
   end
 end

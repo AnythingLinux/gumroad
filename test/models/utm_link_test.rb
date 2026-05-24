@@ -1,13 +1,15 @@
 require "test_helper"
 
-# TODO: Migrate from RSpec. This spec was skip-batched during the bulk
-# fixtures-only migration because it has 73 FactoryBot/create references —
-# too coupled to factory chains to convert mechanically. Revisit post-deadline
-# with a manual rewrite using fixtures, or split into smaller test files.
+# TODO: Migrate from RSpec. UtmLink spec (517 LOC, 54 create() refs) exercises
+# a large association tree: seller + target_resource polymorphic (Link / Post /
+# SellerProfile / SellerProfileSection / VariantCategory / Variant) and a
+# UtmLinkVisit fixture for click-counting. shoulda-matchers shape with extensive
+# `is_expected.to belong_to(...)` / `validate_presence_of`. The polymorphic
+# fixture map + 6 distinct target types are out of scope for mechanical backfill.
 #
-# Original spec: spec/models/utm_link_spec.rb (deleted in this commit; see git history)
+# Original spec: spec/models/utm_link_spec.rb
 class UtmLinkTest < ActiveSupport::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/models/utm_link_spec.rb (73 FactoryBot refs) — see comment above"
+  test "TODO: migrate — polymorphic target_resource + shoulda-matchers" do
+    skip "517 LOC, polymorphic target_resource across 6 model types + UtmLinkVisit + shoulda matchers. Out of scope for mechanical model backfill."
   end
 end

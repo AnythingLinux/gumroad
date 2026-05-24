@@ -1,11 +1,15 @@
-# frozen_string_literal: true
-
 require "test_helper"
 
+# TODO: Migrate from RSpec. Original spec is `:vcr`-tagged and the factory
+# chain `card_bank_account` → `credit_card` → `cc_token_chargeable` →
+# `CardParamsSpecHelper.success_debit_visa` requires real Stripe tokenization
+# under VCR cassettes that aren't ported to the Minitest harness. Without VCR
+# infra all tests crash at credit_card creation. Out of scope for mechanical
+# model backfill.
+#
+# Original spec: spec/models/card_bank_account_spec.rb
 class CardBankAccountTest < ActiveSupport::TestCase
-  test "TODO: migrate from spec/models/card_bank_account_spec.rb" do
-    skip "Skip-batch: requires VCR cassettes for Stripe card tokenization " \
-         "(create(:cc_token_chargeable) hits Stripe to mint a real token + funding_type/card_country). " \
-         "Re-migrate with stripe-mock + fixture credit_cards.yml rows carrying funding_type/card_country."
+  test "TODO: migrate — :vcr + Stripe tokenization required" do
+    skip "spec is :vcr-tagged; card_bank_account factory chains through cc_token_chargeable + Stripe tokenization. No VCR cassettes ported to Minitest. Out of scope."
   end
 end

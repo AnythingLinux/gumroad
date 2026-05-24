@@ -1,13 +1,14 @@
 require "test_helper"
 
-# TODO: Migrate from RSpec. This spec was skip-batched during the bulk
-# fixtures-only migration because it has 41 FactoryBot/create references —
-# too coupled to factory chains to convert mechanically. Revisit post-deadline
-# with a manual rewrite using fixtures, or split into smaller test files.
+# TODO: Migrate from RSpec. Purchase::ChargeEventsHandler spec (354 LOC, 21
+# create() refs) is `:vcr`-tagged and feeds real ChargeEvent payloads from
+# Stripe webhooks through StripeChargeProcessor + handle_charge_event flow.
+# Requires VCR cassettes for dispute / refund / settled / settled_failed
+# transitions. Out of scope for mechanical model backfill.
 #
-# Original spec: spec/models/concerns/purchase/charge_events_handler_spec.rb (deleted in this commit; see git history)
-class ChargeEventsHandlerTest < ActiveSupport::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/models/concerns/purchase/charge_events_handler_spec.rb (41 FactoryBot refs) — see comment above"
+# Original spec: spec/models/concerns/purchase/charge_events_handler_spec.rb
+class Purchase::ChargeEventsHandlerTest < ActiveSupport::TestCase
+  test "TODO: migrate — :vcr Stripe ChargeEvent handlers" do
+    skip ":vcr; Stripe ChargeEvent dispute/refund/settled webhooks. Out of scope for mechanical model backfill."
   end
 end
