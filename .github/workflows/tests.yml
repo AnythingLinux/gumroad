@@ -323,7 +323,7 @@ jobs:
           WEB_REPO: gumroadteam/web
 
       - name: Run tests
-        timeout-minutes: 15
+        timeout-minutes: 10
         run: |
           mkdir -p ./test-logs
           chmod 777 ./test-logs
@@ -514,7 +514,7 @@ jobs:
           WEB_REPO: gumroadteam/web
 
       - name: Run tests
-        timeout-minutes: 25
+        timeout-minutes: 10
         run: |
           mkdir -p ./capybara-artifacts
           chmod 777 ./capybara-artifacts
