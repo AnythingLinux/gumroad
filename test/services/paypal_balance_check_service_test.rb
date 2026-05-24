@@ -53,8 +53,7 @@ class PaypalBalanceCheckServiceTest < ActiveSupport::TestCase
   end
 
   test "#payout_amount_cents returns 0 when there are no PayPal payments" do
-    payment = payments(:paypal_payment_recent)
-    payment.update_column(:processor, "STRIPE")
+    Payment.where(processor: "paypal").update_all(processor: "STRIPE")
     balances(:paypal_seller_unpaid_balance)
     with_paypal(current_balance_cents: 100_000_00) do
       service = PaypalBalanceCheckService.new
@@ -63,8 +62,7 @@ class PaypalBalanceCheckServiceTest < ActiveSupport::TestCase
   end
 
   test "#payout_amount_cents does not include the balance when payment is older than 1 month" do
-    payment = payments(:paypal_payment_recent)
-    payment.update_column(:created_at, 2.months.ago)
+    Payment.where(processor: "paypal").update_all(created_at: 2.months.ago)
     balances(:paypal_seller_unpaid_balance)
     with_paypal(current_balance_cents: 100_000_00) do
       service = PaypalBalanceCheckService.new
