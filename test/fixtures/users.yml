@@ -1282,3 +1282,15 @@ payout_estimates_user_3:
   payment_address: payout-estimates-3-pp@example.com
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by PaginatedProductPostsPresenterTest — isolated to avoid named_seller
+# installment-leak pitfall (gumroad-fixtures-migration skill).
+ppp_presenter_seller:
+  email: ppp-presenter-seller@example.com
+  username: ppppresellr
+  name: PPP Presenter Seller
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: compliant
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

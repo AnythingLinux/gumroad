@@ -35,3 +35,14 @@ workflows_presenter_seller:
   flags: 0
   created_at: <%= 2.hours.ago %>
   updated_at: <%= 2.hours.ago %>
+
+# PaginatedProductPostsPresenterTest: product workflow scoped to ppp_presenter_seller.
+ppp_presenter_workflow:
+  name: PPP product workflow
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:ppp_presenter_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:ppp_presenter_product) %>
+  workflow_type: product
+  flags: 0
+  published_at: <%= 1.day.ago %>
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>

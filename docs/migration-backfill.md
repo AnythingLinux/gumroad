@@ -17,7 +17,7 @@ Tracks the ~649 silenced test methods across ~643 files left after the bulk RSpe
 | `test/models/` | 104 | 104 |
 | `test/services/` | 99 | 99 |
 | `test/sidekiq/` | 61 | 61 |
-| `test/presenters/` | 62 | 67 |
+| `test/presenters/` | 59 | 64 |
 | `test/modules/` | 28 | 28 |
 | `test/business/` | 25 | 25 |
 | `test/mailers/` | 0 | 0 |
@@ -596,11 +596,11 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/presenters/post_presenter_test.rb` | 1 |
 | ⬜ | `test/presenters/payouts_presenter_test.rb` | 1 |
 | ⬜ | `test/presenters/paginated_utm_links_presenter_test.rb` | 1 |
-| ⬜ | `test/presenters/paginated_product_posts_presenter_test.rb` | 1 |
+| ✅ | `test/presenters/paginated_product_posts_presenter_test.rb` | 1 |
 | ✅ | `test/presenters/paginated_installments_presenter_test.rb` | 1 |
 | ⬜ | `test/presenters/library_presenter_test.rb` | 1 |
-| ⬜ | `test/presenters/invoice_presenter/supplier_info_test.rb` | 1 |
-| ⬜ | `test/presenters/invoice_presenter/order_info_test.rb` | 1 |
+| ✅ | `test/presenters/invoice_presenter/supplier_info_test.rb` | 1 |
+| ✅ | `test/presenters/invoice_presenter/order_info_test.rb` | 1 |
 | ✅ | `test/presenters/invoice_presenter/form_info_test.rb` | 1 |
 | ⬜ | `test/presenters/installment_presenter_test.rb` | 1 |
 | ⬜ | `test/presenters/dispute_evidence_page_presenter_test.rb` | 1 |

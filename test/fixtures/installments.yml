@@ -214,3 +214,34 @@ inst_scopes_scheduled:
   flags: 512
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# PaginatedProductPostsPresenterTest fixtures (isolated to ppp_presenter_seller).
+ppp_presenter_seller_post:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:ppp_presenter_seller) %>
+  link_id:
+  workflow_id:
+  name: Seller post for all customers
+  message: Hello
+  slug: ppp-presenter-seller-post-slug
+  installment_type: seller
+  json_data: '<%= { bought_products: [] }.to_json %>'
+  published_at: <%= 3.hours.ago %>
+  deleted_at:
+  flags: 0
+  created_at: <%= 3.hours.ago %>
+  updated_at: <%= 3.hours.ago %>
+
+ppp_presenter_workflow_post:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:ppp_presenter_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:ppp_presenter_product) %>
+  workflow_id: <%= ActiveRecord::FixtureSet.identify(:ppp_presenter_workflow) %>
+  name: PPP workflow post
+  message: Hello
+  slug: ppp-presenter-workflow-post-slug
+  installment_type: product
+  json_data: '<%= { bought_products: ["pppprd"] }.to_json %>'
+  published_at: <%= 1.day.ago %>
+  deleted_at:
+  flags: 0
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>

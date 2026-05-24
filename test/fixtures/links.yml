@@ -1324,3 +1324,17 @@ named_seller_call_product:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# PaginatedProductPostsPresenterTest product (isolated seller).
+ppp_presenter_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:ppp_presenter_seller) %>
+  name: PPP Presenter Product
+  unique_permalink: pppprd
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

@@ -1,0 +1,9 @@
+# Installment rules. PaginatedProductPostsPresenterTest uses a workflow-rule
+# (delayed_delivery_time in seconds; time_period drives `displayable_time_duration`).
+ppp_presenter_workflow_rule:
+  installment_id: <%= ActiveRecord::FixtureSet.identify(:ppp_presenter_workflow_post) %>
+  delayed_delivery_time: 86400 # 1 day
+  time_period: day
+  version: 1
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
