@@ -1,16 +1,33 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "support/controller_seller_auth_helpers"
 
-# TODO: Migrate from RSpec. Skip-batched during fixtures-only controller migration.
-# Original spec: spec/controllers/wishlists/following_controller_spec.rb (deleted in this commit; see git history)
-# Reason: controller request-style spec with heavy auth/session/shared_context setup
-# (FB/create/let/shared_context refs: 8). Requires fixture-based equivalents
-# for "user signed in as admin for seller" + Pundit authorization shared examples
-# + downstream factories (users, products, purchases, etc.). Out of scope for
-# mechanical migration; revisit post-deadline with manual rewrite using fixtures.
 class Wishlists::FollowingControllerTest < ActionController::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/controllers/wishlists/following_controller_spec.rb — controller spec with shared auth/Pundit contexts"
+  include Devise::Test::ControllerHelpers
+  include ControllerSellerAuthHelpers
+
+  setup do
+    @user = users(:purchaser)
+    sign_in_as_seller(@user)
+    Feature.activate(:follow_wishlists)
+    @request.headers["X-Inertia"] = "true"
+  end
+
+  teardown { restore_protect_against_forgery! }
+
+  test "GET index returns 404 when feature flag is off" do
+    Feature.deactivate(:follow_wishlists)
+    assert_raises(ActionController::RoutingError) do
+      get :index
+    end
+  end
+
+  test "GET index renders Wishlists/Following/Index" do
+    get :index
+    assert_response :success
+    page = JSON.parse(@response.body)
+    assert_equal "Wishlists/Following/Index", page["component"]
+    assert_kind_of Array, page["props"]["wishlists"]
   end
 end

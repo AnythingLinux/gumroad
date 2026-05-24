@@ -2,15 +2,14 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during fixtures-only controller migration.
-# Original spec: spec/controllers/dashboard_controller_spec.rb (deleted in this commit; see git history)
-# Reason: controller request-style spec with heavy auth/session/shared_context setup
-# (FB/create/let/shared_context refs: 26). Requires fixture-based equivalents
-# for "user signed in as admin for seller" + Pundit authorization shared examples
-# + downstream factories (users, products, purchases, etc.). Out of scope for
-# mechanical migration; revisit post-deadline with manual rewrite using fixtures.
+# Partial migration: DashboardController#index drives CreatorAnalytics through
+# `CreatorAnalytics::ProductPageViews#paginate` which iterates over ES response
+# `aggregations["per_product"]["buckets"]`. The global EsClient stub returns no
+# aggregations, so the dashboard load crashes before reaching the inertia render
+# path. Asserting on success needs a live ES cluster or a heavy stub layer that
+# replaces both Sales aggregations and product-page-view aggregations.
 class DashboardControllerTest < ActionController::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/controllers/dashboard_controller_spec.rb — controller spec with shared auth/Pundit contexts"
+  test "TODO: migrate spec/controllers/dashboard_controller_spec.rb" do
+    skip "TODO: CreatorAnalytics::ProductPageViews ES buckets — see comment above"
   end
 end
