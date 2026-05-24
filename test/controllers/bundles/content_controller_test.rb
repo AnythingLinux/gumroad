@@ -2,15 +2,13 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during fixtures-only controller migration.
-# Original spec: spec/controllers/bundles/content_controller_spec.rb (deleted in this commit; see git history)
-# Reason: controller request-style spec with heavy auth/session/shared_context setup
-# (FB/create/let/shared_context refs: 16). Requires fixture-based equivalents
-# for "user signed in as admin for seller" + Pundit authorization shared examples
-# + downstream factories (users, products, purchases, etc.). Out of scope for
-# mechanical migration; revisit post-deadline with manual rewrite using fixtures.
-class Bundles::ContentControllerTest < ActionController::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/controllers/bundles/content_controller_spec.rb — controller spec with shared auth/Pundit contexts"
+# TODO: Migrate from RSpec. Spec was deleted in commit c9c93ee5 during the
+# big RSpec->Minitest cutover; original at spec/controllers/bundles/content_controller_spec.rb.
+#
+# Sharpened skip-stub reason (see PR #5257 batch A):
+#   Requires `index_model_records(Purchase)` (ES helper not loaded in Minitest harness), `:eligible_for_service_products` user trait, `:bundle` Link trait with bundle_products pre-attached, and `:product_with_digital_versions` for variant assertions. Worth ~10 net-new fixture rows + ES indexing — defer to dedicated bundles PR.
+class Bundles::ContentControllerTest < ActiveSupport::TestCase
+  test "TODO migrate — fixture-hostile (see class comment for concrete blockers)" do
+    skip "TODO migrate — see class-level comment above for concrete blockers"
   end
 end

@@ -13,7 +13,7 @@ Tracks the ~649 silenced test methods across ~643 files left after the bulk RSpe
 
 | Domain | Files | Skips |
 |---|---:|---:|
-| `test/controllers/` | 222 | 222 |
+| `test/controllers/` | 222 | 210 |
 | `test/models/` | 104 | 104 |
 | `test/services/` | 99 | 99 |
 | `test/sidekiq/` | 61 | 61 |
@@ -40,26 +40,26 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 6. `test/presenters/`
 7. `test/modules/`, `test/lib/`, `test/mailers/`, `test/helpers/`, `test/policies/`, `test/observers/`, `test/jobs/`
 
-## `test/controllers/` (222 files, 222 skips)
+## `test/controllers/` (222 files, 210 skips)
 
 | Status | File | Skips |
 |---|---|---:|
 | ⬜ | `test/controllers/workflows_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/workflows/emails_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/wishlists_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/wishlists/products_controller_test.rb` | 1 |
+| ✅ | `test/controllers/wishlists_controller_test.rb` | 1 |
+| ✅ | `test/controllers/wishlists/products_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/wishlists/following_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/wishlists/followers_controller_test.rb` | 1 |
+| ✅ | `test/controllers/wishlists/followers_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/utm_links_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/users_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/users/review_reminders_controller_test.rb` | 1 |
+| ✅ | `test/controllers/users/review_reminders_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/user/passwords_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/user/omniauth_callbacks_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/user/invalidate_active_sessions_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/url_redirects_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/two_factor_authentication_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/thumbnails_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/third_party_analytics_controller_test.rb` | 1 |
+| ✅ | `test/controllers/third_party_analytics_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/test_pings_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/tax_center_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/subscriptions_controller_test.rb` | 1 |
@@ -70,13 +70,13 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/settings/totp_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/third_party_analytics_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/team_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/settings/team/members_controller_test.rb` | 1 |
+| ✅ | `test/controllers/settings/team/members_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/team/invitations_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/stripe_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/profile_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/profile/products_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/payments_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/settings/password_controller_test.rb` | 1 |
+| ✅ | `test/controllers/settings/password_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/main_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/dismiss_ai_product_generation_promos_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/billing_controller_test.rb` | 1 |
@@ -109,7 +109,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/product_review_videos/streams_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/product_review_videos/streaming_urls_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/product_review_responses_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/product_duplicates_controller_test.rb` | 1 |
+| ✅ | `test/controllers/product_duplicates_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/posts_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/paypal_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/payouts/exports_controller_test.rb` | 1 |
@@ -133,7 +133,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/integrations/circle_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/instant_payouts_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/imported_customers_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/healthcheck_controller_test.rb` | 1 |
+| ✅ | `test/controllers/healthcheck_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/gumroad_blog/posts_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/global_affiliates/product_eligibility_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/foreign_webhooks_controller_test.rb` | 1 |
@@ -146,7 +146,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/customers_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/customer_surcharge_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/custom_domain/verifications_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/consumption_analytics_controller_test.rb` | 1 |
+| ✅ | `test/controllers/consumption_analytics_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/connections_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/concerns/utm_link_tracking_test.rb` | 1 |
 | ⬜ | `test/controllers/concerns/two_factor_authentication_validator_test.rb` | 1 |
@@ -163,7 +163,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/comments_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/collaborators/main_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/collaborators/incomings_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/churn_controller_test.rb` | 1 |
+| ✅ | `test/controllers/churn_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/checkout_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/checkout/upsells_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/checkout/upsells/products_controller_test.rb` | 1 |
@@ -172,7 +172,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/checkout/discounts_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/calls_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/bundles_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/bundles/share_controller_test.rb` | 1 |
+| ✅ | `test/controllers/bundles/share_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/bundles/product_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/bundles/content_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/braintree_controller_test.rb` | 1 |
