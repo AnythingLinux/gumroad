@@ -864,3 +864,18 @@ social_apple_unattached_purchase:
   succeeded_at: <%= Time.current %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by CallsControllerTest.
+named_seller_call_product_purchase:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_call_product) %>
+  email: caller@example.com
+  price_cents: 100
+  total_transaction_cents: 100
+  displayed_price_cents: 100
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  succeeded_at: <%= Time.current %>
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
