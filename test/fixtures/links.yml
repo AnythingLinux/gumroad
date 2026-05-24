@@ -909,3 +909,46 @@ as_json_user_with_twitter_product:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by Affiliate::SortingTest.
+affiliate_sorting_product_1:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:affiliate_sorting_seller) %>
+  name: p1
+  unique_permalink: afsp1
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+affiliate_sorting_product_2:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:affiliate_sorting_seller) %>
+  name: p2
+  unique_permalink: afsp2
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+affiliate_sorting_product_3:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:affiliate_sorting_seller) %>
+  name: p3
+  unique_permalink: afsp3
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
