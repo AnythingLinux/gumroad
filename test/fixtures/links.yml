@@ -675,3 +675,19 @@ bundle_update_products_stale:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by Product::SkusUpdaterServiceTest.
+# bit 8 => is_physical (128), bit 9 => skus_enabled (256). Combined = 384.
+skus_updater_physical_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Skus updater physical product
+  unique_permalink: skusupd
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 384
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
