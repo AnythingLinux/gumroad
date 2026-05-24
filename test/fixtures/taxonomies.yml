@@ -1,0 +1,4 @@
+# Minimal taxonomies for TaxonomyTest. Just a top-level "design" parent;
+# slug uniqueness validation scoped by parent_id.
+design:
+  slug: design
