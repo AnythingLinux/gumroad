@@ -1052,3 +1052,35 @@ review_stat_test_product_d:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by SubscriptionPlanChangeTest. Tiered membership product:
+# bit 2 (is_recurring_billing) = 2, bit 19 (is_tiered_membership) = 262144.
+spc_membership_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: SPC Membership
+  unique_permalink: spcmbr
+  price_cents: 500
+  purchase_type: 0
+  native_type: membership
+  filetype: link
+  filegroup: url
+  subscription_duration: monthly
+  price_currency_type: usd
+  flags: 262146
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+spc_nontiered_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: SPC NonTiered
+  unique_permalink: spcntr
+  price_cents: 500
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  subscription_duration: monthly
+  price_currency_type: usd
+  flags: 2
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
