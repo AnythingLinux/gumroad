@@ -2,11 +2,98 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during the bulk fixtures-only migration
-# because of factory/Stripe/HTTP/ES dependencies (1 FactoryBot refs).
-# Original: spec/sidekiq/post_to_individual_ping_endpoint_worker_spec.rb (deleted in this commit; see git history).
 class PostToIndividualPingEndpointWorkerTest < ActiveSupport::TestCase
-  test "TODO: migrate spec/sidekiq/post_to_individual_ping_endpoint_worker_spec.rb" do
-    skip "TODO: migrate spec/sidekiq/post_to_individual_ping_endpoint_worker_spec.rb (1 FactoryBot refs) — see comment above"
+  def setup
+    @http_double = Object.new
+    def @http_double.success?; true; end
+    def @http_double.code; 200; end
+  end
+
+  def stub_httparty_post(expected_args_matcher)
+    calls = []
+    HTTParty.define_singleton_method(:post) do |*args, **kwargs|
+      calls << [args, kwargs]
+      expected_args_matcher.call(args, kwargs) if expected_args_matcher
+      @stub_response
+    end
+    HTTParty.instance_variable_set(:@stub_response, @http_double)
+    yield calls
+  ensure
+    HTTParty.singleton_class.send(:remove_method, :post) if HTTParty.singleton_class.method_defined?(:post)
+    HTTParty.instance_variable_set(:@stub_response, nil)
+  end
+
+  test "posts url-encoded form data" do
+    stub_httparty_post(nil) do |calls|
+      assert_nothing_raised do
+        PostToIndividualPingEndpointWorker.new.perform("http://notification.com", { "a" => 1 }, Mime[:url_encoded_form].to_s)
+      end
+      assert_equal 1, calls.size
+      url, args = calls.first[0][0], calls.first[1]
+      assert_equal "http://notification.com", url
+      assert_equal 5, args[:timeout]
+      assert_equal({ "a" => 1 }, args[:body])
+      assert_equal "application/x-www-form-urlencoded", args[:headers]["Content-Type"]
+    end
+  end
+
+  test "url-encoded body encodes brackets in keys" do
+    stub_httparty_post(nil) do |calls|
+      PostToIndividualPingEndpointWorker.new.perform(
+        "http://notification.com",
+        { "name [for field] [[]]!@#$%^&" => 1, custom_fields: { "name [for field] [[]]!@#$%^&" => 1 } },
+        Mime[:url_encoded_form].to_s
+      )
+      body = calls.first[1][:body]
+      assert body.key?("name %5Bfor field%5D %5B%5B%5D%5D!@\#$%^&")
+      assert body["custom_fields"].key?("name %5Bfor field%5D %5B%5B%5D%5D!@\#$%^&")
+    end
+  end
+
+  test "posts JSON body" do
+    stub_httparty_post(nil) do |calls|
+      PostToIndividualPingEndpointWorker.new.perform("http://notification.com", { "some [thing]" => 1 }, Mime[:json].to_s)
+      args = calls.first[1]
+      assert_equal({ "some [thing]" => 1 }.to_json, args[:body])
+      assert_equal "application/json", args[:headers]["Content-Type"]
+    end
+  end
+
+  test "does not raise on SocketError" do
+    HTTParty.define_singleton_method(:post) { |*_a, **_k| raise SocketError.new("socket error message") }
+    log_msgs = []
+    logger_method_original = Rails.logger.method(:info)
+    Rails.logger.define_singleton_method(:info) { |msg| log_msgs << msg }
+    begin
+      PostToIndividualPingEndpointWorker.new.perform("http://example.com", { "q" => 47 })
+    ensure
+      Rails.logger.singleton_class.send(:remove_method, :info)
+      HTTParty.singleton_class.send(:remove_method, :post)
+    end
+    assert log_msgs.any? { |m| m.include?("[SocketError]") && m.include?("PostToIndividualPingEndpointWorker") && m.include?("socket error message") }
+  end
+
+  test "re-raises non-internet error" do
+    HTTParty.define_singleton_method(:post) { |*_a, **_k| raise StandardError }
+    begin
+      assert_raises(StandardError) do
+        PostToIndividualPingEndpointWorker.new.perform("http://notification.com", { "q" => 47 })
+      end
+    ensure
+      HTTParty.singleton_class.send(:remove_method, :post)
+    end
+  end
+
+  test "logs response code, url and params" do
+    stub_httparty_post(nil) do |_calls|
+      log_msgs = []
+      Rails.logger.define_singleton_method(:info) { |msg| log_msgs << msg }
+      begin
+        PostToIndividualPingEndpointWorker.new.perform("https://notification.com", { "a" => 1 })
+      ensure
+        Rails.logger.singleton_class.send(:remove_method, :info)
+      end
+      assert log_msgs.any? { |m| m.include?("response=200") && m.include?("url=https://notification.com") && m.include?("\"a\"") && m.include?("=>") }
+    end
   end
 end
