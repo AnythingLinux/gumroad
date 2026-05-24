@@ -124,3 +124,50 @@ process_pw_processing:
   amount_cents: 100
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by User::VipCreatorTest.
+vip_above_payment_a:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:vip_above_threshold_user) %>
+  state: completed
+  processor: paypal
+  correlation_id: vip-above-a
+  txn_id: vip-above-a
+  processor_fee_cents: 10
+  amount_cents: 300000
+  payout_period_end_date: <%= Date.yesterday %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+vip_above_payment_b:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:vip_above_threshold_user) %>
+  state: completed
+  processor: paypal
+  correlation_id: vip-above-b
+  txn_id: vip-above-b
+  processor_fee_cents: 10
+  amount_cents: 250000
+  payout_period_end_date: <%= Date.yesterday %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+vip_at_threshold_payment:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:vip_at_threshold_user) %>
+  state: completed
+  processor: paypal
+  correlation_id: vip-at-threshold
+  txn_id: vip-at-threshold
+  processor_fee_cents: 10
+  amount_cents: 500000
+  payout_period_end_date: <%= Date.yesterday %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+vip_non_completed_payment:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:vip_non_completed_user) %>
+  state: processing
+  processor: paypal
+  correlation_id: vip-non-completed
+  amount_cents: 1000000
+  payout_period_end_date: <%= Date.yesterday %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
