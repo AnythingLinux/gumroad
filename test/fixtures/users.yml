@@ -1056,3 +1056,16 @@ as_json_user_with_twitter:
   recommendation_type: own_products
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by User::PayoutInfoTest. flag bit for payouts_paused_internally = 524288.
+payout_info_user:
+  email: payout-info-user@example.com
+  username: payoutinfouser
+  payment_address: test@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  flags: 524288
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
