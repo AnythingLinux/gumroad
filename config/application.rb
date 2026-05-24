@@ -23,7 +23,7 @@ require_relative "../lib/utilities/global_config"
 module Gumroad
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.0
+    config.load_defaults 7.2
     config.active_support.cache_format_version = 7.1
     config.active_storage.variant_processor = :mini_magick
 
