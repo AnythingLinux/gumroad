@@ -12,6 +12,16 @@ paypal_payment_recent:
   created_at: <%= 1.week.ago %>
   updated_at: <%= 1.week.ago %>
 
+retry_failed_paypal_payment:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:paypal_seller) %>
+  state: failed
+  processor: paypal
+  failure_reason:
+  amount_cents: 1234
+  payout_period_end_date: 2025-01-15
+  created_at: <%= 1.week.ago %>
+  updated_at: <%= 1.week.ago %>
+
 payout_annual_completed_payment:
   user_id: <%= ActiveRecord::FixtureSet.identify(:payout_annual_seller) %>
   state: completed
