@@ -17,3 +17,24 @@ skus_updater_default_sku:
   flags: 1
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by RichContentsTest.
+rich_contents_variant:
+  variant_category_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_category) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_product) %>
+  name: rc-v1
+  type: Variant
+  price_difference_cents: 0
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_other_variant:
+  variant_category_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_category) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_product) %>
+  name: rc-v2
+  type: Variant
+  price_difference_cents: 0
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

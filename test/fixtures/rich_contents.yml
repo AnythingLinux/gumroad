@@ -1,0 +1,77 @@
+# RichContent fixtures.
+
+# Used by RichContentsTest (product context).
+rich_contents_product_page1:
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_product) %>
+  entity_type: Link
+  title: Page 1
+  position: 3
+  description: '[{"type":"paragraph","content":[{"text":"page 1 content","type":"text"}]}]'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_product_deleted_page2:
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_product) %>
+  entity_type: Link
+  title: Deleted page 2
+  position: 0
+  deleted_at: <%= 1.day.ago %>
+  description: '[{"type":"paragraph","content":[{"text":"deleted page","type":"text"}]}]'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_product_page3:
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_product) %>
+  entity_type: Link
+  title: Page 3
+  position: 1
+  description: '[{"type":"paragraph","content":[{"text":"page 3 content","type":"text"}]}]'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_other_product_page:
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_other_product) %>
+  entity_type: Link
+  title: Another product's page
+  position: 2
+  description: '[{"type":"paragraph","content":[{"text":"other","type":"text"}]}]'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by RichContentsTest (variant context).
+rich_contents_variant_page1:
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant) %>
+  entity_type: BaseVariant
+  title: Page 1
+  position: 3
+  description: '[{"type":"paragraph","content":[{"text":"variant page 1","type":"text"}]}]'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_variant_deleted_page2:
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant) %>
+  entity_type: BaseVariant
+  title: Deleted variant page 2
+  position: 0
+  deleted_at: <%= 1.day.ago %>
+  description: '[]'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_variant_page3:
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant) %>
+  entity_type: BaseVariant
+  title: Page 3
+  position: 1
+  description: '[{"type":"paragraph","content":[{"text":"variant page 3","type":"text"}]}]'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_other_variant_page:
+  entity_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_other_variant) %>
+  entity_type: BaseVariant
+  title: Another variant's page
+  position: 2
+  description: '[]'
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
