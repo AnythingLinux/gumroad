@@ -1052,3 +1052,19 @@ review_stat_test_product_d:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by PriceTest. Subscription product (is_recurring_billing = bit 2 = 2). price_cents 1000.
+price_test_subscription_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Price test subscription
+  unique_permalink: prtsub
+  price_cents: 1000
+  purchase_type: 0
+  native_type: membership
+  subscription_duration: monthly
+  filetype: link
+  filegroup: url
+  flags: 2
+  price_currency_type: usd
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

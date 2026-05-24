@@ -310,3 +310,13 @@ zoom_integration_deleted_pi_product_price:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by PriceTest. Default monthly price for the subscription product fixture.
+price_test_subscription_product_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:price_test_subscription_product) %>
+  price_cents: 1000
+  currency: usd
+  recurrence: monthly
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
