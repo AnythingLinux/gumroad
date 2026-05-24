@@ -562,3 +562,21 @@ cancel_subs_active_subscription_purchase:
   succeeded_at: <%= Time.current %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by CancelPreorderWorkerTest. Authorization purchase for
+# preorder_successful (purchases.first of the preorder = authorization purchase).
+preorder_successful_auth_purchase:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:preorder_test_product) %>
+  preorder_id: <%= ActiveRecord::FixtureSet.identify(:preorder_successful) %>
+  email: preorder-buyer@example.com
+  price_cents: 600
+  total_transaction_cents: 600
+  displayed_price_cents: 600
+  displayed_price_currency_type: usd
+  purchase_state: preorder_authorization_successful
+  # is_preorder_authorization => flag bit 4 (2^3 = 8)
+  flags: 8
+  fee_cents: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
