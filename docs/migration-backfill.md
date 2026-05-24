@@ -631,6 +631,8 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 
 ## `test/modules/` (28 files, 28 skips)
 
+> **Batch A r1 (#5257):** 25 remaining `⬜` module stubs re-triaged. All confirmed fixture-hostile within the 8-iter/file budget — blockers fall into well-known classes: live-ES (`:elasticsearch_wait_for_refresh` + `Link.__elasticsearch__` / aggregations), VCR-tagged Stripe/PayPal/Twitter cassettes, AWS S3/MinIO round trips, devise_pwned_password HTTP gate on `User.create!`, `Subscription.create!` PaymentOption raise, and >40 FactoryBot ref chains (P-M3 skip-batch rule). Existing stub comments already cite the exact skill pitfall + spec line range for each — left in place for the future ES/VCR/S3 harness landings. No inventory delta this round.
+
 | Status | File | Skips |
 |---|---|---:|
 | ⬜ | `test/modules/with_product_files_test.rb` | 1 |
