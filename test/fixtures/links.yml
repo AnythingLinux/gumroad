@@ -1053,6 +1053,7 @@ review_stat_test_product_d:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
+
 # Used by SubscriptionPlanChangeTest. Tiered membership product:
 # bit 2 (is_recurring_billing) = 2, bit 19 (is_tiered_membership) = 262144.
 spc_membership_product:
@@ -1208,5 +1209,74 @@ abandoned_cart_archived_product:
   filetype: link
   filegroup: url
   flags: 16
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by PriceTest. Subscription product (is_recurring_billing = bit 2 = 2). price_cents 1000.
+price_test_subscription_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Price test subscription
+  unique_permalink: prtsub
+  price_cents: 1000
+  purchase_type: 0
+  native_type: membership
+  subscription_duration: monthly
+  filetype: link
+  filegroup: url
+  flags: 2
+  price_currency_type: usd
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by RichContentsTest.
+rich_contents_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Rich Contents Product
+  unique_permalink: rcprod
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_other_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Rich Contents Other Product
+  unique_permalink: rcother
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_variant_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Rich Contents Variant Product
+  unique_permalink: rcvarp
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_folder_test_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Rich Contents Folder Test
+  unique_permalink: rcfldr
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>

@@ -26,3 +26,9 @@ abandoned_cart_product_2_versions_category:
   link_id: <%= ActiveRecord::FixtureSet.identify(:abandoned_cart_product_2) %>
   title: versions
   flags: 0
+
+# Used by RichContentsTest.
+rich_contents_variant_category:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_product) %>
+  title: rc-versions
+  flags: 0

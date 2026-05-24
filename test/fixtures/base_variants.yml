@@ -47,6 +47,17 @@ spc_tier_variant:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
+# Used by RichContentsTest.
+rich_contents_variant:
+  variant_category_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_category) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_product) %>
+  name: rc-v1
+  type: Variant
+  price_difference_cents: 0
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
 abandoned_cart_product_2_variant_1:
   variant_category_id: <%= ActiveRecord::FixtureSet.identify(:abandoned_cart_product_2_versions_category) %>
   link_id: <%= ActiveRecord::FixtureSet.identify(:abandoned_cart_product_2) %>
@@ -61,6 +72,16 @@ abandoned_cart_product_2_variant_2:
   link_id: <%= ActiveRecord::FixtureSet.identify(:abandoned_cart_product_2) %>
   name: Product 2- Version 2
   type: Variant
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_other_variant:
+  variant_category_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_category) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_product) %>
+  name: rc-v2
+  type: Variant
+  price_difference_cents: 0
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>

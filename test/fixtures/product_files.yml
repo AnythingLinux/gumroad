@@ -130,3 +130,109 @@ transcoded_video_pf_old:
   flags: 1
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by MediaLocationTest.
+media_location_pdf_file:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/billion-dollar-company-chapter-0.pdf"
+  filetype: pdf
+  filegroup: document
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+media_location_epub_file:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/test.epub"
+  filetype: epub
+  filegroup: epub_document
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+media_location_video_file:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/ScreenRecording.mov"
+  filetype: mov
+  filegroup: video
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+media_location_audio_file:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/magic.mp3"
+  filetype: mp3
+  filegroup: audio
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+media_location_consumed_pdf_a:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/consumed-a.pdf"
+  filetype: pdf
+  filegroup: document
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+media_location_consumed_pdf_b:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/consumed-b.pdf"
+  filetype: pdf
+  filegroup: document
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by RichContentsTest folder-name test.
+rich_contents_folder_test_file1:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_folder_test_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/rcf1.pdf"
+  filetype: pdf
+  filegroup: document
+  display_name: File 1
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_folder_test_file2:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_folder_test_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/rcf2.pdf"
+  filetype: pdf
+  filegroup: document
+  display_name: File 2
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_folder_test_file3:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_folder_test_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/rcf3.pdf"
+  filetype: pdf
+  filegroup: document
+  display_name: File 3
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_folder_test_file4:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_folder_test_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/rcf4.pdf"
+  filetype: pdf
+  filegroup: document
+  display_name: File 4
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_folder_test_file5:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_folder_test_product) %>
+  url: "https://s3.amazonaws.com/gumroad-specs/specs/rcf5.pdf"
+  filetype: pdf
+  filegroup: document
+  display_name: File 5
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

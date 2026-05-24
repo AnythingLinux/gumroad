@@ -133,3 +133,84 @@ searchable_first_post:
   flags: 1280
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by InstallmentScopesTest. Scoped to installment_scopes_seller so the
+# global scope queries can be narrowed without colliding with other fixtures.
+# Flag bits: 8 => shown_on_profile (128), 9 => send_emails (256), 10 => ready_to_publish (512).
+inst_scopes_shown_no_email:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:installment_scopes_seller) %>
+  workflow_id:
+  name: scopes shown no email
+  message: m
+  slug: inst-scopes-shown-no-email
+  installment_type: audience
+  published_at:
+  deleted_at:
+  flags: 128
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+inst_scopes_shown_with_email:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:installment_scopes_seller) %>
+  workflow_id:
+  name: scopes shown with email
+  message: m
+  slug: inst-scopes-shown-with-email
+  installment_type: audience
+  published_at:
+  deleted_at:
+  flags: 384
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+inst_scopes_not_shown:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:installment_scopes_seller) %>
+  workflow_id:
+  name: scopes not shown
+  message: m
+  slug: inst-scopes-not-shown
+  installment_type: audience
+  published_at:
+  deleted_at:
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+inst_scopes_published:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:installment_scopes_seller) %>
+  workflow_id:
+  name: scopes published
+  message: m
+  slug: inst-scopes-published
+  installment_type: audience
+  published_at: <%= Time.current %>
+  deleted_at:
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+inst_scopes_draft:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:installment_scopes_seller) %>
+  workflow_id:
+  name: scopes draft
+  message: m
+  slug: inst-scopes-draft
+  installment_type: audience
+  published_at:
+  deleted_at:
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+inst_scopes_scheduled:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:installment_scopes_seller) %>
+  workflow_id:
+  name: scopes scheduled
+  message: m
+  slug: inst-scopes-scheduled
+  installment_type: audience
+  published_at:
+  deleted_at:
+  flags: 512
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

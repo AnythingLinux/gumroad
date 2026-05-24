@@ -343,3 +343,46 @@ abandoned_cart_archived_product_price:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
   flags: 0
+
+# Used by PriceTest. Default monthly price for the subscription product fixture.
+price_test_subscription_product_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:price_test_subscription_product) %>
+  price_cents: 1000
+  currency: usd
+  recurrence: monthly
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by RichContentsTest.
+rich_contents_product_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_product) %>
+  price_cents: 100
+  currency: usd
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_other_product_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_other_product) %>
+  price_cents: 100
+  currency: usd
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_variant_product_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_variant_product) %>
+  price_cents: 100
+  currency: usd
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rich_contents_folder_test_product_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:rich_contents_folder_test_product) %>
+  price_cents: 100
+  currency: usd
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
