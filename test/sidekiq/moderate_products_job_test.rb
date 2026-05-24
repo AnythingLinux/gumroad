@@ -54,11 +54,17 @@ class ModerateProductsJobTest < ActiveSupport::TestCase
       @passed_result
     }
     notified = []
-    err_mod = Module.new
-    err_mod.send(:define_method, :notify) { |err, context: nil| notified << [err.class, context] }
-    ErrorNotifier.singleton_class.prepend(err_mod)
+    ErrorNotifier.singleton_class.alias_method(:_orig_notify, :notify) if ErrorNotifier.singleton_class.method_defined?(:notify)
+    ErrorNotifier.define_singleton_method(:notify) { |err, context: nil| notified << [err.class, context] }
 
-    ModerateProductsJob.new.perform([@product1.id, @product2.id])
+    begin
+      ModerateProductsJob.new.perform([@product1.id, @product2.id])
+    ensure
+      if ErrorNotifier.singleton_class.method_defined?(:_orig_notify)
+        ErrorNotifier.singleton_class.alias_method(:notify, :_orig_notify)
+        ErrorNotifier.singleton_class.remove_method(:_orig_notify)
+      end
+    end
 
     assert_includes notified, [Faraday::TimeoutError, { product_id: @product1.id }]
     assert_includes @check_calls, [@product2.id, :product]
