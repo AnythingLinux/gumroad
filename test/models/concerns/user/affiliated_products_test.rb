@@ -1,13 +1,13 @@
-# frozen_string_literal: true
-
 require "test_helper"
 
-# Skip-stub: spec/models/concerns/user/affiliated_products_spec.rb
-# Reason: 21 FB references including :purchase_in_progress, :chargeable, :direct_affiliate, driving the full
-# purchase.process! + update_balance_and_mark_successful! + refund_and_save! pipeline (VCR/Stripe + Balance
-# state machine). Threshold + infra cost too high for fixtures. Per skip-batch policy.
+# TODO: Migrate from RSpec. Original spec is `:vcr`-tagged and requires
+# `purchase.process!` + `update_balance_and_mark_successful!` (Stripe), plus
+# 8 products, 3 direct_affiliates, and 7 purchases — out of scope for the
+# mechanical model backfill without VCR cassettes ported to Minitest.
+#
+# Original spec: spec/models/concerns/user/affiliated_products_spec.rb
 class User::AffiliatedProductsTest < ActiveSupport::TestCase
-  test "skipped: VCR + purchase pipeline + chargeable factory chain" do
-    skip "TODO: migrate spec/models/concerns/user/affiliated_products_spec.rb — purchase_in_progress + chargeable + direct_affiliate VCR pipeline. Covered by RSpec."
+  test "TODO: migrate from RSpec — requires VCR + Stripe processing chain" do
+    skip "Requires :vcr cassettes for purchase.process!/update_balance_and_mark_successful! (Stripe). 21 create() refs across affiliates, products, purchases. Out of scope for mechanical model backfill."
   end
 end

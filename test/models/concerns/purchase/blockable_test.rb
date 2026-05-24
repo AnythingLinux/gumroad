@@ -1,13 +1,16 @@
 require "test_helper"
 
-# TODO: Migrate from RSpec. This spec was skip-batched during the bulk
-# fixtures-only migration because it has 76 FactoryBot/create references —
-# too coupled to factory chains to convert mechanically. Revisit post-deadline
-# with a manual rewrite using fixtures, or split into smaller test files.
+# TODO: Migrate from RSpec. Purchase::Blockable spec (1110 LOC, 69 create()
+# refs) covers BlockedObject (email/IP/card fingerprint/charge processor
+# fingerprint) interactions across purchase + buyer + chargeable factories;
+# extensive Mongoid-style cross-table assertions. The full block-source matrix
+# (5 block reasons × 4 attribute scopes × refund-vs-block decisioning) is out
+# of scope for a mechanical pass without BlockedObject fixtures and a chargeable
+# stub layer.
 #
-# Original spec: spec/models/concerns/purchase/blockable_spec.rb (deleted in this commit; see git history)
-class BlockableTest < ActiveSupport::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/models/concerns/purchase/blockable_spec.rb (76 FactoryBot refs) — see comment above"
+# Original spec: spec/models/concerns/purchase/blockable_spec.rb
+class Purchase::BlockableTest < ActiveSupport::TestCase
+  test "TODO: migrate — BlockedObject + chargeable + 69 create() refs" do
+    skip "1110 LOC; BlockedObject across email/IP/card/processor + chargeable factory chain. Out of scope for mechanical model backfill."
   end
 end
