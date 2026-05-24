@@ -71,7 +71,7 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/settings/third_party_analytics_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/team_controller_test.rb` | 1 |
 | ✅ | `test/controllers/settings/team/members_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/settings/team/invitations_controller_test.rb` | 1 |
+| ✅ | `test/controllers/settings/team/invitations_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/stripe_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/profile_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/profile/products_controller_test.rb` | 1 |
@@ -82,12 +82,12 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/settings/billing_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/beneficial_owners_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/settings/authorized_applications_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/settings/advanced_controller_test.rb` | 1 |
+| ✅ | `test/controllers/settings/advanced_controller_test.rb` | 1 |
 | ✅ | `test/controllers/sellers/switch_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/sellers/base_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/s3_utility_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/reviews_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/recommended_products_controller_test.rb` | 1 |
+| ✅ | `test/controllers/recommended_products_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/purchases_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/purchases/variants_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/purchases/product_controller_test.rb` | 1 |
@@ -134,9 +134,9 @@ Models first (core behavior), then services/sidekiq (business logic), then contr
 | ⬜ | `test/controllers/instant_payouts_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/imported_customers_controller_test.rb` | 1 |
 | ✅ | `test/controllers/healthcheck_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/gumroad_blog/posts_controller_test.rb` | 1 |
+| ✅ | `test/controllers/gumroad_blog/posts_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/global_affiliates/product_eligibility_controller_test.rb` | 1 |
-| ⬜ | `test/controllers/foreign_webhooks_controller_test.rb` | 1 |
+| ✅ | `test/controllers/foreign_webhooks_controller_test.rb` | 1 |
 | ✅ | `test/controllers/followers_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/emails_controller_test.rb` | 1 |
 | ⬜ | `test/controllers/dropbox_files_controller_test.rb` | 1 |
