@@ -101,6 +101,39 @@ ptg_other_seller_c:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
+# TeamMembershipTest — a fresh user with no team_memberships (so the "requires
+# owner membership to be created first" assertion has a non-owner subject).
+tm_test_user:
+  email: tm_test_user@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# TeamMembershipTest — fresh user with NO memberships at all, used only for
+# the "owner_membership_must_exist" negative path.
+tm_no_owner_user:
+  email: tm_no_owner_user@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# TeamMembershipTest — a seller with an owner self-membership (loaded via
+# tm_test_seller_owner in team_memberships.yml).
+tm_test_seller:
+  email: tm_test_seller@example.com
+  encrypted_password: <%= User.new.send(:password_digest, "test-password-123!") %>
+  confirmed_at: <%= Time.current %>
+  user_risk_state: not_reviewed
+  recommendation_type: own_products
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
 named_seller:
   email: seller@example.com
   username: seller
