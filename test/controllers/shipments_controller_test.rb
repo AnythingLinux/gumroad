@@ -2,11 +2,14 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during the bulk fixtures-only migration
-# because of factory/Stripe/HTTP/ES dependencies (5 FactoryBot refs).
-# Original: spec/controllers/shipments_controller_spec.rb (deleted in this commit; see git history).
+# TODO: Migrate from RSpec. The verify_shipping_address path calls EasyPost's
+# API under VCR cassettes that don't exist in the Minitest harness. The
+# mark_as_shipped paths require fixture purchases tied to a physical product
+# (require_shipping column + native_type physical) with admin-for-seller
+# membership — net-new fixture surface.
+# Original: spec/controllers/shipments_controller_spec.rb.
 class ShipmentsControllerTest < ActiveSupport::TestCase
   test "TODO: migrate spec/controllers/shipments_controller_spec.rb" do
-    skip "TODO: migrate spec/controllers/shipments_controller_spec.rb (5 FactoryBot refs) — see comment above"
+    skip "TODO: EasyPost VCR cassettes + physical purchase fixture surface"
   end
 end

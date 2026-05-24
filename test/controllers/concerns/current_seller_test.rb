@@ -2,15 +2,71 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during fixtures-only controller migration.
-# Original spec: spec/controllers/concerns/current_seller_spec.rb (deleted in this commit; see git history)
-# Reason: controller request-style spec with heavy auth/session/shared_context setup
-# (FB/create/let/shared_context refs: 3). Requires fixture-based equivalents
-# for "user signed in as admin for seller" + Pundit authorization shared examples
-# + downstream factories (users, products, purchases, etc.). Out of scope for
-# mechanical migration; revisit post-deadline with manual rewrite using fixtures.
 class CurrentSellerTest < ActionController::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/controllers/concerns/current_seller_spec.rb — controller spec with shared auth/Pundit contexts"
+  class AnonymousController < ApplicationController
+    include CurrentSeller
+    before_action :authenticate_user!
+
+    def action
+      head :ok
+    end
+  end
+
+  tests AnonymousController
+
+  include Devise::Test::ControllerHelpers
+
+  setup do
+    @routes = ActionDispatch::Routing::RouteSet.new
+    @routes.draw { get "action" => "current_seller_test/anonymous#action" }
+    @request.env["devise.mapping"] = Devise.mappings[:user]
+    @seller = users(:named_seller)
+    @other_seller = users(:another_seller)
+    @orig_protect = ActionController::Base.instance_method(:protect_against_forgery?)
+    ActionController::Base.define_method(:protect_against_forgery?) { false }
+  end
+
+  teardown do
+    ActionController::Base.define_method(:protect_against_forgery?, @orig_protect) if @orig_protect
+  end
+
+  test "with seller signed in and correct cookie keeps cookie and assigns current_seller" do
+    sign_in @seller
+    @request.cookie_jar.encrypted[:current_seller_id] = @seller.id
+    get :action
+    assert_equal @seller, @controller.current_seller
+    assert_equal @seller.id, cookies.encrypted[:current_seller_id]
+  end
+
+  test "with seller signed in and deleted other-seller cookie deletes cookie and assigns own seller" do
+    sign_in @seller
+    @other_seller.update!(deleted_at: Time.current)
+    @request.cookie_jar.encrypted[:current_seller_id] = @other_seller.id
+    get :action
+    assert_equal @seller, @controller.current_seller
+    assert_nil cookies.encrypted[:current_seller_id]
+  end
+
+  test "with seller signed in and invalid cookie value deletes cookie and assigns own seller" do
+    sign_in @seller
+    @request.cookie_jar.encrypted[:current_seller_id] = "foo"
+    get :action
+    assert_equal @seller, @controller.current_seller
+    assert_nil cookies.encrypted[:current_seller_id]
+  end
+
+  test "with seller signed in and cookie pointing at a non-member seller deletes cookie" do
+    sign_in @seller
+    @request.cookie_jar.encrypted[:current_seller_id] = @other_seller.id
+    get :action
+    assert_equal @seller, @controller.current_seller
+    assert_nil cookies.encrypted[:current_seller_id]
+  end
+
+  test "with seller signed in and no cookie assigns seller as current_seller" do
+    sign_in @seller
+    get :action
+    assert_equal @seller, @controller.current_seller
+    assert_nil cookies.encrypted[:current_seller_id]
   end
 end
