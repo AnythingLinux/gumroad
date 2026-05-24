@@ -545,3 +545,56 @@ email_sync_purchase_b:
   succeeded_at: <%= Time.current %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by CancelSubscriptionsForProductWorkerTest. Original subscription
+# purchase (flag bit 3 = 8).
+cancel_subs_active_subscription_purchase:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:cancel_subs_deleted_membership) %>
+  subscription_id: <%= ActiveRecord::FixtureSet.identify(:cancel_subs_active_subscription) %>
+  email: cancel-subs-buyer@example.com
+  price_cents: 100
+  total_transaction_cents: 100
+  displayed_price_cents: 100
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  flags: 4
+  succeeded_at: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by CancelPreorderWorkerTest. Authorization purchase for
+# preorder_successful (purchases.first of the preorder = authorization purchase).
+preorder_successful_auth_purchase:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:preorder_test_product) %>
+  preorder_id: <%= ActiveRecord::FixtureSet.identify(:preorder_successful) %>
+  email: preorder-buyer@example.com
+  price_cents: 600
+  total_transaction_cents: 600
+  displayed_price_cents: 600
+  displayed_price_currency_type: usd
+  purchase_state: preorder_authorization_successful
+  # is_preorder_authorization => flag bit 4 (2^3 = 8)
+  flags: 8
+  fee_cents: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by CreateMissingPurchaseEventsWorkerTest. Yesterday-dated purchase
+# without any Event row so the worker can manufacture one.
+missing_events_yesterday_purchase:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  email: missing-events@example.com
+  price_cents: 100
+  total_transaction_cents: 100
+  displayed_price_cents: 100
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  ip_country: United States
+  ip_state: CA
+  flags: 0
+  succeeded_at: <%= Date.yesterday.beginning_of_day + 12.hours %>
+  created_at: <%= Date.yesterday.beginning_of_day + 12.hours %>
+  updated_at: <%= Date.yesterday.beginning_of_day + 12.hours %>
