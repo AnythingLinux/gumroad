@@ -631,3 +631,34 @@ product_utils_custom_b:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by Subscription::RestartableTest. Membership = is_recurring_billing flag bit 2 (= 2).
+restartable_membership_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Restartable membership
+  unique_permalink: rstmem
+  price_cents: 100
+  purchase_type: 0
+  native_type: membership
+  subscription_duration: monthly
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 2
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by Subscription::RestartableTest as a non-membership negative-case product.
+restartable_regular_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Restartable regular product
+  unique_permalink: rstreg
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  discover_fee_per_thousand: 100
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
