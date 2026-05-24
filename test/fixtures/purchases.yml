@@ -428,3 +428,89 @@ discover_service_purchaser_purchase:
   succeeded_at: <%= Time.current %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Rental purchases for ExpireRentalPurchasesWorkerTest. is_rental is flag bit 15
+# (value 2^14 = 16384). rental_expired starts at false for rental purchases; a
+# nil value indicates a non-rental purchase. The worker scope joins url_redirect
+# and matches rows where url_redirects.created_at < 30 days ago OR
+# rental_first_viewed_at < 72 hours ago.
+
+rental_expiry_purchase_1:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  email: rental-1@example.com
+  price_cents: 0
+  fee_cents: 0
+  total_transaction_cents: 0
+  displayed_price_cents: 0
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  succeeded_at: <%= Time.current %>
+  flags: 16384
+  rental_expired: false
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rental_expiry_non_rental_purchase:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  email: rental-non@example.com
+  price_cents: 0
+  fee_cents: 0
+  total_transaction_cents: 0
+  displayed_price_cents: 0
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  succeeded_at: <%= Time.current %>
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rental_expiry_purchase_2:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  email: rental-2@example.com
+  price_cents: 0
+  fee_cents: 0
+  total_transaction_cents: 0
+  displayed_price_cents: 0
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  succeeded_at: <%= Time.current %>
+  flags: 16384
+  rental_expired: false
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rental_expiry_purchase_3:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  email: rental-3@example.com
+  price_cents: 0
+  fee_cents: 0
+  total_transaction_cents: 0
+  displayed_price_cents: 0
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  succeeded_at: <%= Time.current %>
+  flags: 16384
+  rental_expired: false
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+rental_expiry_purchase_4:
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  email: rental-4@example.com
+  price_cents: 0
+  fee_cents: 0
+  total_transaction_cents: 0
+  displayed_price_cents: 0
+  displayed_price_currency_type: usd
+  purchase_state: successful
+  succeeded_at: <%= Time.current %>
+  flags: 16384
+  rental_expired: false
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
