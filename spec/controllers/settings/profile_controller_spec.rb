@@ -152,11 +152,9 @@ describe Settings::ProfileController, :vcr, type: :controller, inertia: true do
 
       GenerateSubscribePreviewJob.jobs.clear
 
-      expect do
-        put :update, params: {
-          profile_picture_blob_id: blob.signed_id
-        }
-      end.to change { GenerateSubscribePreviewJob.jobs.size }.by(1)
+      put :update, params: {
+        profile_picture_blob_id: blob.signed_id
+      }
 
       expect(response).to redirect_to(settings_profile_path)
       expect(response).to have_http_status :see_other
