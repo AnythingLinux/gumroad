@@ -190,6 +190,9 @@ jobs:
         env:
           RAILS_ENV: test
 
+      - name: Precompile assets
+        run: bundle exec rake assets:precompile
+
       - name: Run tests
         timeout-minutes: 20
         run: |
@@ -393,6 +396,9 @@ jobs:
         run: bundle exec rails js:export
         env:
           RAILS_ENV: test
+
+      - name: Precompile assets
+        run: bundle exec rake assets:precompile
 
       - name: Run tests
         timeout-minutes: 30
