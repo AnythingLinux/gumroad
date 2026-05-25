@@ -35,6 +35,22 @@ describe Product::Prices do
       expect(@product.default_price.currency).to eq("usd")
       expect(@product.default_price.price_cents).to eq(2_50)
     end
+
+    it "uses preloaded alive_prices without additional queries" do
+      create(:price, link: @product, price_cents: 2000, currency: "eur")
+      preloaded_product = Link.includes(:alive_prices).find(@product.id)
+
+      query_count = 0
+      counter = lambda do |_name, _start, _finish, _id, payload|
+        query_count += 1 if payload[:sql].include?("prices")
+      end
+
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        preloaded_product.default_price
+      end
+
+      expect(query_count).to eq(0)
+    end
   end
 
   describe "#suggested_price_greater_than_price" do

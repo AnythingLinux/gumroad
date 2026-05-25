@@ -100,6 +100,26 @@ describe ProductPresenter::Card do
       end
     end
 
+    it "does not query the prices table when alive_prices is preloaded" do
+      products = create_list(:product, 3, user: creator)
+      loaded_products = Link.includes(*ProductPresenter::ASSOCIATIONS_FOR_CARD).where(id: products.map(&:id))
+
+      query_count = 0
+      counter = lambda do |_name, _start, _finish, _id, payload|
+        query_count += 1 if payload[:sql].include?("prices") && !payload[:sql].include?("INSERT") && !payload[:sql].include?("UPDATE")
+      end
+
+      loaded_products.to_a
+      query_count = 0
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        loaded_products.each do |p|
+          described_class.new(product: p).for_web(request:, show_seller: false, compute_description: false, compute_inventory: false)
+        end
+      end
+
+      expect(query_count).to eq(0)
+    end
+
     context "membership product" do
       let(:product) do
         recurrence_price_values = [
