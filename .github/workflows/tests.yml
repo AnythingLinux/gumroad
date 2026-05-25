@@ -204,6 +204,15 @@ jobs:
       - name: npm ci
         run: npm ci
 
+      - name: Generate JS exports
+        # Generates app/javascript/utils/routes.js (consumed by Vite as a
+        # bare-specifier import). Must run BEFORE assets:precompile, or
+        # the production-mode Vite build can't resolve the routes import
+        # and fails with 'Could not load .../utils/routes'.
+        run: bundle exec rails js:export
+        env:
+          RAILS_ENV: test
+
       - name: Precompile assets
         # assets:precompile runs vite:build (main app bundles into
         # public/vite-test/) AND vite:build_widget (gumroad-bundle.js +
@@ -219,11 +228,6 @@ jobs:
 
       - name: Prepare test database
         run: bundle exec rake db:prepare
-
-      - name: Generate JS exports
-        run: bundle exec rails js:export
-        env:
-          RAILS_ENV: test
 
       - name: Start Vite dev server
         # Persistent vite dev daemon — avoids vite_ruby autoBuild's per-request
@@ -480,6 +484,15 @@ jobs:
       - name: npm ci
         run: npm ci
 
+      - name: Generate JS exports
+        # Generates app/javascript/utils/routes.js (consumed by Vite as a
+        # bare-specifier import). Must run BEFORE assets:precompile, or
+        # the production-mode Vite build can't resolve the routes import
+        # and fails with 'Could not load .../utils/routes'.
+        run: bundle exec rails js:export
+        env:
+          RAILS_ENV: test
+
       - name: Precompile assets
         # assets:precompile runs vite:build (main app bundles into
         # public/vite-test/) AND vite:build_widget (gumroad-bundle.js +
@@ -495,11 +508,6 @@ jobs:
 
       - name: Prepare test database
         run: bundle exec rake db:prepare
-
-      - name: Generate JS exports
-        run: bundle exec rails js:export
-        env:
-          RAILS_ENV: test
 
       - name: Start Vite dev server
         # Persistent vite dev daemon — avoids vite_ruby autoBuild's per-request
