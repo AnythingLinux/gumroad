@@ -2876,6 +2876,7 @@ describe User, :vcr do
         io: fixture_file_upload("smilie.png"),
         filename: "smilie.png",
       )
+      @user.save! # Rails 7.2: .attach no longer always implicitly saves the parent
       expect(GenerateSubscribePreviewJob.jobs.size).to eq(1)
       expect(GenerateSubscribePreviewJob).to have_enqueued_sidekiq_job(@user.id)
 
@@ -2886,6 +2887,7 @@ describe User, :vcr do
         io: fixture_file_upload("smilie.png"),
         filename: "new_subscribe_preview.png",
       )
+      @user.save!
       expect(GenerateSubscribePreviewJob.jobs.size).to eq(0)
 
       # Avatar removal regenerates the preview.

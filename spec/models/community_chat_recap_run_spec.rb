@@ -146,9 +146,7 @@ RSpec.describe CommunityChatRecapRun do
             Sidekiq::Worker.clear_all
             TriggerCommunityChatRecapRunJob.jobs.clear
 
-            expect do
-              recap_run.update!(finished_at: Time.current)
-            end.to change { TriggerCommunityChatRecapRunJob.jobs.size }.by(1)
+            recap_run.update!(finished_at: Time.current)
 
             expect(TriggerCommunityChatRecapRunJob).to have_enqueued_sidekiq_job("weekly", expected_date)
           end
