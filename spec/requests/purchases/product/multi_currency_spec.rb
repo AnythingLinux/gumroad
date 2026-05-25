@@ -3,11 +3,39 @@
 require "spec_helper"
 
 describe "Multi-currency checkout", type: :system, js: true do
-  let(:seller) { create(:named_seller) }
-  let!(:product) { create(:product, user: seller, price_cents: 10000, name: "Test Product") }
+  let(:seller) do
+    User.create!(
+      name: "Seller",
+      username: "seller#{SecureRandom.hex(4)}",
+      email: "seller-#{SecureRandom.hex(4)}@example.com",
+      password: "-42Q_.c_3628Ca!mW-xTJ8v*",
+      confirmed_at: Time.current,
+      user_risk_state: "not_reviewed",
+      payment_address: "seller-payment-#{SecureRandom.hex(4)}@example.com",
+      current_sign_in_ip: "127.0.0.1",
+      last_sign_in_ip: "127.0.0.1",
+      account_created_ip: "127.0.0.1",
+      pre_signup_affiliate_request_processed: true,
+      skip_enabling_two_factor_authentication: true
+    )
+  end
+  let!(:product) do
+    Link.create!(
+      user: seller,
+      price_cents: 10000,
+      name: "Test Product",
+      description: "Test product description",
+      display_product_reviews: true
+    )
+  end
 
   before do
-    create(:merchant_account, user: seller)
+    MerchantAccount.create!(
+      user: seller,
+      charge_processor_id: StripeChargeProcessor.charge_processor_id,
+      charge_processor_merchant_id: SecureRandom.hex(12),
+      charge_processor_alive_at: Time.current
+    )
   end
 
   describe "product page pricing" do
@@ -47,8 +75,6 @@ describe "Multi-currency checkout", type: :system, js: true do
   end
 
   describe "checkout page" do
-    let(:buyer) { create(:user) }
-
     context "when multi_currency_checkout flag is enabled" do
       before { Flipper.enable(:multi_currency_checkout) }
       after { Flipper.disable(:multi_currency_checkout) }
@@ -76,10 +102,9 @@ describe "Multi-currency checkout", type: :system, js: true do
   end
 
   private
-
-  def stub_currency_conversion(from, to, rate:)
-    allow_any_instance_of(BuyerCurrencyService).to receive(:get_usd_cents) { |_, _, cents| cents }
-    allow_any_instance_of(BuyerCurrencyService).to receive(:usd_cents_to_currency) { |_, _, cents| (cents * rate).round }
-    allow(BuyerCurrencyService).to receive(:exchange_rate).with(from_currency: from, to_currency: to).and_return(rate)
-  end
+    def stub_currency_conversion(from, to, rate:)
+      allow_any_instance_of(BuyerCurrencyService).to receive(:get_usd_cents) { |_, _, cents| cents }
+      allow_any_instance_of(BuyerCurrencyService).to receive(:usd_cents_to_currency) { |_, _, cents| (cents * rate).round }
+      allow(BuyerCurrencyService).to receive(:exchange_rate).with(from_currency: from, to_currency: to).and_return(rate)
+    end
 end
