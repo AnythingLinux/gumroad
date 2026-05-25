@@ -141,6 +141,9 @@ RSpec.describe CommunityChatRecapRun do
           it "enqueues a weekly recap run job with the correct date" do
             expected_date = (saturday - 6.days).to_date.to_s
             recap_run # force creation outside the expect block
+            # Rails 7.2: after_save_commit from create() may not have flushed before
+            # the next update!. Explicit flush + clear avoids double-counting.
+            Sidekiq::Worker.clear_all
             TriggerCommunityChatRecapRunJob.jobs.clear
 
             expect do
