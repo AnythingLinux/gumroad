@@ -253,6 +253,7 @@ module Product::Prices
       alive_prices.select { |p| p.currency == price_currency_type }
     end
 
+    # Private: Called only on create to instantiate Price object(s) and associate it to the newly created product.
     def associate_price
       # for tiered memberships, price is set at the tier level
       return if is_tiered_membership
