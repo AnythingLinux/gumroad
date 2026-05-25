@@ -51,7 +51,6 @@ Rails.application.configure do
   # affects Premailer (mailer rendering) alone.
   if ENV["VITE_RUBY_TEST_DEV_SERVER"] == "true"
     vite_host = ENV.fetch("VITE_RUBY_HOST", "127.0.0.1")
-    config.action_mailer.asset_host = "http://#{vite_host}:3037"
 
     Rails.application.config.after_initialize do
       vite_url = "http://#{vite_host}:3037"
