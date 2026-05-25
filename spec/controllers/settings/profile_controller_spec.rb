@@ -150,6 +150,8 @@ describe Settings::ProfileController, :vcr, type: :controller, inertia: true do
         filename: "smilie.png",
       )
 
+      GenerateSubscribePreviewJob.jobs.clear
+
       expect do
         put :update, params: {
           profile_picture_blob_id: blob.signed_id

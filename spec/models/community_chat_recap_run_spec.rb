@@ -140,6 +140,8 @@ RSpec.describe CommunityChatRecapRun do
 
           it "enqueues a weekly recap run job with the correct date" do
             expected_date = (saturday - 6.days).to_date.to_s
+            recap_run # force creation outside the expect block
+            TriggerCommunityChatRecapRunJob.jobs.clear
 
             expect do
               recap_run.update!(finished_at: Time.current)
