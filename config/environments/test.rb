@@ -40,6 +40,14 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "#{PROTOCOL}://#{ASSET_DOMAIN}"
 
+  # When running with the persistent Vite dev daemon (CI), point Action Mailer
+  # at the dev server so vite_entrypoint_stylesheet_tag emits absolute URLs and
+  # Premailer's network loader can fetch the compiled CSS for inlining.
+  if ENV["VITE_RUBY_TEST_DEV_SERVER"] == "true"
+    vite_host = ENV.fetch("VITE_RUBY_HOST", "127.0.0.1")
+    config.action_mailer.asset_host = "http://#{vite_host}:3037"
+  end
+
   config.active_storage.service = :test
 
   config.action_mailer.perform_caching = true
