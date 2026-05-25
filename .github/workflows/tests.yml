@@ -84,7 +84,7 @@ jobs:
         ports:
           - 11211:11211
       stripe_mock:
-        image: stripemock/stripe-mock:v0.193.1
+        image: stripemock/stripe-mock:v0.110.0
         ports:
           - 12111:12111
           - 12112:12112
@@ -266,7 +266,7 @@ jobs:
         ports:
           - 11211:11211
       stripe_mock:
-        image: stripemock/stripe-mock:v0.193.1
+        image: stripemock/stripe-mock:v0.110.0
         ports:
           - 12111:12111
           - 12112:12112
