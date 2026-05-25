@@ -279,7 +279,7 @@ jobs:
       - name: Run tests
         timeout-minutes: 30
         run: |
-          mkdir -p ./capybara-artifacts ./test-logs
+          mkdir -p ./test-logs
           bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --format progress]"
         env:
           KNAPSACK_PRO_TEST_SUITE_TOKEN_RSPEC: ${{ secrets.KNAPSACK_PRO_TEST_SUITE_TOKEN_RSPEC_FAST }}
