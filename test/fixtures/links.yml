@@ -1309,3 +1309,58 @@ tag_test_product_two:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by CallsControllerTest — must be native_type=call to satisfy
+# Call#purchase_product_is_call validation.
+named_seller_call_product:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:named_seller) %>
+  name: Named seller's call product
+  unique_permalink: nspcall
+  price_cents: 100
+  purchase_type: 0
+  native_type: call
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Used by Collaborator::UpdateServiceTest. Three products owned by csu_seller.
+csu_product_1:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:csu_seller) %>
+  name: CSU Product 1
+  unique_permalink: csuppa
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+csu_product_2:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:csu_seller) %>
+  name: CSU Product 2
+  unique_permalink: csuppb
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+csu_product_3:
+  user_id: <%= ActiveRecord::FixtureSet.identify(:csu_seller) %>
+  name: CSU Product 3
+  unique_permalink: csuppc
+  price_cents: 100
+  purchase_type: 0
+  native_type: digital
+  filetype: link
+  filegroup: url
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

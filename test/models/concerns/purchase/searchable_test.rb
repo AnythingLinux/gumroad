@@ -1,13 +1,14 @@
 require "test_helper"
 
-# TODO: Migrate from RSpec. This spec was skip-batched during the bulk
-# fixtures-only migration because it has 55 FactoryBot/create references —
-# too coupled to factory chains to convert mechanically. Revisit post-deadline
-# with a manual rewrite using fixtures, or split into smaller test files.
+# TODO: Migrate from RSpec. Purchase::Searchable spec (578 LOC, 55 create()
+# refs) exercises ElasticsearchIndexerWorker + as_indexed_json + .build_search
+# query construction; uses `:sidekiq_inline` + `:elasticsearch_wait_for_refresh`
+# tags. EsClient is stubbed globally in test_helper.rb so ES round-trips return
+# no-ops; no equivalent infra in the Minitest harness. Out of scope.
 #
-# Original spec: spec/models/concerns/purchase/searchable_spec.rb (deleted in this commit; see git history)
-class SearchableTest < ActiveSupport::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/models/concerns/purchase/searchable_spec.rb (55 FactoryBot refs) — see comment above"
+# Original spec: spec/models/concerns/purchase/searchable_spec.rb
+class Purchase::SearchableTest < ActiveSupport::TestCase
+  test "TODO: migrate — Elasticsearch indexing/search" do
+    skip "Requires Elasticsearch (sidekiq_inline + elasticsearch_wait_for_refresh + EsClient real round-trips). EsClient stubbed globally in test_helper. Out of scope."
   end
 end

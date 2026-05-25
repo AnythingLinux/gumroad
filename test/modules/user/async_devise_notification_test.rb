@@ -24,8 +24,29 @@ class User::AsyncDeviseNotificationTest < ActiveSupport::TestCase
       assert_equal devise_email_name, enqueued[:args][1]
     end
 
-    test "#{devise_email_method} actually sends the email" do
-      skip "deliver_now path requires built email.scss asset (premailer); covered by integration runs"
+    test "#{devise_email_method} actually invokes UserSignupMailer.#{devise_email_name} when the job runs" do
+      # Stub out the mailer entry-point to avoid Premailer reaching for built
+      # vite assets (deliver_now otherwise needs /vite-test/entrypoints/email.scss).
+      # ActionMailer methods are routed via method_missing, so capture via the
+      # generic .method_missing override instead of alias_method.
+      called = []
+      fake_mail = Object.new
+      fake_mail.define_singleton_method(:deliver_now) { :delivered }
+      fake_mail.define_singleton_method(:deliver_later) { |*_| :enqueued }
+      sig_class = UserSignupMailer.singleton_class
+      target = devise_email_name.to_sym
+      sig_class.send(:define_method, target) do |*args, **opts|
+        called << [args, opts]
+        fake_mail
+      end
+      begin
+        perform_enqueued_jobs do
+          @user.public_send(devise_email_method)
+        end
+      ensure
+        sig_class.send(:remove_method, target) if sig_class.method_defined?(target) || sig_class.private_method_defined?(target)
+      end
+      assert_equal 1, called.length, "expected UserSignupMailer.#{devise_email_name} to be invoked exactly once"
     end
   end
 end

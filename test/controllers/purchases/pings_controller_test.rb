@@ -2,11 +2,57 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during the bulk fixtures-only migration
-# because of factory/Stripe/HTTP/ES dependencies (4 FactoryBot refs).
-# Original: spec/controllers/purchases/pings_controller_spec.rb (deleted in this commit; see git history).
-class Purchases::PingsControllerTest < ActiveSupport::TestCase
-  test "TODO: migrate spec/controllers/purchases/pings_controller_spec.rb" do
-    skip "TODO: migrate spec/controllers/purchases/pings_controller_spec.rb (4 FactoryBot refs) — see comment above"
+class Purchases::PingsControllerTest < ActionController::TestCase
+  include Devise::Test::ControllerHelpers
+  include ControllerSellerAuthHelpers
+
+  setup do
+    boot_controller_test!
+    @seller = users(:named_seller)
+    @admin = users(:admin_for_named_seller)
+    @purchase = purchases(:named_seller_call_purchase)
+  end
+
+  teardown { restore_protect_against_forgery! }
+
+  test "POST create returns 404 when unauthenticated" do
+    called = false
+    orig = Purchase.instance_method(:send_notification_webhook_from_ui)
+    Purchase.define_method(:send_notification_webhook_from_ui) { called = true }
+    begin
+      post :create, format: :json, params: { purchase_id: @purchase.external_id }
+    ensure
+      Purchase.define_method(:send_notification_webhook_from_ui, orig)
+    end
+    refute called
+    assert_response :not_found
+  end
+
+  test "POST create returns 404 when signed in as a different seller" do
+    sign_in_as_seller(users(:basic_user))
+    called = false
+    orig = Purchase.instance_method(:send_notification_webhook_from_ui)
+    Purchase.define_method(:send_notification_webhook_from_ui) { called = true }
+    begin
+      post :create, format: :json, params: { purchase_id: @purchase.external_id }
+    ensure
+      Purchase.define_method(:send_notification_webhook_from_ui, orig)
+    end
+    refute called
+    assert_response :not_found
+  end
+
+  test "POST create resends the ping and responds with success when signed in as the seller's admin" do
+    sign_in_as_seller(@admin, @seller)
+    called = false
+    orig = Purchase.instance_method(:send_notification_webhook_from_ui)
+    Purchase.define_method(:send_notification_webhook_from_ui) { called = true }
+    begin
+      post :create, format: :json, params: { purchase_id: @purchase.external_id }
+    ensure
+      Purchase.define_method(:send_notification_webhook_from_ui, orig)
+    end
+    assert called
+    assert_response :no_content
   end
 end

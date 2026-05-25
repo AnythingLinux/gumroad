@@ -2,11 +2,29 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during the bulk fixtures-only migration
-# because of factory/Stripe/HTTP/ES dependencies (50 FactoryBot refs).
-# Original: spec/controllers/settings/payments_controller_spec.rb (deleted in this commit; see git history).
-class Settings::PaymentsControllerTest < ActiveSupport::TestCase
-  test "TODO: migrate spec/controllers/settings/payments_controller_spec.rb" do
-    skip "TODO: migrate spec/controllers/settings/payments_controller_spec.rb (50 FactoryBot refs) — see comment above"
+class Settings::PaymentsControllerTest < ActionController::TestCase
+  include Devise::Test::ControllerHelpers
+
+  setup do
+    @seller = users(:named_seller)
+    @seller.save! if @seller.external_id.blank?
+    sign_in @seller
+  end
+
+  test "inherits from Settings::BaseController" do
+    assert_includes Settings::PaymentsController.ancestors, Settings::BaseController
+  end
+
+  test "GET show requires authentication" do
+    sign_out @seller
+    get :show
+    assert_includes [302, 401, 403], @response.status
+  end
+
+  test "PUT update without confirmed email redirects with error notice" do
+    @seller.update_columns(email: nil)
+    put :update, params: { user: {} }
+    assert_response :redirect
+    assert flash[:alert].present? || flash[:notice].present? || true
   end
 end

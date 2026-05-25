@@ -2,11 +2,21 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during the bulk fixtures-only migration
-# because of factory/Stripe/HTTP/ES dependencies (5 FactoryBot refs).
-# Original: spec/controllers/shipments_controller_spec.rb (deleted in this commit; see git history).
-class ShipmentsControllerTest < ActiveSupport::TestCase
-  test "TODO: migrate spec/controllers/shipments_controller_spec.rb" do
-    skip "TODO: migrate spec/controllers/shipments_controller_spec.rb (5 FactoryBot refs) — see comment above"
+class ShipmentsControllerTest < ActionController::TestCase
+  include Devise::Test::ControllerHelpers
+
+  setup do
+    @request.env["devise.mapping"] = Devise.mappings[:user]
+    @orig_protect = ActionController::Base.instance_method(:protect_against_forgery?)
+    ActionController::Base.define_method(:protect_against_forgery?) { false }
+  end
+
+  teardown do
+    ActionController::Base.define_method(:protect_against_forgery?, @orig_protect) if @orig_protect
+  end
+
+  test "POST mark_as_shipped redirects to login when not authenticated" do
+    post :mark_as_shipped, params: { purchase_id: "any" }
+    assert_response :redirect
   end
 end

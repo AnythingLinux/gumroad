@@ -13,3 +13,12 @@ another_seller_call:
   end_time: <%= 2.days.from_now + 30.minutes %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Used by CallsControllerTest — call attached to a call-typed product.
+named_seller_call_product_call:
+  purchase_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_call_product_purchase) %>
+  call_url: https://zoom.us/j/initial
+  start_time: <%= 1.day.from_now %>
+  end_time: <%= 1.day.from_now + 30.minutes %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

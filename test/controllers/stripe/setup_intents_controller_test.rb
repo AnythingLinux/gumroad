@@ -2,11 +2,20 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during the bulk fixtures-only migration
-# because of factory/Stripe/HTTP/ES dependencies (2 FactoryBot refs).
-# Original: spec/controllers/stripe/setup_intents_controller_spec.rb (deleted in this commit; see git history).
-class Stripe::SetupIntentsControllerTest < ActiveSupport::TestCase
-  test "TODO: migrate spec/controllers/stripe/setup_intents_controller_spec.rb" do
-    skip "TODO: migrate spec/controllers/stripe/setup_intents_controller_spec.rb (2 FactoryBot refs) — see comment above"
+class Stripe::SetupIntentsControllerTest < ActionController::TestCase
+  include Devise::Test::ControllerHelpers
+  include ControllerSellerAuthHelpers
+
+  setup do
+    boot_controller_test!
+  end
+
+  teardown { restore_protect_against_forgery! }
+
+  test "POST create with invalid card params responds with an error" do
+    post :create, params: {}
+    assert_response :unprocessable_entity
+    assert_equal false, @response.parsed_body["success"]
+    assert_equal "We couldn't charge your card. Try again or use a different card.", @response.parsed_body["error_message"]
   end
 end

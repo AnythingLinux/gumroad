@@ -97,6 +97,7 @@ ended_past_sub:
 magic_link_subscription:
   link_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_product) %>
   user_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_user) %>
+  seller_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_seller) %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
   flags: 0

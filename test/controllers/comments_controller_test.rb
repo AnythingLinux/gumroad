@@ -2,15 +2,25 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during fixtures-only controller migration.
-# Original spec: spec/controllers/comments_controller_spec.rb (deleted in this commit; see git history)
-# Reason: controller request-style spec with heavy auth/session/shared_context setup
-# (FB/create/let/shared_context refs: 120). Requires fixture-based equivalents
-# for "user signed in as admin for seller" + Pundit authorization shared examples
-# + downstream factories (users, products, purchases, etc.). Out of scope for
-# mechanical migration; revisit post-deadline with manual rewrite using fixtures.
 class CommentsControllerTest < ActionController::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/controllers/comments_controller_spec.rb — controller spec with shared auth/Pundit contexts"
+  include Devise::Test::ControllerHelpers
+  test "GET index returns 404 JSON when the post is missing" do
+    get :index, params: { post_id: "missing-external-id" }
+    assert_response :not_found
+  end
+
+  test "POST create returns 404 JSON when the post is missing" do
+    post :create, params: { post_id: "missing-external-id", comment: { content: "hi" } }
+    assert_response :not_found
+  end
+
+  test "PATCH update returns 404 JSON when the post is missing" do
+    patch :update, params: { post_id: "missing-external-id", id: "nope", comment: { content: "x" } }
+    assert_response :not_found
+  end
+
+  test "DELETE destroy returns 404 JSON when the post is missing" do
+    delete :destroy, params: { post_id: "missing-external-id", id: "nope" }
+    assert_response :not_found
   end
 end

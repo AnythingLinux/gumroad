@@ -1,13 +1,15 @@
 require "test_helper"
 
-# TODO: Migrate from RSpec. This spec was skip-batched during the bulk
-# fixtures-only migration because it has 97 FactoryBot/create references —
-# too coupled to factory chains to convert mechanically. Revisit post-deadline
-# with a manual rewrite using fixtures, or split into smaller test files.
+# TODO: Migrate from RSpec. Charge::Disputable spec (1296 LOC, 82 create()
+# refs) is `:vcr`-tagged and is the most VCR-dependent model spec in the
+# suite: every dispute lifecycle path threads Stripe (or PayPal) chargeback
+# webhooks through Charge::Disputable + Purchase::Disputable + creator
+# notification mailers. Requires ~40 VCR cassettes ported. Out of scope for
+# mechanical model backfill.
 #
-# Original spec: spec/models/concerns/charge/disputable_spec.rb (deleted in this commit; see git history)
-class DisputableTest < ActiveSupport::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/models/concerns/charge/disputable_spec.rb (97 FactoryBot refs) — see comment above"
+# Original spec: spec/models/concerns/charge/disputable_spec.rb
+class Charge::DisputableTest < ActiveSupport::TestCase
+  test "TODO: migrate — :vcr Stripe/PayPal chargeback lifecycle (1296 LOC)" do
+    skip "Top-level :vcr; 82 create() across chargeback lifecycle (Stripe + PayPal) + mailer enqueues. Out of scope for mechanical model backfill."
   end
 end

@@ -1,16 +1,53 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "support/controller_seller_auth_helpers"
 
-# TODO: Migrate from RSpec. Skip-batched during fixtures-only controller migration.
-# Original spec: spec/controllers/communities/chat_messages_controller_spec.rb (deleted in this commit; see git history)
-# Reason: controller request-style spec with heavy auth/session/shared_context setup
-# (FB/create/let/shared_context refs: 33). Requires fixture-based equivalents
-# for "user signed in as admin for seller" + Pundit authorization shared examples
-# + downstream factories (users, products, purchases, etc.). Out of scope for
-# mechanical migration; revisit post-deadline with manual rewrite using fixtures.
 class Communities::ChatMessagesControllerTest < ActionController::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/controllers/communities/chat_messages_controller_spec.rb — controller spec with shared auth/Pundit contexts"
+  include Devise::Test::ControllerHelpers
+  include ControllerSellerAuthHelpers
+
+  setup do
+    @seller = users(:named_seller)
+    @seller.save! if @seller.external_id.blank?
+    sign_in_as_seller(@seller)
+    Feature.activate_user(:communities, @seller)
+    @community = communities(:named_seller_product_community)
+  end
+
+  teardown { restore_protect_against_forgery! }
+
+  test "POST create raises RecordNotFound when community is not found" do
+    assert_raises(ActiveRecord::RecordNotFound) do
+      post :create, params: { community_id: "nonexistent", community_chat_message: { content: "Hello" } }
+    end
+  end
+
+  test "POST create redirects to dashboard when :communities flag is disabled" do
+    Feature.deactivate_user(:communities, @seller)
+    post :create, params: { community_id: @community.external_id, community_chat_message: { content: "Hello" } }
+    assert_redirected_to dashboard_path
+    assert_equal "You are not allowed to perform this action.", flash[:alert]
+  end
+
+  test "POST create creates a new message" do
+    assert_difference -> { CommunityChatMessage.count }, 1 do
+      post :create, params: {
+        community_id: @community.external_id,
+        community_chat_message: { content: "Hello, community!" }
+      }
+    end
+    assert_redirected_to community_path(@seller.external_id, @community.external_id)
+    msg = CommunityChatMessage.last
+    assert_equal "Hello, community!", msg.content
+    assert_equal @seller, msg.user
+    assert_equal @community, msg.community
+  end
+
+  test "POST create with invalid content redirects without creating a message" do
+    assert_no_difference -> { CommunityChatMessage.count } do
+      post :create, params: { community_id: @community.external_id, community_chat_message: { content: "" } }
+    end
+    assert_redirected_to community_path(@seller.external_id, @community.external_id)
   end
 end

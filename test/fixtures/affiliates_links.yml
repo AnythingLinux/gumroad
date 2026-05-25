@@ -2,6 +2,7 @@
 collaborator_for_named_seller_product_link:
   affiliate_id: <%= ActiveRecord::FixtureSet.identify(:collaborator_for_named_seller_product) %>
   link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
+  affiliate_basis_points: 1000
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -75,5 +76,20 @@ aff_credit_test_all_products_link:
   affiliate_id: <%= ActiveRecord::FixtureSet.identify(:aff_credit_test_direct_affiliate_all_products) %>
   link_id: <%= ActiveRecord::FixtureSet.identify(:named_seller_product) %>
   affiliate_basis_points: 1000
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# Collaborator::UpdateServiceTest: PA on product_1 (3000 bps).
+csu_pa_product_1:
+  affiliate_id: <%= ActiveRecord::FixtureSet.identify(:csu_collaborator) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:csu_product_1) %>
+  affiliate_basis_points: 3000
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+csu_pa_product_2:
+  affiliate_id: <%= ActiveRecord::FixtureSet.identify(:csu_collaborator) %>
+  link_id: <%= ActiveRecord::FixtureSet.identify(:csu_product_2) %>
+  affiliate_basis_points: 3000
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>

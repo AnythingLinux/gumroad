@@ -40,3 +40,12 @@ po_test_validation_phantom_payment_option:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Phantom PO for magic_link_subscription so refresh_token (calls save!) passes
+# must_have_payment_option validation. Used by Subscriptions::MagicLinksControllerTest.
+magic_link_payment_option:
+  subscription_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_subscription) %>
+  price_id: <%= ActiveRecord::FixtureSet.identify(:magic_link_product_price) %>
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

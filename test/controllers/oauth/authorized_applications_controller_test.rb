@@ -2,15 +2,40 @@
 
 require "test_helper"
 
-# TODO: Migrate from RSpec. Skip-batched during fixtures-only controller migration.
-# Original spec: spec/controllers/oauth/authorized_applications_controller_spec.rb (deleted in this commit; see git history)
-# Reason: controller request-style spec with heavy auth/session/shared_context setup
-# (FB/create/let/shared_context refs: 3). Requires fixture-based equivalents
-# for "user signed in as admin for seller" + Pundit authorization shared examples
-# + downstream factories (users, products, purchases, etc.). Out of scope for
-# mechanical migration; revisit post-deadline with manual rewrite using fixtures.
 class Oauth::AuthorizedApplicationsControllerTest < ActionController::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/controllers/oauth/authorized_applications_controller_spec.rb — controller spec with shared auth/Pundit contexts"
+  include Devise::Test::ControllerHelpers
+  include ControllerSellerAuthHelpers
+
+  setup do
+    boot_controller_test!
+    @user = users(:named_seller)
+    @application = oauth_applications(:notion_app_for_named_seller)
+    Doorkeeper::AccessToken.create!(
+      resource_owner_id: @user.id,
+      application: @application,
+      scopes: "creator_api"
+    )
+    sign_in @user
+  end
+
+  teardown { restore_protect_against_forgery! }
+
+  test "GET index redirects to settings_authorized_applications_path" do
+    get :index
+    assert_redirected_to settings_authorized_applications_path
+  end
+
+  test "DELETE destroy revokes access to the authorized application and redirects" do
+    assert_difference -> { OauthApplication.authorized_for(@user).count }, -1 do
+      delete :destroy, params: { id: @application.external_id }
+    end
+    assert_redirected_to settings_authorized_applications_path
+    assert_equal "Authorized application revoked", flash[:notice]
+  end
+
+  test "DELETE destroy with invalid id flashes an error and redirects" do
+    delete :destroy, params: { id: "invalid_id" }
+    assert_redirected_to settings_authorized_applications_path
+    assert_equal "Authorized application could not be revoked", flash[:alert]
   end
 end

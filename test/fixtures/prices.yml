@@ -268,6 +268,26 @@ cancel_subs_deleted_membership_price:
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
+# Default monthly buy price for the restartable membership fixture so that
+# ProductPresenter::Card display_price_cents (default_price_cents + 0) is not nil.
+restartable_membership_product_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:restartable_membership_product) %>
+  price_cents: 100
+  currency: usd
+  recurrence: monthly
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+spc_nontiered_product_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:spc_nontiered_product) %>
+  price_cents: 500
+  currency: usd
+  recurrence: monthly
+  flags: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
 # PaymentOptionTest fixtures.
 po_test_subscription_product_price:
   link_id: <%= ActiveRecord::FixtureSet.identify(:po_test_subscription_product) %>
@@ -402,3 +422,28 @@ tag_test_product_two_price:
   flags: 0
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
+
+# Collaborator::UpdateServiceTest products.
+csu_product_1_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:csu_product_1) %>
+  price_cents: 100
+  currency: usd
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  flags: 0
+
+csu_product_2_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:csu_product_2) %>
+  price_cents: 100
+  currency: usd
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  flags: 0
+
+csu_product_3_price:
+  link_id: <%= ActiveRecord::FixtureSet.identify(:csu_product_3) %>
+  price_cents: 100
+  currency: usd
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+  flags: 0

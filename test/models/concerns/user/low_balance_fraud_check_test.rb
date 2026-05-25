@@ -1,12 +1,14 @@
-# frozen_string_literal: true
-
 require "test_helper"
 
+# TODO: Migrate from RSpec. Original spec stubs `@creator.unpaid_balance_cents`
+# (`allow(...).to receive(...)`), uses `have_enqueued_mail(AdminMailer, ...)`,
+# and `versioning: true` (PaperTrail). Stubbing instance methods in Minitest
+# without Mocha is awkward, and the refunded_purchase factory + comments
+# threading + paper_trail context together exceed mechanical-conversion budget.
+#
+# Original spec: spec/models/concerns/user/low_balance_fraud_check_spec.rb
 class User::LowBalanceFraudCheckTest < ActiveSupport::TestCase
-  test "TODO: migrate from spec/models/concerns/user/low_balance_fraud_check_spec.rb" do
-    skip "Skip-batch: state machine transitions (suspend_for_fraud!, suspend_for_tos_violation!) " \
-         "trigger heavy callbacks (Stripe Apple Pay domain, gmail abuse filter, send_suspension_email, " \
-         "suspend_sellers_other_accounts, block_seller_ip!) without stubs; uses PaperTrail versioning and " \
-         "stubs unpaid_balance_cents (User::Stats ES chain). Re-migrate with comprehensive User stubs."
+  test "TODO: migrate — Minitest instance stubbing + ActionMailer enqueue + paper_trail" do
+    skip "Requires instance stubs for unpaid_balance_cents, have_enqueued_mail equivalent, refunded_purchase + paper_trail :versioning context. Out of scope for mechanical backfill."
   end
 end

@@ -1,13 +1,15 @@
 require "test_helper"
 
-# TODO: Migrate from RSpec. This spec was skip-batched during the bulk
-# fixtures-only migration because it has 44 FactoryBot/create references —
-# too coupled to factory chains to convert mechanically. Revisit post-deadline
-# with a manual rewrite using fixtures, or split into smaller test files.
+# TODO: Migrate from RSpec. Product::AsJson spec (548 LOC, 44 create() refs)
+# is `:vcr`-tagged and exercises the full Link#as_json projection across
+# variants / base_variants / offer_codes / installment_plans / shipping_destinations
+# / asset_previews / product_files / preorders, plus PurchaseSearchService /
+# RecommendationEngine for some branches. Out of scope for mechanical model
+# backfill.
 #
-# Original spec: spec/models/concerns/product/as_json_spec.rb (deleted in this commit; see git history)
-class AsJsonTest < ActiveSupport::TestCase
-  test "TODO: migrate from RSpec — fixture-hostile, requires manual rewrite" do
-    skip "TODO: migrate spec/models/concerns/product/as_json_spec.rb (44 FactoryBot refs) — see comment above"
+# Original spec: spec/models/concerns/product/as_json_spec.rb
+class Product::AsJsonTest < ActiveSupport::TestCase
+  test "TODO: migrate — :vcr + Link as_json full projection" do
+    skip ":vcr; Link#as_json across 8+ associations + ES recommendations. Out of scope for mechanical model backfill."
   end
 end
