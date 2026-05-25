@@ -204,14 +204,16 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      - name: Build widget bundles
-        # gumroad-bundle.js and gumroad-embed-bundle.js are served from
-        # public/js/ via EmbeddedJavascriptsController. They're produced
-        # by vite.config.widget.ts and historically built as part of
-        # `assets:precompile` (see lib/tasks/vite_widget.rake). Without
-        # this step, embed/widget system specs fail because the embed
-        # iframe's script tag 404s and the iframe never injects.
-        run: npm run build:widget
+      - name: Precompile assets
+        # assets:precompile runs vite:build (main app bundles into
+        # public/vite-test/) AND vite:build_widget (gumroad-bundle.js +
+        # gumroad-embed-bundle.js into public/js/, enhanced via
+        # lib/tasks/vite_widget.rake). Without this every Capybara
+        # browser hit on a Vite-served route pays cold-compile tax;
+        # with it, the dev daemon only needs to recompile changed
+        # entrypoints (rare in CI). Widget bundles are required by
+        # embed/widget system specs regardless.
+        run: bundle exec rake assets:precompile
         env:
           RAILS_ENV: test
 
@@ -478,14 +480,16 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      - name: Build widget bundles
-        # gumroad-bundle.js and gumroad-embed-bundle.js are served from
-        # public/js/ via EmbeddedJavascriptsController. They're produced
-        # by vite.config.widget.ts and historically built as part of
-        # `assets:precompile` (see lib/tasks/vite_widget.rake). Without
-        # this step, embed/widget system specs fail because the embed
-        # iframe's script tag 404s and the iframe never injects.
-        run: npm run build:widget
+      - name: Precompile assets
+        # assets:precompile runs vite:build (main app bundles into
+        # public/vite-test/) AND vite:build_widget (gumroad-bundle.js +
+        # gumroad-embed-bundle.js into public/js/, enhanced via
+        # lib/tasks/vite_widget.rake). Without this every Capybara
+        # browser hit on a Vite-served route pays cold-compile tax;
+        # with it, the dev daemon only needs to recompile changed
+        # entrypoints (rare in CI). Widget bundles are required by
+        # embed/widget system specs regardless.
+        run: bundle exec rake assets:precompile
         env:
           RAILS_ENV: test
 
