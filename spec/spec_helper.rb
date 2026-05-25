@@ -370,7 +370,9 @@ RSpec.configure do |config|
     else
       Sidekiq::Testing.fake!
     end
+    Sidekiq::Worker.clear_all
     example.run
+    Sidekiq::Worker.clear_all
   end
 
   config.around(:each) do |example|
