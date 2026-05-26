@@ -108,6 +108,7 @@ export type Product = {
   is_sales_limited: boolean;
   price_cents: number;
   buyer_currency?: string;
+  buyer_local_currency_rate?: number;
   buyer_local_price_cents?: number;
   buyer_local_original_price_cents?: number;
   buyer_currency_display?: BuyerCurrencyDisplay;
@@ -397,6 +398,7 @@ export const Product = ({
                 isSalesLimited={product.is_sales_limited}
                 creatorName={product.seller?.name}
                 buyerCurrency={product.buyer_currency}
+                buyerLocalCurrencyRate={product.buyer_local_currency_rate}
                 buyerLocalPriceCents={product.buyer_local_price_cents}
                 buyerLocalOriginalPriceCents={product.buyer_local_original_price_cents}
               />

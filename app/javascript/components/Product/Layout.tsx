@@ -299,6 +299,7 @@ const CtaBar = ({
           isSalesLimited={product.is_sales_limited}
           creatorName={product.seller?.name}
           buyerCurrency={product.buyer_currency}
+          buyerLocalCurrencyRate={product.buyer_local_currency_rate}
           buyerLocalPriceCents={product.buyer_local_price_cents}
           buyerLocalOriginalPriceCents={product.buyer_local_original_price_cents}
         />

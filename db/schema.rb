@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_29_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_29_000000) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name", limit: 191, null: false
     t.string "record_type", limit: 191, null: false
@@ -507,18 +507,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_29_000001) do
     t.index ["order_id"], name: "index_carts_on_order_id"
     t.index ["updated_at"], name: "index_carts_on_updated_at"
     t.index ["user_id"], name: "index_carts_on_user_id"
-  end
-
-  create_table "charge_buyer_currency_amounts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.bigint "charge_id", null: false
-    t.string "buyer_currency", limit: 3, null: false
-    t.bigint "buyer_currency_amount_cents"
-    t.bigint "buyer_currency_gumroad_amount_cents"
-    t.decimal "buyer_currency_exchange_rate", precision: 20, scale: 10
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["buyer_currency"], name: "index_charge_buyer_currency_amounts_on_buyer_currency"
-    t.index ["charge_id"], name: "index_charge_buyer_currency_amounts_on_charge_id", unique: true
   end
 
   create_table "charge_purchases", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -1673,17 +1661,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_29_000001) do
     t.index ["resource_type", "resource_id"], name: "index_public_files_on_resource"
     t.index ["scheduled_for_deletion_at"], name: "index_public_files_on_scheduled_for_deletion_at"
     t.index ["seller_id"], name: "index_public_files_on_seller_id"
-  end
-
-  create_table "purchase_buyer_currency_amounts", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.bigint "purchase_id", null: false
-    t.string "buyer_currency", limit: 3, null: false
-    t.bigint "buyer_currency_amount_cents"
-    t.decimal "buyer_currency_exchange_rate", precision: 20, scale: 10
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["buyer_currency"], name: "index_purchase_buyer_currency_amounts_on_buyer_currency"
-    t.index ["purchase_id"], name: "index_purchase_buyer_currency_amounts_on_purchase_id", unique: true
   end
 
   create_table "purchase_custom_field_files", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

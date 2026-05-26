@@ -43,7 +43,7 @@ class ProductPresenter::Card
       price_cents:,
       currency_code: product.price_currency_type.downcase,
       **(buyer_currency_display.present? ? { buyer_currency_display: } : {}),
-      **buyer_local_price_props(original_price_cents:, buyer_currency_display:),
+      **buyer_local_price_props(product:, original_price_cents:, buyer_currency_display:),
       is_pay_what_you_want: product.has_customizable_price_option?,
       url: url_for_product_page(product, request:, recommended_by:, recommender_model_name:, layout: target, affiliate_id:, query:, offer_code:),
       duration_in_months: product.duration_in_months,
@@ -81,26 +81,5 @@ class ProductPresenter::Card
 
       discount_amount_cents = offer_code.amount_off(base_price_cents)
       [base_price_cents - discount_amount_cents, 0].max
-    end
-
-    def buyer_local_price_props(original_price_cents: nil, buyer_currency_display:)
-      return {} unless buyer_currency_display&.dig(:variant) == "buyer_local"
-
-      props = {
-        buyer_currency: buyer_currency_display[:buyer_currency_shown],
-        buyer_local_price_cents: buyer_currency_display[:buyer_local_price_cents],
-      }
-
-      if original_price_cents.present?
-        local_original_price_cents = buyer_local_price_cents(
-          price_cents: original_price_cents,
-          from_currency: product.price_currency_type,
-          to_currency: buyer_currency_display[:buyer_currency_shown],
-          rate: BigDecimal(buyer_currency_display[:rate].to_s)
-        )
-        props[:buyer_local_original_price_cents] = local_original_price_cents if local_original_price_cents.present?
-      end
-
-      props
     end
 end

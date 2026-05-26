@@ -104,7 +104,7 @@ export const formatPriceCentsWithoutCurrencySymbolAndComma = (code: CurrencyCode
 
 export const formatMinorUnitPriceWithIntl = (currencyCode: string, amountMinorUnits: number): string => {
   const currency = currencyCode.toUpperCase();
-  const formatter = new Intl.NumberFormat(undefined, { style: "currency", currency });
+  const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency });
   const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
   return formatter.format(amountMinorUnits / 10 ** fractionDigits);
 };

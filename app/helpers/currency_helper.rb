@@ -99,11 +99,11 @@ module CurrencyHelper
   def buyer_currency_for_ip(ip)
     buyer_currency_for_country(GeoIp.lookup(ip)&.country_code)
   rescue StandardError
-    Currency::USD
+    nil
   end
 
   def buyer_currency_for_country(country_code)
-    COUNTRY_TO_CURRENCY[country_code.to_s.upcase] || Currency::USD
+    COUNTRY_TO_CURRENCY[country_code.to_s.upcase]
   end
 
   def buyer_local_price_cents(price_cents:, from_currency:, to_currency:, rate: nil)
@@ -145,7 +145,7 @@ module CurrencyHelper
 
     if creator_opted_in
       buyer_currency = buyer_currency_for_ip(ip)
-      if buyer_currency != product_currency
+      if buyer_currency.present? && buyer_currency != product_currency
         rate = buyer_local_currency_rate(from_currency: product_currency, to_currency: buyer_currency)
         if rate.present?
           local_price_cents = buyer_local_price_cents(
@@ -189,6 +189,33 @@ module CurrencyHelper
       rate: nil,
       variant: "usd_default",
     }
+  end
+
+  def buyer_local_price_props(product:, original_price_cents: nil, buyer_currency_display:)
+    return {} unless buyer_currency_display&.dig(:variant) == "buyer_local"
+
+    buyer_currency = buyer_currency_display[:buyer_currency_shown]
+    rate = BigDecimal(buyer_currency_display[:rate].to_s)
+    minor_unit_rate = rate *
+      BigDecimal(subunit_to_unit(buyer_currency).to_s) /
+      BigDecimal(subunit_to_unit(product.price_currency_type).to_s)
+    props = {
+      buyer_currency:,
+      buyer_local_currency_rate: minor_unit_rate.to_f,
+      buyer_local_price_cents: buyer_currency_display[:buyer_local_price_cents],
+    }
+
+    if original_price_cents.present?
+      local_original_price_cents = buyer_local_price_cents(
+        price_cents: original_price_cents,
+        from_currency: product.price_currency_type,
+        to_currency: buyer_currency,
+        rate:
+      )
+      props[:buyer_local_original_price_cents] = local_original_price_cents if local_original_price_cents.present?
+    end
+
+    props
   end
 
   def get_usd_cents(currency_type, quantity, rate: nil)
@@ -288,6 +315,7 @@ module CurrencyHelper
   end
 
   def query_buyer_local_currency_rate(from_currency:, to_currency:)
+    # TODO: Pre-warm buyer-local currency rates in a background job to keep render paths off external HTTP.
     rates = JSON.parse(URI.open(CURRENCY_SOURCE).read)["rates"]
     from_rate = from_currency.to_s.casecmp?(Currency::USD) ? BigDecimal("1") : BigDecimal(rates[from_currency.to_s.upcase].to_s)
     to_rate = to_currency.to_s.casecmp?(Currency::USD) ? BigDecimal("1") : BigDecimal(rates[to_currency.to_s.upcase].to_s)

@@ -13,9 +13,17 @@ describe CurrencyHelper do
       expect(helper.buyer_currency_for_country("BR")).to eq("brl")
     end
 
-    it "falls back to USD for unknown countries" do
-      expect(helper.buyer_currency_for_country("ZZ")).to eq("usd")
-      expect(helper.buyer_currency_for_country(nil)).to eq("usd")
+    it "returns nil for unknown countries" do
+      expect(helper.buyer_currency_for_country("ZZ")).to be_nil
+      expect(helper.buyer_currency_for_country(nil)).to be_nil
+    end
+  end
+
+  describe "#buyer_currency_for_ip" do
+    it "returns nil when GeoIP lookup fails" do
+      allow(GeoIp).to receive(:lookup).with("2.2.2.2").and_raise(StandardError)
+
+      expect(helper.buyer_currency_for_ip("2.2.2.2")).to be_nil
     end
   end
 

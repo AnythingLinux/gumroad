@@ -27,6 +27,7 @@ type Props = {
   creatorName?: string | undefined;
   tooltipPosition?: "top" | "right";
   buyerCurrency?: string | null | undefined;
+  buyerLocalCurrencyRate?: number | null | undefined;
   buyerLocalPriceCents?: number | null | undefined;
   buyerLocalOriginalPriceCents?: number | null | undefined;
 };
@@ -42,20 +43,26 @@ export const PriceTag = ({
   creatorName,
   tooltipPosition = "right",
   buyerCurrency,
+  buyerLocalCurrencyRate,
   buyerLocalPriceCents,
   buyerLocalOriginalPriceCents,
 }: Props) => {
+  const buyerLocalPriceCentsFor = (amountCents: number, fallbackAmountCents?: number | null) =>
+    buyerLocalCurrencyRate != null ? Math.round(amountCents * buyerLocalCurrencyRate) : fallbackAmountCents;
+  const currentBuyerLocalPriceCents = buyerLocalPriceCentsFor(price, buyerLocalPriceCents);
   const buyerLocalPrice =
-    buyerCurrency && buyerLocalPriceCents != null
+    buyerCurrency && currentBuyerLocalPriceCents != null
       ? {
           currency: buyerCurrency,
-          priceCents: buyerLocalPriceCents,
+          priceCents: currentBuyerLocalPriceCents,
           originalPriceCents: buyerLocalOriginalPriceCents,
         }
       : null;
   const displayedPrice = buyerLocalPrice?.priceCents ?? price;
-  const displayedOldPrice = buyerLocalPrice ? (buyerLocalPrice.originalPriceCents ?? undefined) : oldPrice;
-  const displayedCurrencyCode = buyerLocalPrice?.currency ?? currencyCode;
+  const displayedOldPrice =
+    buyerLocalPrice && oldPrice != null
+      ? buyerLocalPriceCentsFor(oldPrice, buyerLocalPrice.originalPriceCents) ?? undefined
+      : oldPrice;
   const formatDisplayedPrice = (amountCents: number) =>
     buyerLocalPrice
       ? formatMinorUnitPriceWithIntl(buyerLocalPrice.currency, amountCents)
@@ -86,11 +93,7 @@ export const PriceTag = ({
           <div
             className="bg-accent px-2 py-1 text-accent-foreground"
             itemProp="price"
-            content={
-              buyerLocalPrice
-                ? formatMinorUnitPriceWithoutCurrencySymbolAndComma(buyerLocalPrice.currency, displayedPrice)
-                : formatPriceCentsWithoutCurrencySymbolAndComma(currencyCode, displayedPrice)
-            }
+            content={formatPriceCentsWithoutCurrencySymbolAndComma(currencyCode, price)}
           >
             {priceTag}
           </div>
@@ -103,7 +106,7 @@ export const PriceTag = ({
         {`https://schema.org/${isSalesLimited ? "LimitedAvailability" : "InStock"}`}
       </div>
       <div itemProp="priceCurrency" className="hidden">
-        {displayedCurrencyCode}
+        {currencyCode.toUpperCase()}
       </div>
       {creatorName ? (
         <div itemProp="seller" itemType="https://schema.org/Person" className="hidden">
@@ -114,15 +117,4 @@ export const PriceTag = ({
       ) : null}
     </div>
   );
-};
-
-const formatMinorUnitPriceWithoutCurrencySymbolAndComma = (currencyCode: string, amountMinorUnits: number): string => {
-  const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: currencyCode.toUpperCase() });
-  const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
-  const amount = amountMinorUnits / 10 ** fractionDigits;
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: amount % 1 === 0 ? 0 : fractionDigits,
-    maximumFractionDigits: fractionDigits,
-    useGrouping: false,
-  });
 };
