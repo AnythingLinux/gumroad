@@ -11,6 +11,7 @@ import { Discount } from "$app/parsers/checkout";
 import {
   AnalyticsData,
   AssetPreview,
+  BuyerCurrencyDisplay,
   COMMISSION_DEPOSIT_PROPORTION,
   CustomButtonTextOption,
   FreeTrial,
@@ -24,7 +25,7 @@ import { formatDate } from "$app/utils/date";
 import { formatOrderOfMagnitude } from "$app/utils/formatOrderOfMagnitude";
 import { variantLabel } from "$app/utils/labels";
 import { assertResponseError } from "$app/utils/request";
-import { startTrackingForSeller, trackProductEvent } from "$app/utils/user_analytics";
+import { startTrackingForSeller, trackBuyerCurrencyDisplayView, trackProductEvent } from "$app/utils/user_analytics";
 
 import { NavigationButton } from "$app/components/Button";
 import {
@@ -109,6 +110,7 @@ export type Product = {
   buyer_currency?: string;
   buyer_local_price_cents?: number;
   buyer_local_original_price_cents?: number;
+  buyer_currency_display?: BuyerCurrencyDisplay;
   pwyw: { suggested_price_cents: number | null } | null;
   installment_plan: InstallmentPlan | null;
   ratings: RatingsWithPercentages | null;
@@ -321,6 +323,7 @@ export const Product = ({
     setPageLoaded(true);
 
     if (disableAnalytics) return;
+    trackBuyerCurrencyDisplayView(product.seller?.id, product.buyer_currency_display);
     if (product.seller) {
       startTrackingForSeller(product.seller.id, product.analytics);
       trackProductEvent(product.seller.id, {

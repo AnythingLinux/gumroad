@@ -106,10 +106,10 @@ module CurrencyHelper
     COUNTRY_TO_CURRENCY[country_code.to_s.upcase] || Currency::USD
   end
 
-  def buyer_local_price_cents(price_cents:, from_currency:, to_currency:)
+  def buyer_local_price_cents(price_cents:, from_currency:, to_currency:, rate: nil)
     return price_cents if from_currency.to_s.casecmp?(to_currency.to_s)
 
-    rate = buyer_local_currency_rate(from_currency:, to_currency:)
+    rate ||= buyer_local_currency_rate(from_currency:, to_currency:)
     return if rate.blank?
 
     from_subunit_to_unit = subunit_to_unit(from_currency)
@@ -137,6 +137,58 @@ module CurrencyHelper
   rescue StandardError
     stale_rate = $redis.get(buyer_local_currency_stale_rate_cache_key(from_currency:, to_currency:))
     BigDecimal(stale_rate) if stale_rate.present? && stale_rate.to_d.positive?
+  end
+
+  def buyer_currency_display_props(product:, price_cents:, ip:)
+    product_currency = product.price_currency_type.to_s.downcase
+    creator_opted_in = product.user.show_buyer_local_currency?
+
+    if creator_opted_in
+      buyer_currency = buyer_currency_for_ip(ip)
+      if buyer_currency != product_currency
+        rate = buyer_local_currency_rate(from_currency: product_currency, to_currency: buyer_currency)
+        if rate.present?
+          local_price_cents = buyer_local_price_cents(
+            price_cents:,
+            from_currency: product_currency,
+            to_currency: buyer_currency,
+            rate:
+          )
+        end
+
+        if rate.present? && local_price_cents.present?
+          return {
+            product_id: product.external_id,
+            creator_opted_in:,
+            buyer_currency_shown: buyer_currency,
+            product_currency:,
+            buyer_local_price_cents: local_price_cents,
+            rate: rate.to_f,
+            variant: "buyer_local",
+          }
+        end
+      end
+    end
+
+    {
+      product_id: product.external_id,
+      creator_opted_in:,
+      buyer_currency_shown: product_currency,
+      product_currency:,
+      buyer_local_price_cents: nil,
+      rate: nil,
+      variant: "usd_default",
+    }
+  rescue StandardError
+    {
+      product_id: product.external_id,
+      creator_opted_in: product.user.show_buyer_local_currency?,
+      buyer_currency_shown: product.price_currency_type.to_s.downcase,
+      product_currency: product.price_currency_type.to_s.downcase,
+      buyer_local_price_cents: nil,
+      rate: nil,
+      variant: "usd_default",
+    }
   end
 
   def get_usd_cents(currency_type, quantity, rate: nil)
