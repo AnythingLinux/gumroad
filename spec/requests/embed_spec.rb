@@ -174,7 +174,7 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true, retry: 
     visit(embed_page_url)
 
     within_embed_frame do
-      expect(page).to have_field(type: "radio", with: selected_sku.external_id, checked: true, visible: :all)
+      expect(page).to have_radio_button(selected_sku.name, checked: true)
       expect(page).to have_field("Quantity", with: 2)
       expect(page).to have_field("Name a fair price", with: 3)
       click_on "Add to cart"
