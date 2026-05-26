@@ -55,33 +55,37 @@ export const PriceTag = ({
       ? {
           currency: buyerCurrency,
           priceCents: currentBuyerLocalPriceCents,
-          originalPriceCents: buyerLocalOriginalPriceCents,
+          originalPriceCents: buyerLocalPriceCentsFor(oldPrice ?? price, buyerLocalOriginalPriceCents),
         }
       : null;
-  const displayedPrice = buyerLocalPrice?.priceCents ?? price;
-  const displayedOldPrice =
-    buyerLocalPrice && oldPrice != null
-      ? buyerLocalPriceCentsFor(oldPrice, buyerLocalPrice.originalPriceCents) ?? undefined
-      : oldPrice;
-  const formatDisplayedPrice = (amountCents: number) =>
-    buyerLocalPrice
-      ? formatMinorUnitPriceWithIntl(buyerLocalPrice.currency, amountCents)
-      : formatPriceCentsWithCurrencySymbol(currencyCode, amountCents, { symbolFormat: "long" });
+  const formatNativePrice = (amountCents: number) =>
+    formatPriceCentsWithCurrencySymbol(currencyCode, amountCents, { symbolFormat: "long" });
+  const formatLocalPrice = (amountCents: number) =>
+    buyerLocalPrice ? formatMinorUnitPriceWithIntl(buyerLocalPrice.currency, amountCents) : null;
 
   const recurrenceLabel = recurrence
     ? formatRecurrenceWithDuration(recurrence.id, recurrence.duration_in_months)
     : null;
 
-  const priceTag = (
+  const nativePriceTag = (
     <>
-      {displayedOldPrice != null ? (
+      {oldPrice != null ? (
         <>
-          <s>{formatDisplayedPrice(displayedOldPrice)}</s>{" "}
+          <s>{formatNativePrice(oldPrice)}</s>{" "}
         </>
       ) : null}
-      {formatDisplayedPrice(displayedPrice)}
+      {formatNativePrice(price)}
       {isPayWhatYouWant ? "+" : null}
       {recurrenceLabel ? ` ${recurrenceLabel}` : null}
+    </>
+  );
+  const localPriceAnnotation = buyerLocalPrice
+    ? `≈ ${formatLocalPrice(buyerLocalPrice.priceCents) ?? ""}`
+    : null;
+  const priceTag = (
+    <>
+      {nativePriceTag}
+      {localPriceAnnotation ? <span className="text-muted ml-1 text-sm">{localPriceAnnotation}</span> : null}
     </>
   );
   const borderClasses = "border-r-transparent border-[calc(0.5lh+--spacing(1))] border-l-1";

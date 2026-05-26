@@ -38,30 +38,40 @@ describe CurrencyHelper do
       end
     end
 
-    it "returns the cached daily rate" do
+    it "returns the cached daily rate without enqueuing a refresh" do
       $redis.set("buyer_local_currency_rate:usd:eur:2026-05-26", "0.8")
 
-      expect(helper).not_to receive(:query_buyer_local_currency_rate)
+      expect(PrewarmBuyerLocalCurrencyRateJob).not_to receive(:perform_async)
       expect(helper.buyer_local_currency_rate(from_currency: "usd", to_currency: "eur")).to eq(BigDecimal("0.8"))
     end
 
-    it "caches a daily snapshot rate" do
-      expect(helper.buyer_local_currency_rate(from_currency: "usd", to_currency: "eur")).to eq(BigDecimal("0.81127"))
-      expect($redis.get("buyer_local_currency_rate:usd:eur:2026-05-26")).to eq("0.81127")
-      expect($redis.ttl("buyer_local_currency_rate:usd:eur:2026-05-26")).to be_between(1, 24.hours.to_i)
-    end
-
-    it "returns stale cache when the daily snapshot fails" do
+    it "returns stale cache and enqueues a refresh on cold cache" do
       $redis.set("buyer_local_currency_rate:usd:eur:latest", "0.7")
-      allow(helper).to receive(:query_buyer_local_currency_rate).and_raise(StandardError)
 
+      expect(PrewarmBuyerLocalCurrencyRateJob).to receive(:perform_async).with("usd", "eur")
       expect(helper.buyer_local_currency_rate(from_currency: "usd", to_currency: "eur")).to eq(BigDecimal("0.7"))
     end
 
-    it "skips the annotation when the daily snapshot fails without stale cache" do
+    it "returns nil and enqueues a refresh when no stale cache exists" do
+      expect(PrewarmBuyerLocalCurrencyRateJob).to receive(:perform_async).with("usd", "eur")
+      expect(helper.buyer_local_currency_rate(from_currency: "usd", to_currency: "eur")).to be_nil
+    end
+  end
+
+  describe "#refresh_buyer_local_currency_rate!" do
+    it "queries the live rate and writes both daily and stale caches" do
+      allow(helper).to receive(:query_buyer_local_currency_rate).and_return(BigDecimal("0.81127"))
+
+      expect(helper.refresh_buyer_local_currency_rate!(from_currency: "usd", to_currency: "eur")).to eq(BigDecimal("0.81127"))
+      expect($redis.get("buyer_local_currency_rate:usd:eur:2026-05-26")).to eq("0.81127")
+      expect($redis.get("buyer_local_currency_rate:usd:eur:latest")).to eq("0.81127")
+      expect($redis.ttl("buyer_local_currency_rate:usd:eur:2026-05-26")).to be_between(1, 24.hours.to_i)
+    end
+
+    it "returns nil when the live query fails" do
       allow(helper).to receive(:query_buyer_local_currency_rate).and_raise(StandardError)
 
-      expect(helper.buyer_local_currency_rate(from_currency: "usd", to_currency: "eur")).to be_nil
+      expect(helper.refresh_buyer_local_currency_rate!(from_currency: "usd", to_currency: "eur")).to be_nil
     end
   end
 

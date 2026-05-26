@@ -35,7 +35,7 @@ export type RatingsWithPercentages = Ratings & { percentages: Tuple<number, 5> }
 export type BuyerCurrencyDisplay = {
   product_id: string;
   creator_opted_in: boolean;
-  buyer_currency_shown: CurrencyCode;
+  buyer_currency_shown: string;
   product_currency: CurrencyCode;
   buyer_local_price_cents: number | null;
   rate: number | null;
