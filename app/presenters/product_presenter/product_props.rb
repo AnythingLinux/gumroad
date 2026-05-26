@@ -46,7 +46,7 @@ class ProductPresenter::ProductProps
         currency_code: product.price_currency_type.downcase,
         price_cents: product.price_cents,
         buyer_currency_display:,
-        **buyer_local_price_props(original_price_cents:, buyer_currency_display:),
+        **buyer_local_price_props(product:, original_price_cents:, buyer_currency_display:),
         rental_price_cents: product.rental_price_cents,
         pwyw: product.customizable_price ? { suggested_price_cents: product.suggested_price_cents } : nil,
         **ProductPresenter::InstallmentPlanProps.new(product:).props,
@@ -180,27 +180,6 @@ class ProductPresenter::ProductProps
         (ppp_details[:factor] * price_cents).round,
         ppp_details[:minimum_price]
       ].max
-    end
-
-    def buyer_local_price_props(original_price_cents: nil, buyer_currency_display:)
-      return {} unless buyer_currency_display[:variant] == "buyer_local"
-
-      props = {
-        buyer_currency: buyer_currency_display[:buyer_currency_shown],
-        buyer_local_price_cents: buyer_currency_display[:buyer_local_price_cents],
-      }
-
-      if original_price_cents.present?
-        local_original_price_cents = buyer_local_price_cents(
-          price_cents: original_price_cents,
-          from_currency: product.price_currency_type,
-          to_currency: buyer_currency_display[:buyer_currency_shown],
-          rate: BigDecimal(buyer_currency_display[:rate].to_s)
-        )
-        props[:buyer_local_original_price_cents] = local_original_price_cents if local_original_price_cents.present?
-      end
-
-      props
     end
 
     def refund_policy_props

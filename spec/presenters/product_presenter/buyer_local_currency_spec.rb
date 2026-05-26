@@ -45,6 +45,7 @@ describe "ProductPresenter buyer local currency props" do
       props = described_class.new(product:).props(seller_custom_domain_url: nil, request:, pundit_user: nil)[:product]
 
       expect(props[:buyer_currency]).to eq("eur")
+      expect(props[:buyer_local_currency_rate]).to eq(0.8)
       expect(props[:buyer_local_price_cents]).to eq(800)
       expect(props[:buyer_currency_display]).to eq(
         product_id: product.external_id,
@@ -65,6 +66,7 @@ describe "ProductPresenter buyer local currency props" do
       props = described_class.new(product:).props(seller_custom_domain_url: nil, request:, pundit_user: nil)[:product]
 
       expect(props[:buyer_currency]).to eq("eur")
+      expect(props[:buyer_local_currency_rate]).to eq(0.8)
       expect(props[:buyer_local_price_cents]).to eq(400)
       expect(props[:buyer_local_original_price_cents]).to eq(800)
     end
@@ -77,6 +79,7 @@ describe "ProductPresenter buyer local currency props" do
       props = described_class.new(product:).props(seller_custom_domain_url: nil, request:, pundit_user: nil)[:product]
 
       expect(props).not_to have_key(:buyer_currency)
+      expect(props).not_to have_key(:buyer_local_currency_rate)
       expect(props).not_to have_key(:buyer_local_price_cents)
       expect(props).not_to have_key(:buyer_local_original_price_cents)
       expect(props[:buyer_currency_display]).to eq(
@@ -107,6 +110,7 @@ describe "ProductPresenter buyer local currency props" do
       props = described_class.new(product:).props(seller_custom_domain_url: nil, request:, pundit_user: nil)[:product]
 
       expect(props).not_to have_key(:buyer_currency)
+      expect(props).not_to have_key(:buyer_local_currency_rate)
       expect(props).not_to have_key(:buyer_local_price_cents)
       expect(props).not_to have_key(:buyer_local_original_price_cents)
       expect(props[:buyer_currency_display]).to eq(
@@ -114,6 +118,40 @@ describe "ProductPresenter buyer local currency props" do
         creator_opted_in: true,
         buyer_currency_shown: "usd",
         product_currency: "usd",
+        buyer_local_price_cents: nil,
+        rate: nil,
+        variant: "usd_default"
+      )
+    end
+
+    it "omits buyer local price when the buyer country is unknown" do
+      product = links(:buyer_currency_product)
+      product.alive_prices.update_all(currency: "eur")
+      product.update!(price_currency_type: "eur")
+      allow(GeoIp).to receive(:lookup).with("2.2.2.2").and_return(
+        GeoIp::Result.new(
+          country_name: "Unknown",
+          country_code: "ZZ",
+          region_name: nil,
+          city_name: nil,
+          postal_code: nil,
+          latitude: nil,
+          longitude: nil
+        )
+      )
+
+      expect_any_instance_of(described_class).not_to receive(:buyer_local_currency_rate)
+
+      props = described_class.new(product:).props(seller_custom_domain_url: nil, request:, pundit_user: nil)[:product]
+
+      expect(props).not_to have_key(:buyer_currency)
+      expect(props).not_to have_key(:buyer_local_currency_rate)
+      expect(props).not_to have_key(:buyer_local_price_cents)
+      expect(props[:buyer_currency_display]).to eq(
+        product_id: product.external_id,
+        creator_opted_in: true,
+        buyer_currency_shown: "eur",
+        product_currency: "eur",
         buyer_local_price_cents: nil,
         rate: nil,
         variant: "usd_default"
@@ -129,6 +167,7 @@ describe "ProductPresenter buyer local currency props" do
       props = described_class.new(product:).for_web(request:)
 
       expect(props[:buyer_currency]).to eq("eur")
+      expect(props[:buyer_local_currency_rate]).to eq(0.8)
       expect(props[:buyer_local_price_cents]).to eq(800)
       expect(props[:buyer_currency_display]).to eq(
         product_id: product.external_id,
@@ -149,8 +188,43 @@ describe "ProductPresenter buyer local currency props" do
       props = described_class.new(product:).for_web(request:)
 
       expect(props[:buyer_currency]).to eq("eur")
+      expect(props[:buyer_local_currency_rate]).to eq(0.8)
       expect(props[:buyer_local_price_cents]).to eq(400)
       expect(props[:buyer_local_original_price_cents]).to eq(800)
+    end
+
+    it "omits buyer local price for product cards when the buyer country is unknown" do
+      product = links(:buyer_currency_product)
+      product.alive_prices.update_all(currency: "eur")
+      product.update!(price_currency_type: "eur")
+      allow(GeoIp).to receive(:lookup).with("2.2.2.2").and_return(
+        GeoIp::Result.new(
+          country_name: "Unknown",
+          country_code: "ZZ",
+          region_name: nil,
+          city_name: nil,
+          postal_code: nil,
+          latitude: nil,
+          longitude: nil
+        )
+      )
+
+      expect_any_instance_of(described_class).not_to receive(:buyer_local_currency_rate)
+
+      props = described_class.new(product:).for_web(request:)
+
+      expect(props).not_to have_key(:buyer_currency)
+      expect(props).not_to have_key(:buyer_local_currency_rate)
+      expect(props).not_to have_key(:buyer_local_price_cents)
+      expect(props[:buyer_currency_display]).to eq(
+        product_id: product.external_id,
+        creator_opted_in: true,
+        buyer_currency_shown: "eur",
+        product_currency: "eur",
+        buyer_local_price_cents: nil,
+        rate: nil,
+        variant: "usd_default"
+      )
     end
   end
 end
