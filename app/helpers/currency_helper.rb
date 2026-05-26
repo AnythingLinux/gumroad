@@ -128,15 +128,29 @@ module CurrencyHelper
     cached_rate = $redis.get(cache_key)
     return BigDecimal(cached_rate) if cached_rate.present? && cached_rate.to_d.positive?
 
-    rate = query_buyer_local_currency_rate(from_currency:, to_currency:)
-    if rate.present? && rate.to_d.positive?
-      $redis.set(cache_key, rate.to_s, ex: BUYER_LOCAL_CURRENCY_RATE_TTL)
-      $redis.set(buyer_local_currency_stale_rate_cache_key(from_currency:, to_currency:), rate.to_s)
-      rate.to_d
-    end
-  rescue StandardError
+    # On cold cache: fall back to last known good rate (stale-while-revalidate) and enqueue
+    # a background refresh. We never make a synchronous HTTP call on the render path.
+    PrewarmBuyerLocalCurrencyRateJob.perform_async(from_currency, to_currency)
+
     stale_rate = $redis.get(buyer_local_currency_stale_rate_cache_key(from_currency:, to_currency:))
     BigDecimal(stale_rate) if stale_rate.present? && stale_rate.to_d.positive?
+  end
+
+  # Synchronous path used by background jobs (cron + prewarm). Safe to block on HTTP here.
+  def refresh_buyer_local_currency_rate!(from_currency:, to_currency:)
+    from_currency = from_currency.to_s.downcase
+    to_currency = to_currency.to_s.downcase
+    return BigDecimal("1") if from_currency == to_currency
+
+    rate = query_buyer_local_currency_rate(from_currency:, to_currency:)
+    return nil if rate.blank? || !rate.to_d.positive?
+
+    cache_key = buyer_local_currency_rate_cache_key(from_currency:, to_currency:, date: Date.current)
+    $redis.set(cache_key, rate.to_s, ex: BUYER_LOCAL_CURRENCY_RATE_TTL)
+    $redis.set(buyer_local_currency_stale_rate_cache_key(from_currency:, to_currency:), rate.to_s)
+    rate.to_d
+  rescue StandardError
+    nil
   end
 
   def buyer_currency_display_props(product:, price_cents:, ip:)

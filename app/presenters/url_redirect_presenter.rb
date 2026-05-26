@@ -86,6 +86,7 @@ class UrlRedirectPresenter
 
       product = purchase.link
       analytics = product.analytics_data
+      return nil unless analytics[:facebook_pixel_id] || analytics[:google_analytics_id] || analytics[:tiktok_pixel_id]
 
       currency_type = purchase.displayed_price_currency_type.to_s
       {
