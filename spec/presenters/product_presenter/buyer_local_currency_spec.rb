@@ -46,6 +46,15 @@ describe "ProductPresenter buyer local currency props" do
 
       expect(props[:buyer_currency]).to eq("eur")
       expect(props[:buyer_local_price_cents]).to eq(800)
+      expect(props[:buyer_currency_display]).to eq(
+        product_id: product.external_id,
+        creator_opted_in: true,
+        buyer_currency_shown: "eur",
+        product_currency: "usd",
+        buyer_local_price_cents: 800,
+        rate: 0.8,
+        variant: "buyer_local"
+      )
     end
 
     it "includes buyer local price and original price for an opted-in discounted product" do
@@ -70,6 +79,15 @@ describe "ProductPresenter buyer local currency props" do
       expect(props).not_to have_key(:buyer_currency)
       expect(props).not_to have_key(:buyer_local_price_cents)
       expect(props).not_to have_key(:buyer_local_original_price_cents)
+      expect(props[:buyer_currency_display]).to eq(
+        product_id: product.external_id,
+        creator_opted_in: false,
+        buyer_currency_shown: "usd",
+        product_currency: "usd",
+        buyer_local_price_cents: nil,
+        rate: nil,
+        variant: "usd_default"
+      )
     end
 
     it "omits buyer local price when the buyer currency matches the product currency" do
@@ -91,6 +109,15 @@ describe "ProductPresenter buyer local currency props" do
       expect(props).not_to have_key(:buyer_currency)
       expect(props).not_to have_key(:buyer_local_price_cents)
       expect(props).not_to have_key(:buyer_local_original_price_cents)
+      expect(props[:buyer_currency_display]).to eq(
+        product_id: product.external_id,
+        creator_opted_in: true,
+        buyer_currency_shown: "usd",
+        product_currency: "usd",
+        buyer_local_price_cents: nil,
+        rate: nil,
+        variant: "usd_default"
+      )
     end
   end
 
@@ -103,6 +130,15 @@ describe "ProductPresenter buyer local currency props" do
 
       expect(props[:buyer_currency]).to eq("eur")
       expect(props[:buyer_local_price_cents]).to eq(800)
+      expect(props[:buyer_currency_display]).to eq(
+        product_id: product.external_id,
+        creator_opted_in: true,
+        buyer_currency_shown: "eur",
+        product_currency: "usd",
+        buyer_local_price_cents: 800,
+        rate: 0.8,
+        variant: "buyer_local"
+      )
     end
 
     it "includes buyer local price and original price for product cards with a pre-discount price" do

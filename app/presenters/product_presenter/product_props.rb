@@ -18,6 +18,7 @@ class ProductPresenter::ProductProps
     ppp_details = product.ppp_details(request.remote_ip)
     displayed_price_cents = displayed_price_cents(discount_code_result:, ppp_details:, quantity:)
     original_price_cents = product.price_cents if displayed_price_cents < product.price_cents
+    buyer_currency_display = buyer_currency_display_props(product:, price_cents: displayed_price_cents, ip: request.remote_ip)
 
     {
       product: {
@@ -44,7 +45,8 @@ class ProductPresenter::ProductProps
         description_html: product.html_safe_description,
         currency_code: product.price_currency_type.downcase,
         price_cents: product.price_cents,
-        **buyer_local_price_props(price_cents: displayed_price_cents, original_price_cents:, request:),
+        buyer_currency_display:,
+        **buyer_local_price_props(original_price_cents:, buyer_currency_display:),
         rental_price_cents: product.rental_price_cents,
         pwyw: product.customizable_price ? { suggested_price_cents: product.suggested_price_cents } : nil,
         **ProductPresenter::InstallmentPlanProps.new(product:).props,
@@ -180,29 +182,20 @@ class ProductPresenter::ProductProps
       ].max
     end
 
-    def buyer_local_price_props(price_cents:, original_price_cents: nil, request:)
-      return {} unless seller.show_buyer_local_currency?
-
-      buyer_currency = buyer_currency_for_ip(request.remote_ip)
-      return {} if buyer_currency == product.price_currency_type.to_s.downcase
-
-      local_price_cents = buyer_local_price_cents(
-        price_cents:,
-        from_currency: product.price_currency_type,
-        to_currency: buyer_currency
-      )
-      return {} if local_price_cents.blank?
+    def buyer_local_price_props(original_price_cents: nil, buyer_currency_display:)
+      return {} unless buyer_currency_display[:variant] == "buyer_local"
 
       props = {
-        buyer_currency:,
-        buyer_local_price_cents: local_price_cents,
+        buyer_currency: buyer_currency_display[:buyer_currency_shown],
+        buyer_local_price_cents: buyer_currency_display[:buyer_local_price_cents],
       }
 
       if original_price_cents.present?
         local_original_price_cents = buyer_local_price_cents(
           price_cents: original_price_cents,
           from_currency: product.price_currency_type,
-          to_currency: buyer_currency
+          to_currency: buyer_currency_display[:buyer_currency_shown],
+          rate: BigDecimal(buyer_currency_display[:rate].to_s)
         )
         props[:buyer_local_original_price_cents] = local_original_price_cents if local_original_price_cents.present?
       end
