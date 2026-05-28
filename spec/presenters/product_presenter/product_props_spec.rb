@@ -58,7 +58,7 @@ describe ProductPresenter::ProductProps do
                 product_currency: "usd",
                 buyer_local_price_cents: nil,
                 rate: nil,
-                variant: "usd_default"
+                variant: "default"
               },
               custom_view_content_button_text: nil,
               custom_button_text_option: nil,
@@ -300,7 +300,7 @@ describe ProductPresenter::ProductProps do
                 product_currency: "usd",
                 buyer_local_price_cents: nil,
                 rate: nil,
-                variant: "usd_default"
+                variant: "default"
               },
               custom_view_content_button_text: nil,
               custom_button_text_option: nil,

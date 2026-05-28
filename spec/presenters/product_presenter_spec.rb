@@ -101,7 +101,7 @@ describe ProductPresenter do
               product_currency: "usd",
               buyer_local_price_cents: nil,
               rate: nil,
-              variant: "usd_default"
+              variant: "default"
             },
             custom_view_content_button_text: nil,
             custom_button_text_option: nil,
@@ -1149,7 +1149,7 @@ describe ProductPresenter do
       per_row_patterns.each do |pattern, label|
         hits = queries.grep(pattern)
         expect(hits.size).to be <= 1,
-          "Expected at most 1 query matching #{label} (the batched IN preload), got #{hits.size}:\n#{hits.join("\n")}"
+                             "Expected at most 1 query matching #{label} (the batched IN preload), got #{hits.size}:\n#{hits.join("\n")}"
       end
     end
 
@@ -1181,7 +1181,7 @@ describe ProductPresenter do
       per_row_patterns.each do |pattern, label|
         hits = queries.grep(pattern)
         expect(hits).to be_empty,
-          "Expected no per-row queries matching #{label}, got #{hits.size}:\n#{hits.join("\n")}"
+                        "Expected no per-row queries matching #{label}, got #{hits.size}:\n#{hits.join("\n")}"
       end
     end
   end

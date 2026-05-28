@@ -71,16 +71,21 @@ export function startTrackingForSeller(id: string, data: AnalyticsData) {
 export function trackProductEvent(id: string | undefined, data: ProductAnalyticsEvent) {
   const config = id ? configs.get(id) : undefined;
 
-  GoogleAnalytics.trackProductEvent(config, data);
-  if (!config) return;
-  if (data.action === "buyer_currency_display_viewed") return;
+  if (data.action === "buyer_currency_display_viewed") {
+    GoogleAnalytics.trackProductEvent(config, data);
+    return;
+  }
 
+  if (!config) return;
+
+  GoogleAnalytics.trackProductEvent(config, data);
   if (data.action !== "begin_checkout") FacebookPixel.trackProductEvent(config, data);
   if (data.action !== "begin_checkout") TikTokPixel.trackProductEvent(config, data);
 }
 
 export function trackBuyerCurrencyDisplayView(id: string | undefined, data: BuyerCurrencyDisplay | undefined) {
   if (!data) return;
+  if (data.variant !== "buyer_local") return;
 
   let alreadyTracked = false;
   try {

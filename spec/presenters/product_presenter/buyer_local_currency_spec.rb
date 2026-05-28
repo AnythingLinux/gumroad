@@ -89,7 +89,7 @@ describe "ProductPresenter buyer local currency props" do
         product_currency: "usd",
         buyer_local_price_cents: nil,
         rate: nil,
-        variant: "usd_default"
+        variant: "default"
       )
     end
 
@@ -120,7 +120,7 @@ describe "ProductPresenter buyer local currency props" do
         product_currency: "usd",
         buyer_local_price_cents: nil,
         rate: nil,
-        variant: "usd_default"
+        variant: "default"
       )
     end
 
@@ -154,7 +154,7 @@ describe "ProductPresenter buyer local currency props" do
         product_currency: "eur",
         buyer_local_price_cents: nil,
         rate: nil,
-        variant: "usd_default"
+        variant: "default"
       )
     end
   end
@@ -223,7 +223,7 @@ describe "ProductPresenter buyer local currency props" do
         product_currency: "eur",
         buyer_local_price_cents: nil,
         rate: nil,
-        variant: "usd_default"
+        variant: "default"
       )
     end
   end

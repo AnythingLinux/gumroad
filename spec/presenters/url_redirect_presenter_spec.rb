@@ -150,28 +150,7 @@ describe UrlRedirectPresenter do
           avatar_url: @user.avatar_url,
         },
         product_has_third_party_analytics: false,
-        seller_analytics: {
-          seller_id: @product.user.external_id,
-          analytics: @product.analytics_data,
-          purchase_event: {
-            permalink: @product.unique_permalink,
-            purchase_external_id: @purchase.external_id,
-            product_name: @product.name,
-            value: Money.new(@purchase.displayed_price_cents, @purchase.displayed_price_currency_type).cents,
-            currency: @purchase.displayed_price_currency_type.to_s,
-            quantity: @purchase.quantity,
-            tax: Money.new(@purchase.seller_taxes_in_purchase_currency, @purchase.displayed_price_currency_type).format(no_cents_if_whole: true, symbol: false),
-            buyer_currency_display: {
-              product_id: @product.external_id,
-              creator_opted_in: false,
-              buyer_currency_shown: "usd",
-              product_currency: "usd",
-              buyer_local_price_cents: nil,
-              rate: nil,
-              variant: "usd_default"
-            },
-          },
-        },
+        seller_analytics: nil,
         installment: nil,
         purchase: {
           id: @purchase.external_id,

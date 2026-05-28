@@ -125,14 +125,14 @@ module CurrencyHelper
     return BigDecimal("1") if from_currency == to_currency
 
     cache_key = buyer_local_currency_rate_cache_key(from_currency:, to_currency:, date: Date.current)
-    cached_rate = $redis.get(cache_key)
+    cached_rate = currency_namespace.get(cache_key)
     return BigDecimal(cached_rate) if cached_rate.present? && cached_rate.to_d.positive?
 
     # On cold cache: fall back to last known good rate (stale-while-revalidate) and enqueue
     # a background refresh. We never make a synchronous HTTP call on the render path.
     PrewarmBuyerLocalCurrencyRateJob.perform_async(from_currency, to_currency)
 
-    stale_rate = $redis.get(buyer_local_currency_stale_rate_cache_key(from_currency:, to_currency:))
+    stale_rate = currency_namespace.get(buyer_local_currency_stale_rate_cache_key(from_currency:, to_currency:))
     BigDecimal(stale_rate) if stale_rate.present? && stale_rate.to_d.positive?
   end
 
@@ -146,8 +146,8 @@ module CurrencyHelper
     return nil if rate.blank? || !rate.to_d.positive?
 
     cache_key = buyer_local_currency_rate_cache_key(from_currency:, to_currency:, date: Date.current)
-    $redis.set(cache_key, rate.to_s, ex: BUYER_LOCAL_CURRENCY_RATE_TTL)
-    $redis.set(buyer_local_currency_stale_rate_cache_key(from_currency:, to_currency:), rate.to_s)
+    currency_namespace.set(cache_key, rate.to_s, ex: BUYER_LOCAL_CURRENCY_RATE_TTL)
+    currency_namespace.set(buyer_local_currency_stale_rate_cache_key(from_currency:, to_currency:), rate.to_s)
     rate.to_d
   rescue StandardError
     nil
@@ -191,7 +191,7 @@ module CurrencyHelper
       product_currency:,
       buyer_local_price_cents: nil,
       rate: nil,
-      variant: "usd_default",
+      variant: "default",
     }
   rescue StandardError
     {
@@ -201,7 +201,7 @@ module CurrencyHelper
       product_currency: product.price_currency_type.to_s.downcase,
       buyer_local_price_cents: nil,
       rate: nil,
-      variant: "usd_default",
+      variant: "default",
     }
   end
 

@@ -803,6 +803,7 @@ export default function PaymentsPage() {
         payouts_paused_by_user: data.payouts_paused_by_user,
         payout_threshold_cents: data.payout_threshold_cents,
         payout_frequency: data.payout_frequency,
+        show_buyer_local_currency: data.show_buyer_local_currency,
       };
 
       if (selectedPayoutMethod === "bank") {

@@ -152,7 +152,7 @@ describe CheckoutPresenter do
               product_currency: "usd",
               buyer_local_price_cents: nil,
               rate: nil,
-              variant: "usd_default"
+              variant: "default"
             },
             pwyw: nil,
             installment_plan: nil,
@@ -675,7 +675,7 @@ describe CheckoutPresenter do
                                    product_currency: "usd",
                                    buyer_local_price_cents: nil,
                                    rate: nil,
-                                   variant: "usd_default"
+                                   variant: "default"
                                  },
                                  installment_plan: nil,
                                  is_tiered_membership: true,
