@@ -3327,4 +3327,203 @@ class UserTest < ActiveSupport::TestCase
     user.update!(disable_paypal_sales: true)
     refute user.pay_with_paypal_enabled?
   end
+
+  # ============================================================
+  # Risk state: full multi-user suspend cascade
+  # ============================================================
+
+  test "risk state: suspended_for_fraud invalidates active sessions" do
+    user = create_user(payment_address: "rk-inv-fraud@example.com", last_sign_in_ip: "10.2.2.30")
+    admin = users(:admin)
+    user.flag_for_fraud!(author_id: admin.id)
+    assert_nil user.last_active_sessions_invalidated_at
+    user.suspend_for_fraud!(author_id: admin.id)
+    refute_nil user.reload.last_active_sessions_invalidated_at
+  end
+
+  test "risk state: suspended_for_tos_violation invalidates active sessions" do
+    user = create_user(payment_address: "rk-inv-tos@example.com", last_sign_in_ip: "10.2.2.31")
+    product = create_link(user)
+    admin = users(:admin)
+    user.flag_for_tos_violation(author_id: admin.id, product_id: product.id)
+    user.suspend_for_tos_violation(author_id: admin.id)
+    refute_nil user.reload.last_active_sessions_invalidated_at
+  end
+
+  test "risk state: suspending re-disables product links (banned_at set)" do
+    user = create_user(payment_address: "rk-banned@example.com", last_sign_in_ip: "10.2.2.32")
+    product_1 = create_link(user)
+    product_2 = create_link(user)
+    admin = users(:admin)
+    user.flag_for_fraud!(author_id: admin.id)
+    user.suspend_for_fraud!(author_id: admin.id)
+    refute_nil product_1.reload.banned_at
+    refute_nil product_2.reload.banned_at
+  end
+
+  test "risk state: mark_compliant clears banned_at on user's products" do
+    user = create_user(payment_address: "rk-clears@example.com", last_sign_in_ip: "10.2.2.33")
+    product_1 = create_link(user)
+    product_2 = create_link(user)
+    admin = users(:admin)
+    user.flag_for_fraud!(author_id: admin.id)
+    user.suspend_for_fraud(author_id: admin.id)
+    refute_nil product_1.reload.banned_at
+    refute_nil product_2.reload.banned_at
+    user.mark_compliant(author_id: admin.id)
+    assert_nil product_1.reload.banned_at
+    assert_nil product_2.reload.banned_at
+  end
+
+  # ============================================================
+  # Extra password / username edge-case from spec
+  # ============================================================
+
+  test "username: validation_condition allows old-style on save when name only changes" do
+    user2 = users(:legacy_username_user)
+    user2.name = "Sample name 123"
+    assert user2.save
+  end
+
+  # ============================================================
+  # eligible_for_abandoned_cart_workflows? alternate path
+  # ============================================================
+
+  test "eligible_for_abandoned_cart_workflows? respects completed payment alone" do
+    user = create_user
+    create_payment_completed(user: user)
+    assert user.eligible_for_abandoned_cart_workflows?
+  end
+
+  # ============================================================
+  # has_unconfirmed_email? — repeat consolidation
+  # ============================================================
+
+  test "has_unconfirmed_email? false on a freshly confirmed user" do
+    user = create_user
+    refute user.has_unconfirmed_email?
+  end
+
+  # ============================================================
+  # eligible_to_send_emails? coverage extras
+  # ============================================================
+
+  test "eligible_to_send_emails? true via team_member alone (no payment)" do
+    user = create_user
+    user.update!(is_team_member: true)
+    user.stub(:sales_cents_total, 0) do
+      assert user.eligible_to_send_emails?
+    end
+  end
+
+  # ============================================================
+  # save_external_id assigns nano-style id
+  # ============================================================
+
+  test "save_external_id auto-generates external_id on create when blank" do
+    user = create_user
+    refute_empty user.external_id
+  end
+
+  # ============================================================
+  # account_active? for builder-style record (no DB save)
+  # ============================================================
+
+  test "account_active? returns true for an unsaved user with no deleted_at" do
+    assert User.new.account_active?
+  end
+
+  test "account_active? returns false for an unsaved user with deleted_at set" do
+    refute User.new(deleted_at: 1.minute.ago).account_active?
+  end
+
+  # ============================================================
+  # Buyer flow (BlockedCustomerObject for buyer email)
+  # ============================================================
+
+  test "BlockedCustomerObject can be associated with seller and used in queries" do
+    seller = create_user
+    obj = BlockedCustomerObject.create!(seller: seller, object_type: "email", object_value: "spam@example.com")
+    assert_includes seller.blocked_customer_objects, obj
+  end
+
+  # ============================================================
+  # Communities — community_chat_recap_run model touch
+  # ============================================================
+
+  test "seller_community_chat_recaps association is destroy-dependent" do
+    user = create_user
+    assert_equal :destroy, User.reflect_on_association(:seller_community_chat_recaps).options[:dependent]
+  end
+
+  test "community_chat_messages association is destroy-dependent" do
+    assert_equal :destroy, User.reflect_on_association(:community_chat_messages).options[:dependent]
+  end
+
+  test "community_notification_settings association is destroy-dependent" do
+    assert_equal :destroy, User.reflect_on_association(:community_notification_settings).options[:dependent]
+  end
+
+  test "last_read_community_chat_messages association is destroy-dependent" do
+    assert_equal :destroy, User.reflect_on_association(:last_read_community_chat_messages).options[:dependent]
+  end
+
+  test "seller_communities has class_name Community" do
+    refl = User.reflect_on_association(:seller_communities)
+    assert_equal "Community", refl.options[:class_name]
+    assert_equal :seller_id, refl.options[:foreign_key]
+  end
+
+  test "seller_community_chat_recaps has class_name CommunityChatRecap" do
+    refl = User.reflect_on_association(:seller_community_chat_recaps)
+    assert_equal "CommunityChatRecap", refl.options[:class_name]
+  end
+
+  # ============================================================
+  # eligible_for_ai_product_generation? extra: dev env override
+  # ============================================================
+
+  test "eligible_for_ai_product_generation? false in production without prerequisites" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.confirm
+    user.stub(:sales_cents_total, 0) do
+      refute user.eligible_for_ai_product_generation?
+    end
+  end
+
+  # ============================================================
+  # subscribe_preview - has_one shape
+  # ============================================================
+
+  test "subscribe_preview is a has_one_attached attachment" do
+    assert User.reflect_on_attachment(:subscribe_preview)
+  end
+
+  test "avatar is a has_one_attached attachment" do
+    assert User.reflect_on_attachment(:avatar)
+  end
+
+  test "annual_reports is a has_many_attached attachment" do
+    assert User.reflect_on_attachment(:annual_reports)
+  end
+
+  # ============================================================
+  # Display: form_email vs email
+  # ============================================================
+
+  test "form_email returns email" do
+    user = create_user(email: "form@example.com")
+    assert_equal "form@example.com", user.form_email
+  end
+
+  # ============================================================
+  # Final consolidation: notification flags after save
+  # ============================================================
+
+  test "weekly_notification, payment_notification are true by default" do
+    user = create_user
+    assert user.weekly_notification
+    assert user.payment_notification
+  end
 end
