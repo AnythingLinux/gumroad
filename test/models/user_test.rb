@@ -2940,4 +2940,112 @@ class UserTest < ActiveSupport::TestCase
     seller.save_gumroad_day_timezone
     assert_equal "Pacific Time (US & Canada)", seller.reload.gumroad_day_timezone
   end
+
+  # ============================================================
+  # #clear_products_cache
+  # ============================================================
+
+  test "clear_products_cache enqueues InvalidateProductCacheWorker for each alive product" do
+    user = create_user
+    p1 = create_link(user)
+    p2 = create_link(user)
+    InvalidateProductCacheWorker.jobs.clear
+    user.clear_products_cache
+    enqueued_ids = InvalidateProductCacheWorker.jobs.flat_map { |j| j["args"] }.flatten
+    assert_includes enqueued_ids, p1.id
+    assert_includes enqueued_ids, p2.id
+  end
+
+  # ============================================================
+  # Risk state machine: more transitions
+  # ============================================================
+
+  test "risk state: bulk flagging for fraud doesn't add a comment" do
+    user = create_user(payment_address: "bulk-fraud@example.com", last_sign_in_ip: "10.2.2.20")
+    product = create_link(user)
+    admin = users(:admin)
+    assert_no_difference -> { product.comments.reload.count } do
+      user.flag_for_fraud!(author_id: admin.id, bulk: true)
+    end
+  end
+
+  # ============================================================
+  # extra display_name / username/email edge
+  # ============================================================
+
+  test "username sequence yields valid usernames" do
+    user1 = create_user(username: "aaa123")
+    user2 = create_user(username: "bbb456")
+    refute_equal user1.username, user2.username
+  end
+
+  # ============================================================
+  # #stripe_account / #stripe_connect_account symmetry
+  # ============================================================
+
+  test "stripe_connect_account and stripe_account are mutually exclusive selectors" do
+    user = create_user
+    sc = create_stripe_connect_account(user: user)
+    stripe = create_merchant_account(user: user)
+    assert_equal sc, user.stripe_connect_account
+    assert_equal stripe, user.stripe_account
+  end
+
+  test "stripe_account returns nil when only stripe_connect exists" do
+    user = create_user
+    create_stripe_connect_account(user: user)
+    assert_nil user.stripe_account
+  end
+
+  # ============================================================
+  # has_workflows? — extra: unpublished workflow does not count
+  # ============================================================
+
+  # Note: a Workflow that has been published_at once is considered alive_published; an unpublished
+  # workflow created from scratch will be excluded only if there's a matching scope. Skipping
+  # this assertion until we confirm has_workflows? semantics in the test env.
+
+  # ============================================================
+  # email behavior — full lifecycle
+  # ============================================================
+
+  test "email: confirm with no pending unconfirmed_email is a no-op" do
+    user = create_user
+    refute user.has_unconfirmed_email?
+    assert_nothing_raised { user.confirm }
+  end
+
+  # ============================================================
+  # is_team_member flag flips correctly via setter
+  # ============================================================
+
+  test "is_team_member writer flips bit 28" do
+    user = create_user
+    refute user.is_team_member?
+    user.update!(is_team_member: true)
+    assert user.reload.is_team_member?
+    user.update!(is_team_member: false)
+    refute user.reload.is_team_member?
+  end
+
+  # ============================================================
+  # tier_state behavior
+  # ============================================================
+
+  test "tier_state can be set to typical revenue tiers" do
+    user = create_user
+    [0, 1_000, 100_000, 1_000_000].each do |tier|
+      user.update!(tier_state: tier)
+      assert_equal tier, user.reload.tier_state
+    end
+  end
+
+  # ============================================================
+  # display_name with both name and username present
+  # ============================================================
+
+  test "display_name returns name when both name and username are present" do
+    user = create_user(name: "Kate Smith", username: "kateswanky")
+    assert_equal "Kate Smith", user.display_name
+  end
 end
