@@ -1800,4 +1800,570 @@ class UserTest < ActiveSupport::TestCase
     end
     assert_equal Compliance::EXPLICIT_NSFW_TOS_VIOLATION_REASON, user.tos_violation_reason
   end
+
+  # ============================================================
+  # eligible_for_* / made_a_successful_sale_* / payouts
+  # ============================================================
+
+  test "eligible_for_ai_product_generation? true with payment_completed" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.confirm
+    user.stub(:sales_cents_total, 15_000) do
+      create_payment_completed(user: user)
+      assert user.eligible_for_ai_product_generation?
+    end
+  end
+
+  test "eligible_for_ai_product_generation? true with Stripe Connect sale" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.confirm
+    user.stub(:sales_cents_total, 15_000) do
+      sc = create_stripe_connect_account(user: user)
+      create_purchase(seller: user, link: create_link(user), merchant_account: sc)
+      assert user.eligible_for_ai_product_generation?
+    end
+  end
+
+  test "eligible_for_ai_product_generation? true with PayPal Connect sale" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.confirm
+    user.stub(:sales_cents_total, 15_000) do
+      pp = create_paypal_merchant_account(user: user)
+      create_purchase(seller: user, link: create_link(user), merchant_account: pp)
+      assert user.eligible_for_ai_product_generation?
+    end
+  end
+
+  test "eligible_for_ai_product_generation? false with no payments or sales" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.confirm
+    user.stub(:sales_cents_total, 15_000) do
+      refute user.eligible_for_ai_product_generation?
+    end
+  end
+
+  test "eligible_for_ai_product_generation? false when feature flag inactive" do
+    user = create_user
+    Feature.deactivate_user(:ai_product_generation, user)
+    user.confirm
+    user.stub(:sales_cents_total, 15_000) do
+      create_payment_completed(user: user)
+      refute user.eligible_for_ai_product_generation?
+    end
+  end
+
+  test "eligible_for_ai_product_generation? false when not confirmed" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.update!(confirmed_at: nil)
+    user.stub(:sales_cents_total, 15_000) do
+      create_payment_completed(user: user)
+      refute user.eligible_for_ai_product_generation?
+    end
+  end
+
+  test "eligible_for_ai_product_generation? false when suspended" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.confirm
+    user.update!(user_risk_state: :suspended_for_fraud)
+    user.stub(:sales_cents_total, 15_000) do
+      create_payment_completed(user: user)
+      refute user.eligible_for_ai_product_generation?
+    end
+  end
+
+  test "eligible_for_ai_product_generation? false with insufficient sales" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.confirm
+    user.stub(:sales_cents_total, 5_000) do
+      create_payment_completed(user: user)
+      refute user.eligible_for_ai_product_generation?
+    end
+  end
+
+  test "eligible_for_ai_product_generation? true in development env regardless" do
+    user = create_user
+    Feature.activate_user(:ai_product_generation, user)
+    user.update!(confirmed_at: nil, user_risk_state: :suspended_for_fraud)
+    Rails.env.stub(:development?, true) do
+      user.stub(:sales_cents_total, 0) do
+        assert user.eligible_for_ai_product_generation?
+      end
+    end
+  end
+
+  # ----- #eligible_for_abandoned_cart_workflows? -----
+
+  test "eligible_for_abandoned_cart_workflows? false when Stripe Connect deleted with no sales" do
+    user = create_user
+    sc = create_stripe_connect_account(user: user)
+    sc.mark_deleted!
+    refute user.eligible_for_abandoned_cart_workflows?
+  end
+
+  test "eligible_for_abandoned_cart_workflows? true when Stripe Connect deleted but had a successful sale" do
+    user = create_user
+    sc = create_stripe_connect_account(user: user)
+    create_purchase(seller: user, link: create_link(user), merchant_account: sc)
+    sc.mark_deleted!
+    assert user.eligible_for_abandoned_cart_workflows?
+  end
+
+  test "eligible_for_abandoned_cart_workflows? false when PayPal Connect deleted with no sales" do
+    user = create_user
+    pp = create_paypal_merchant_account(user: user)
+    pp.mark_deleted!
+    refute user.eligible_for_abandoned_cart_workflows?
+  end
+
+  test "eligible_for_abandoned_cart_workflows? true when PayPal Connect deleted but had a successful sale" do
+    user = create_user
+    pp = create_paypal_merchant_account(user: user)
+    create_purchase(seller: user, link: create_link(user), merchant_account: pp)
+    pp.mark_deleted!
+    assert user.eligible_for_abandoned_cart_workflows?
+  end
+
+  test "eligible_for_abandoned_cart_workflows? true with completed payments" do
+    user = create_user
+    create_payment_completed(user: user)
+    assert user.eligible_for_abandoned_cart_workflows?
+  end
+
+  test "eligible_for_abandoned_cart_workflows? false with neither Stripe Connect nor payments" do
+    user = create_user
+    refute user.eligible_for_abandoned_cart_workflows?
+  end
+
+  # ----- #eligible_to_send_emails? -----
+
+  test "eligible_to_send_emails? returns true for team member" do
+    user = create_user
+    user.update!(is_team_member: true)
+    assert user.eligible_to_send_emails?
+  end
+
+  test "eligible_to_send_emails? true with completed payment and minimum sales" do
+    user = create_user
+    create_payment_completed(user: user)
+    user.stub(:sales_cents_total, Installment::MINIMUM_SALES_CENTS_VALUE) do
+      assert user.eligible_to_send_emails?
+    end
+  end
+
+  test "eligible_to_send_emails? false when Stripe Connect deleted with no sales" do
+    user = create_user
+    sc = create_stripe_connect_account(user: user)
+    user.stub(:sales_cents_total, Installment::MINIMUM_SALES_CENTS_VALUE) do
+      sc.mark_deleted!
+      refute user.eligible_to_send_emails?
+    end
+  end
+
+  test "eligible_to_send_emails? true when Stripe Connect deleted with a successful sale" do
+    user = create_user
+    sc = create_stripe_connect_account(user: user)
+    create_purchase(seller: user, link: create_link(user), merchant_account: sc)
+    user.stub(:sales_cents_total, Installment::MINIMUM_SALES_CENTS_VALUE) do
+      sc.mark_deleted!
+      assert user.eligible_to_send_emails?
+    end
+  end
+
+  test "eligible_to_send_emails? false when PayPal Connect deleted with no sales" do
+    user = create_user
+    pp = create_paypal_merchant_account(user: user)
+    user.stub(:sales_cents_total, Installment::MINIMUM_SALES_CENTS_VALUE) do
+      pp.mark_deleted!
+      refute user.eligible_to_send_emails?
+    end
+  end
+
+  test "eligible_to_send_emails? true when PayPal Connect deleted with a successful sale" do
+    user = create_user
+    pp = create_paypal_merchant_account(user: user)
+    create_purchase(seller: user, link: create_link(user), merchant_account: pp)
+    user.stub(:sales_cents_total, Installment::MINIMUM_SALES_CENTS_VALUE) do
+      pp.mark_deleted!
+      assert user.eligible_to_send_emails?
+    end
+  end
+
+  test "eligible_to_send_emails? false when suspended" do
+    user = create_user(payment_address: "suspemails@example.com", last_sign_in_ip: "10.2.2.2")
+    admin = users(:admin)
+    user.flag_for_fraud(author_id: admin.id)
+    user.suspend_for_fraud(author_id: admin.id)
+    refute user.eligible_to_send_emails?
+  end
+
+  test "eligible_to_send_emails? false when no completed payment" do
+    user = create_user
+    user.stub(:sales_cents_total, Installment::MINIMUM_SALES_CENTS_VALUE) do
+      refute user.eligible_to_send_emails?
+    end
+  end
+
+  test "eligible_to_send_emails? false when sales under minimum" do
+    user = create_user
+    create_payment_completed(user: user)
+    user.stub(:sales_cents_total, Installment::MINIMUM_SALES_CENTS_VALUE - 1) do
+      refute user.eligible_to_send_emails?
+    end
+  end
+
+  # ----- #has_all_eligible_refund_policies_as_no_refunds? -----
+
+  test "has_all_eligible_refund_policies_as_no_refunds? false when policies are not no-refunds" do
+    seller = users(:named_seller)
+    p1 = create_link(seller)
+    p2 = create_link(seller)
+    ProductRefundPolicy.create!(seller: seller, product: p1, title: "no", fine_print: "")
+    ProductRefundPolicy.create!(seller: seller, product: p2, title: "no", fine_print: "")
+    refute seller.has_all_eligible_refund_policies_as_no_refunds?
+  end
+
+  test "has_all_eligible_refund_policies_as_no_refunds? false when user has no refund policies" do
+    seller = users(:named_seller)
+    refute seller.has_all_eligible_refund_policies_as_no_refunds?
+  end
+
+  # ----- #made_a_successful_sale_with_a_stripe_connect_or_paypal_connect_account? -----
+
+  test "made_a_successful_sale_with_*: true with Stripe Connect alive sale" do
+    user = create_user
+    sc = create_stripe_connect_account(user: user)
+    create_purchase(seller: user, link: create_link(user), merchant_account: sc)
+    assert user.made_a_successful_sale_with_a_stripe_connect_or_paypal_connect_account?
+  end
+
+  test "made_a_successful_sale_with_*: true even after Stripe Connect deleted (sale already happened)" do
+    user = create_user
+    sc = create_stripe_connect_account(user: user)
+    create_purchase(seller: user, link: create_link(user), merchant_account: sc)
+    sc.mark_deleted!
+    assert user.made_a_successful_sale_with_a_stripe_connect_or_paypal_connect_account?
+  end
+
+  test "made_a_successful_sale_with_*: false when no Stripe Connect account" do
+    user = create_user
+    refute user.made_a_successful_sale_with_a_stripe_connect_or_paypal_connect_account?
+  end
+
+  test "made_a_successful_sale_with_*: true with PayPal Connect alive sale" do
+    user = create_user
+    pp = create_paypal_merchant_account(user: user)
+    create_purchase(seller: user, link: create_link(user), merchant_account: pp)
+    assert user.made_a_successful_sale_with_a_stripe_connect_or_paypal_connect_account?
+  end
+
+  test "made_a_successful_sale_with_*: true even after PayPal Connect deleted" do
+    user = create_user
+    pp = create_paypal_merchant_account(user: user)
+    create_purchase(seller: user, link: create_link(user), merchant_account: pp)
+    pp.mark_deleted!
+    assert user.made_a_successful_sale_with_a_stripe_connect_or_paypal_connect_account?
+  end
+
+  # ----- #purchased_small_bets? -----
+
+  test "purchased_small_bets? returns true after purchase of small bets product" do
+    user = create_user
+    small_bets = create_link(users(:seller_one))
+    GlobalConfig.stub(:get, ->(name, *args) { name == "SMALL_BETS_PRODUCT_ID" ? small_bets.id : args.first }) do
+      refute user.purchased_small_bets?
+      create_purchase(seller: small_bets.user, link: small_bets, purchaser: user, purchase_state: "successful")
+      assert user.purchased_small_bets?
+    end
+  end
+
+  # ----- #eligible_for_instant_payouts? -----
+
+  test "eligible_for_instant_payouts? true when all conditions met" do
+    user = create_user(user_risk_state: "compliant")
+    create_user_compliance_info(user: user)
+    4.times { create_payment_completed(user: user) }
+    user.stub(:payouts_paused?, false) do
+      assert user.eligible_for_instant_payouts?
+    end
+  end
+
+  test "eligible_for_instant_payouts? false when not compliant" do
+    user = create_user(user_risk_state: "compliant")
+    create_user_compliance_info(user: user)
+    4.times { create_payment_completed(user: user) }
+    user.stub(:payouts_paused?, false) do
+      %w[not_reviewed on_probation flagged_for_fraud flagged_for_tos_violation
+         suspended_for_fraud suspended_for_tos_violation].each do |state|
+        user.update_column(:user_risk_state, state)
+        refute user.reload.eligible_for_instant_payouts?, "expected false for #{state}"
+      end
+    end
+  end
+
+  test "eligible_for_instant_payouts? false when payouts paused" do
+    user = create_user(user_risk_state: "compliant")
+    create_user_compliance_info(user: user)
+    4.times { create_payment_completed(user: user) }
+    user.stub(:payouts_paused?, true) do
+      refute user.eligible_for_instant_payouts?
+    end
+  end
+
+  test "eligible_for_instant_payouts? false without 4 completed payments" do
+    user = create_user(user_risk_state: "compliant")
+    create_user_compliance_info(user: user)
+    3.times { create_payment_completed(user: user) }
+    user.stub(:payouts_paused?, false) do
+      refute user.eligible_for_instant_payouts?
+    end
+  end
+
+  test "eligible_for_instant_payouts? false when not from US" do
+    user = create_user(user_risk_state: "compliant")
+    create_user_compliance_info(user: user, country: "Canada", state: "BC", zip_code: "M4C 1T2")
+    4.times { create_payment_completed(user: user) }
+    user.stub(:payouts_paused?, false) do
+      refute user.eligible_for_instant_payouts?
+    end
+  end
+
+  # ----- #instant_payouts_supported? -----
+
+  test "instant_payouts_supported? false when no active bank account" do
+    user = create_user
+    user.stub(:active_bank_account, nil) do
+      user.stub(:eligible_for_instant_payouts?, true) do
+        refute user.instant_payouts_supported?
+      end
+    end
+  end
+
+  test "instant_payouts_supported? false when bank doesn't support instant payouts" do
+    user = create_user
+    fake_bank = Struct.new(:supports_instant_payouts?).new(false)
+    user.stub(:active_bank_account, fake_bank) do
+      user.stub(:eligible_for_instant_payouts?, true) do
+        refute user.instant_payouts_supported?
+      end
+    end
+  end
+
+  test "instant_payouts_supported? false when user not eligible" do
+    user = create_user
+    fake_bank = Struct.new(:supports_instant_payouts?).new(true)
+    user.stub(:active_bank_account, fake_bank) do
+      user.stub(:eligible_for_instant_payouts?, false) do
+        refute user.instant_payouts_supported?
+      end
+    end
+  end
+
+  test "instant_payouts_supported? true when bank supports & user eligible" do
+    user = create_user
+    fake_bank = Struct.new(:supports_instant_payouts?).new(true)
+    user.stub(:active_bank_account, fake_bank) do
+      user.stub(:eligible_for_instant_payouts?, true) do
+        assert user.instant_payouts_supported?
+      end
+    end
+  end
+
+  # ----- #minimum_payout_amount_cents (cross-border) -----
+
+  test "minimum_payout_amount_cents returns higher of threshold and country minimum (KR)" do
+    user = create_user
+    create_user_compliance_info(user: user, country: "Korea, Republic of", zip_code: "10169", state: "Seoul")
+    assert_equal Payouts::MIN_AMOUNT_CENTS, user.minimum_payout_amount_cents
+    user.payout_threshold_cents = 20_000
+    assert_equal 20_000, user.minimum_payout_amount_cents
+  end
+
+  # ============================================================
+  # Communities — #accessible_communities_ids
+  # ============================================================
+
+  test "accessible_communities_ids: includes seller's own community" do
+    user = create_user
+    product = create_link(user)
+    community = Community.create!(seller: user, resource: product)
+    Feature.activate_user(:communities, user)
+    product.update!(community_chat_enabled: true)
+    assert_equal [community.id], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: seller — excluded when resource is deleted" do
+    user = create_user
+    product = create_link(user)
+    Community.create!(seller: user, resource: product)
+    Feature.activate_user(:communities, user)
+    product.update!(community_chat_enabled: true)
+    product.mark_deleted!
+    assert_equal [], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: seller — excluded when feature flag disabled" do
+    user = create_user
+    product = create_link(user)
+    Community.create!(seller: user, resource: product)
+    Feature.deactivate_user(:communities, user)
+    product.update!(community_chat_enabled: true)
+    assert_equal [], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: seller — excluded when chat disabled" do
+    user = create_user
+    product = create_link(user)
+    Community.create!(seller: user, resource: product)
+    Feature.activate_user(:communities, user)
+    product.update!(community_chat_enabled: false)
+    assert_equal [], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: buyer — includes purchased product's community" do
+    user = create_user
+    other_product = create_link(users(:seller_one))
+    other_community = Community.create!(seller: other_product.user, resource: other_product)
+    create_purchase(seller: other_product.user, link: other_product, purchaser: user, purchase_state: "successful")
+    Feature.activate_user(:communities, other_product.user)
+    other_product.update!(community_chat_enabled: true)
+    assert_equal [other_community.id], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: buyer — excluded when resource deleted" do
+    user = create_user
+    other_product = create_link(users(:seller_one))
+    Community.create!(seller: other_product.user, resource: other_product)
+    create_purchase(seller: other_product.user, link: other_product, purchaser: user, purchase_state: "successful")
+    Feature.activate_user(:communities, other_product.user)
+    other_product.update!(community_chat_enabled: true)
+    other_product.mark_deleted!
+    assert_equal [], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: buyer — excluded when feature flag disabled" do
+    user = create_user
+    other_product = create_link(users(:seller_one))
+    Community.create!(seller: other_product.user, resource: other_product)
+    create_purchase(seller: other_product.user, link: other_product, purchaser: user, purchase_state: "successful")
+    Feature.deactivate_user(:communities, other_product.user)
+    other_product.update!(community_chat_enabled: true)
+    assert_equal [], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: buyer — excluded when chat disabled" do
+    user = create_user
+    other_product = create_link(users(:seller_one))
+    Community.create!(seller: other_product.user, resource: other_product)
+    create_purchase(seller: other_product.user, link: other_product, purchaser: user, purchase_state: "successful")
+    Feature.activate_user(:communities, other_product.user)
+    other_product.update!(community_chat_enabled: false)
+    assert_equal [], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: buyer — email-only purchase still includes community" do
+    user = create_user
+    other_product = create_link(users(:seller_one))
+    other_community = Community.create!(seller: other_product.user, resource: other_product)
+    create_purchase(seller: other_product.user, link: other_product, purchaser: nil, email: user.email, purchase_state: "successful")
+    Feature.activate_user(:communities, other_product.user)
+    other_product.update!(community_chat_enabled: true)
+    assert_equal [other_community.id], user.accessible_communities_ids
+  end
+
+  test "accessible_communities_ids: seller+buyer gets both" do
+    user = create_user
+    product = create_link(user)
+    community = Community.create!(seller: user, resource: product)
+    other_product = create_link(users(:seller_one))
+    other_community = Community.create!(seller: other_product.user, resource: other_product)
+    create_purchase(seller: other_product.user, link: other_product, purchaser: user, purchase_state: "successful")
+    Feature.activate_user(:communities, user)
+    Feature.activate_user(:communities, other_product.user)
+    product.update!(community_chat_enabled: true)
+    other_product.update!(community_chat_enabled: true)
+    assert_equal [community.id, other_community.id].sort, user.accessible_communities_ids.uniq.sort
+  end
+
+  # ============================================================
+  # pay_with_paypal_enabled?
+  # ============================================================
+
+  test "pay_with_paypal_enabled? true when PayPal merchant account connected" do
+    user = create_user
+    user.check_merchant_account_is_linked = true
+    user.save
+    create_user_compliance_info(user: user)
+    create_paypal_merchant_account(user: user)
+    assert user.pay_with_paypal_enabled?
+  end
+
+  test "pay_with_paypal_enabled? toggled by disable_paypal_sales flag (PayPal connected)" do
+    user = create_user
+    user.check_merchant_account_is_linked = true
+    user.save
+    create_user_compliance_info(user: user)
+    create_paypal_merchant_account(user: user)
+    user.update!(disable_paypal_sales: true)
+    refute user.pay_with_paypal_enabled?
+    user.update!(disable_paypal_sales: false)
+    assert user.pay_with_paypal_enabled?
+  end
+
+  test "pay_with_paypal_enabled? true for non-compliant user without merchant account" do
+    Feature.deactivate(:disable_braintree_sales)
+    user = create_user
+    assert_nil user.alive_user_compliance_info
+    assert user.pay_with_paypal_enabled?
+  ensure
+    Feature.activate(:disable_braintree_sales)
+  end
+
+  test "pay_with_paypal_enabled? true for unsupported PayPal Connect country" do
+    Feature.deactivate(:disable_braintree_sales)
+    user = create_user
+    create_user_compliance_info(user: user, country: "India")
+    assert user.pay_with_paypal_enabled?
+  ensure
+    Feature.activate(:disable_braintree_sales)
+  end
+
+  test "pay_with_paypal_enabled? false for supported country (US) without PayPal merchant account" do
+    Feature.deactivate(:disable_braintree_sales)
+    user = create_user
+    create_user_compliance_info(user: user)
+    refute user.pay_with_paypal_enabled?
+  ensure
+    Feature.activate(:disable_braintree_sales)
+  end
+
+  test "pay_with_paypal_enabled? toggled by disable_paypal_sales flag (no merchant account)" do
+    Feature.deactivate(:disable_braintree_sales)
+    user = create_user
+    create_user_compliance_info(user: user, country: "India")
+    user.update!(disable_paypal_sales: true)
+    refute user.pay_with_paypal_enabled?
+    user.update!(disable_paypal_sales: false)
+    assert user.pay_with_paypal_enabled?
+  ensure
+    Feature.activate(:disable_braintree_sales)
+  end
+
+  # ============================================================
+  # merchant_account_currency
+  # ============================================================
+
+  test "merchant_account_currency returns currency for each charge processor" do
+    user = create_user
+    create_paypal_merchant_account(user: user, currency: "gbp")
+    create_merchant_account(user: user, currency: "usd")
+    assert_equal "USD", user.merchant_account_currency(StripeChargeProcessor.charge_processor_id)
+    assert_equal "GBP", user.merchant_account_currency(PaypalChargeProcessor.charge_processor_id)
+  end
 end
