@@ -46,7 +46,6 @@ def docker_browser_args
     "--disable-setuid-sandbox",
     "--disable-dev-shm-usage",
     "--disable-popup-blocking",
-    "--user-data-dir=/tmp/chrome",
     # Workaround https://bugs.chromium.org/p/chromedriver/issues/detail?id=2650&q=load&sort=-id&colspec=ID%20Status%20Pri%20Owner%20Summary
     "--disable-site-isolation-trials",
   ]
