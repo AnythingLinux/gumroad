@@ -297,10 +297,16 @@ jobs:
       - name: Install Chrome and ChromeDriver
         if: steps.chrome-cache.outputs.cache-hit != 'true'
         run: |
+          # Ubicloud runners ship with a newer Chrome preinstalled; remove it
+          # so the pinned 125.x .deb installs cleanly instead of triggering
+          # `Packages were downgraded and -y was used without --allow-downgrades`.
+          sudo apt-get remove -y google-chrome-stable google-chrome || true
           curl --retry 10 --connect-timeout 5 --retry-max-time 60 \
             --output /tmp/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
             "https://public-files.gumroad.com/google-chrome-stable_${CHROME_VERSION}_amd64.deb"
-          sudo apt-get install -y /tmp/google-chrome-stable_${CHROME_VERSION}_amd64.deb
+          sudo apt-get install -y --allow-downgrades /tmp/google-chrome-stable_${CHROME_VERSION}_amd64.deb
+          # Pin so a later apt-get upgrade doesn't bump it under us.
+          sudo apt-mark hold google-chrome-stable
           CHROME_VER_FULL=$(google-chrome --version | sed 's/^Google Chrome //')
           curl --silent --show-error --location --fail --retry 4 --retry-delay 5 \
             --output /tmp/chromedriver_linux64.zip \
