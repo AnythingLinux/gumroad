@@ -195,6 +195,7 @@ jobs:
           KNAPSACK_PRO_CI_NODE_RETRY_COUNT: ${{ github.run_attempt }}
           KNAPSACK_PRO_PROJECT_DIR: ${{ github.workspace }}
           KNAPSACK_PRO_FIXED_QUEUE_SPLIT: true
+          IN_DOCKER: "true"
           CI: true
 
       - name: Archive flaky specs log
@@ -415,6 +416,7 @@ jobs:
           KNAPSACK_PRO_CI_NODE_RETRY_COUNT: ${{ github.run_attempt }}
           KNAPSACK_PRO_PROJECT_DIR: ${{ github.workspace }}
           KNAPSACK_PRO_FIXED_QUEUE_SPLIT: true
+          IN_DOCKER: "true"
           CI: true
 
       - name: Archive capybara artifacts
