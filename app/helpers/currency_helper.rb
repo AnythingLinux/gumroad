@@ -329,7 +329,7 @@ module CurrencyHelper
   end
 
   def query_buyer_local_currency_rate(from_currency:, to_currency:)
-    # TODO: Pre-warm buyer-local currency rates in a background job to keep render paths off external HTTP.
+    # Called only from the cache refresh path, not directly while rendering product pages.
     rates = JSON.parse(URI.open(CURRENCY_SOURCE).read)["rates"]
     from_rate = from_currency.to_s.casecmp?(Currency::USD) ? BigDecimal("1") : BigDecimal(rates[from_currency.to_s.upcase].to_s)
     to_rate = to_currency.to_s.casecmp?(Currency::USD) ? BigDecimal("1") : BigDecimal(rates[to_currency.to_s.upcase].to_s)
