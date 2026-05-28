@@ -28,25 +28,27 @@ describe CurrencyHelper do
   end
 
   describe "#buyer_local_currency_rate" do
+    let(:currency_namespace) { helper.currency_namespace }
+
     around do |example|
       travel_to Date.new(2026, 5, 26) do
-        $redis.del("buyer_local_currency_rate:usd:eur:2026-05-26")
-        $redis.del("buyer_local_currency_rate:usd:eur:latest")
+        currency_namespace.del("buyer_local_currency_rate:usd:eur:2026-05-26")
+        currency_namespace.del("buyer_local_currency_rate:usd:eur:latest")
         example.run
-        $redis.del("buyer_local_currency_rate:usd:eur:2026-05-26")
-        $redis.del("buyer_local_currency_rate:usd:eur:latest")
+        currency_namespace.del("buyer_local_currency_rate:usd:eur:2026-05-26")
+        currency_namespace.del("buyer_local_currency_rate:usd:eur:latest")
       end
     end
 
     it "returns the cached daily rate without enqueuing a refresh" do
-      $redis.set("buyer_local_currency_rate:usd:eur:2026-05-26", "0.8")
+      currency_namespace.set("buyer_local_currency_rate:usd:eur:2026-05-26", "0.8")
 
       expect(PrewarmBuyerLocalCurrencyRateJob).not_to receive(:perform_async)
       expect(helper.buyer_local_currency_rate(from_currency: "usd", to_currency: "eur")).to eq(BigDecimal("0.8"))
     end
 
     it "returns stale cache and enqueues a refresh on cold cache" do
-      $redis.set("buyer_local_currency_rate:usd:eur:latest", "0.7")
+      currency_namespace.set("buyer_local_currency_rate:usd:eur:latest", "0.7")
 
       expect(PrewarmBuyerLocalCurrencyRateJob).to receive(:perform_async).with("usd", "eur")
       expect(helper.buyer_local_currency_rate(from_currency: "usd", to_currency: "eur")).to eq(BigDecimal("0.7"))
@@ -59,13 +61,24 @@ describe CurrencyHelper do
   end
 
   describe "#refresh_buyer_local_currency_rate!" do
+    let(:currency_namespace) { helper.currency_namespace }
+
+    around do |example|
+      travel_to Date.new(2026, 5, 26) do
+        currency_namespace.del("buyer_local_currency_rate:usd:eur:2026-05-26")
+        currency_namespace.del("buyer_local_currency_rate:usd:eur:latest")
+        example.run
+        currency_namespace.del("buyer_local_currency_rate:usd:eur:2026-05-26")
+        currency_namespace.del("buyer_local_currency_rate:usd:eur:latest")
+      end
+    end
+
     it "queries the live rate and writes both daily and stale caches" do
       allow(helper).to receive(:query_buyer_local_currency_rate).and_return(BigDecimal("0.81127"))
-
       expect(helper.refresh_buyer_local_currency_rate!(from_currency: "usd", to_currency: "eur")).to eq(BigDecimal("0.81127"))
-      expect($redis.get("buyer_local_currency_rate:usd:eur:2026-05-26")).to eq("0.81127")
-      expect($redis.get("buyer_local_currency_rate:usd:eur:latest")).to eq("0.81127")
-      expect($redis.ttl("buyer_local_currency_rate:usd:eur:2026-05-26")).to be_between(1, 24.hours.to_i)
+      expect(currency_namespace.get("buyer_local_currency_rate:usd:eur:2026-05-26")).to eq("0.81127")
+      expect(currency_namespace.get("buyer_local_currency_rate:usd:eur:latest")).to eq("0.81127")
+      expect(currency_namespace.ttl("buyer_local_currency_rate:usd:eur:2026-05-26")).to be_between(1, 24.hours.to_i)
     end
 
     it "returns nil when the live query fails" do

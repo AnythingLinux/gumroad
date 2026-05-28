@@ -37,7 +37,7 @@ describe ProductPresenter::Card do
               product_currency: "usd",
               buyer_local_price_cents: nil,
               rate: nil,
-              variant: "usd_default"
+              variant: "default"
             },
             thumbnail_url: nil,
             native_type: Link::NATIVE_TYPE_DIGITAL,
@@ -171,7 +171,7 @@ describe ProductPresenter::Card do
         per_row_patterns.each do |pattern, label|
           hits = queries.grep(pattern)
           expect(hits).to be_empty,
-            "Expected no per-row #{label} queries, got #{hits.size}:\n#{hits.join("\n")}"
+                          "Expected no per-row #{label} queries, got #{hits.size}:\n#{hits.join("\n")}"
         end
       end
 
@@ -211,7 +211,7 @@ describe ProductPresenter::Card do
         per_row_patterns.each do |pattern, label|
           hits = queries.grep(pattern)
           expect(hits).to be_empty,
-            "Expected no per-row #{label} queries, got #{hits.size}:\n#{hits.join("\n")}"
+                          "Expected no per-row #{label} queries, got #{hits.size}:\n#{hits.join("\n")}"
         end
       end
     end

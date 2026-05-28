@@ -39,7 +39,7 @@ export type BuyerCurrencyDisplay = {
   product_currency: CurrencyCode;
   buyer_local_price_cents: number | null;
   rate: number | null;
-  variant: "buyer_local" | "usd_default";
+  variant: "buyer_local" | "default";
 };
 
 export type CardProduct = {

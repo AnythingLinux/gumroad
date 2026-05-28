@@ -324,14 +324,16 @@ export const Product = ({
     setPageLoaded(true);
 
     if (disableAnalytics) return;
-    trackBuyerCurrencyDisplayView(product.seller?.id, product.buyer_currency_display);
     if (product.seller) {
       startTrackingForSeller(product.seller.id, product.analytics);
+      trackBuyerCurrencyDisplayView(product.seller.id, product.buyer_currency_display);
       trackProductEvent(product.seller.id, {
         permalink: product.permalink,
         action: "viewed",
         product_name: product.name,
       });
+    } else {
+      trackBuyerCurrencyDisplayView(undefined, product.buyer_currency_display);
     }
     void incrementProductViews({ permalink: product.permalink, recommendedBy: searchParams.get("recommended_by") });
     if (product.has_third_party_analytics)
