@@ -55,19 +55,31 @@ class Affiliate < ApplicationRecord
 
   validate :eligible_for_stripe_payments
   def enabled_products
-    product_affiliates
-      .joins(:product)
-      .merge(Link.alive)
-      .select("affiliates_links.*, links.unique_permalink, links.name")
-      .map do
+    if product_affiliates.loaded?
+      product_affiliates.select { |pa| pa.product&.alive? }.map do |pa|
         {
-          id: ObfuscateIds.encrypt_numeric(_1.link_id),
-          name: _1.name,
-          fee_percent: _1.affiliate_percentage || affiliate_percentage,
-          destination_url: _1.destination_url,
-          referral_url: construct_permalink(_1.unique_permalink)
+          id: ObfuscateIds.encrypt_numeric(pa.link_id),
+          name: pa.product.name,
+          fee_percent: pa.affiliate_percentage || affiliate_percentage,
+          destination_url: pa.destination_url,
+          referral_url: construct_permalink(pa.product.unique_permalink)
         }
       end
+    else
+      product_affiliates
+        .joins(:product)
+        .merge(Link.alive)
+        .select("affiliates_links.*, links.unique_permalink, links.name")
+        .map do
+          {
+            id: ObfuscateIds.encrypt_numeric(_1.link_id),
+            name: _1.name,
+            fee_percent: _1.affiliate_percentage || affiliate_percentage,
+            destination_url: _1.destination_url,
+            referral_url: construct_permalink(_1.unique_permalink)
+          }
+        end
+    end
   end
 
   def affiliate_info

@@ -20,7 +20,8 @@ class AffiliatesPresenter
   def index_props
     pagination, direct_affiliates = pagy(fetch_direct_affiliates, page:, limit: PER_PAGE)
 
-    affiliates = direct_affiliates.map(&:as_json)
+    seller_products_alive_count = seller.links.alive.count
+    affiliates = direct_affiliates.map { |da| da.as_json(seller_products_alive_count:) }
     affiliate_requests = should_get_affiliate_requests ? fetch_affiliate_requests : []
 
     {
@@ -111,7 +112,7 @@ class AffiliatesPresenter
     def fetch_direct_affiliates
       affiliates = seller.direct_affiliates
                             .alive
-                            .includes(:affiliate_user, :seller)
+                            .includes(:affiliate_user, :seller, product_affiliates: :product)
                             .sorted_by(**sort.to_h.symbolize_keys)
 
       affiliates = affiliates.joins(:affiliate_user).where("users.username LIKE :query OR users.email LIKE :query OR users.name LIKE :query", query: "%#{query.strip}%") if query
