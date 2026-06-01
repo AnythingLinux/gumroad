@@ -62,6 +62,120 @@ const UpdateProductResponseFields = () => (
   </ApiResponseFields>
 );
 
+const CustomHtmlDocumentation = () => (
+  <div id="custom-html" className="grid gap-4">
+    <h4>Custom HTML landing pages</h4>
+    <p>
+      A product can have one custom HTML landing page, stored in its <code>custom_html</code> field. While it's set and
+      the product is published, buyers see it instead of the default product page. Authenticate with a Bearer token that
+      has the <code>edit_products</code> scope.
+    </p>
+    <ul>
+      <li>
+        <code>GET /v2/products/:id</code> returns the <code>custom_html</code> field.
+      </li>
+      <li>
+        <code>PUT /v2/products/:id</code> sets it; send <code>null</code> or an empty string to clear it.
+      </li>
+      <li>
+        <code>POST /v2/products/:id/preview_custom_html</code> returns the sanitized HTML and a sanitization report
+        without saving — use it to iterate before you publish.
+      </li>
+      <li>
+        Both <code>PUT</code> and preview return a <code>sanitization_report</code> listing what was stripped.
+      </li>
+      <li>
+        A successful <code>PUT</code> also returns <code>previous_custom_html</code> (the prior value, for one-step
+        rollback) and the live <code>landing_url</code>.
+      </li>
+      <li>Only the latest version is stored — there's no history, so keep your source under version control.</li>
+      <li>The HTML is capped at 500,000 characters.</li>
+      <li>
+        Rate limits per token: 30 <code>PUT</code>s/min, 60 previews/min.
+      </li>
+    </ul>
+    <CodeSnippet caption="cURL example">
+      {`curl https://api.gumroad.com/v2/products/<permalink> \\
+  -X PUT \\
+  -H "Authorization: Bearer <user_api_token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"custom_html":"<main><h1>My landing page</h1></main>"}'`}
+    </CodeSnippet>
+    <CodeSnippet caption="Gumroad CLI">
+      {`gumroad products page preview <permalink> ./landing.html
+gumroad products page push <permalink> ./landing.html`}
+    </CodeSnippet>
+    <p>
+      Your HTML is sanitized — disallowed tags and attributes are stripped — then served inside a sandboxed iframe (
+      <code>sandbox="allow-scripts allow-forms"</code>).
+    </p>
+    <p>It can:</p>
+    <ul>
+      <li>Run inline JavaScript for animations, scroll effects, sticky headers, and modals.</li>
+      <li>Load scripts from the Tailwind, jsDelivr, and unpkg CDNs.</li>
+      <li>Load fonts from Google Fonts and Bunny Fonts.</li>
+      <li>Load images and media from Gumroad only — e.g. your product's covers and thumbnail.</li>
+      <li>Submit forms in-page with JavaScript.</li>
+    </ul>
+    <p>It can't:</p>
+    <ul>
+      <li>Read your Gumroad cookies or session — it runs on an opaque origin.</li>
+      <li>Touch or navigate the parent page, or open popups.</li>
+      <li>
+        Make <code>fetch</code>, <code>XHR</code>, or WebSocket requests (<code>connect-src 'none'</code>).
+      </li>
+      <li>Load images or media from any non-Gumroad host.</li>
+      <li>
+        Submit forms to external URLs — off-site <code>action</code> attributes are stripped.
+      </li>
+    </ul>
+    <p>
+      Every external load is restricted to Gumroad's CDN (images and media) or the named font and script CDNs above, so
+      the page has no arbitrary-host network channel — it can't beacon data off to a server you control.
+    </p>
+    <h5>Live values and buy buttons</h5>
+    <p>
+      Mark elements with data attributes that Gumroad fills in server-side so the page always shows current values and a
+      working checkout button:
+    </p>
+    <ul>
+      <li>
+        <code>data-gumroad-field="name|price|description"</code> — the element's contents are replaced with the
+        product's current value (HTML-escaped).
+      </li>
+      <li>
+        <code>data-gumroad-action="buy"</code> — wires the element up to launch the Gumroad checkout. Works on any tag (
+        <code>&lt;a&gt;</code>, <code>&lt;button&gt;</code>, <code>&lt;div&gt;</code>).
+      </li>
+    </ul>
+    <p>
+      For products with selection state, set the choice directly on the buy element. Invalid values silently fall back
+      to the product defaults — they won't break the page.
+    </p>
+    <ul>
+      <li>
+        <code>data-gumroad-option="&lt;variant name&gt;"</code> — products with variants/versions/tiers.
+      </li>
+      <li>
+        <code>data-gumroad-quantity="&lt;integer&gt;"</code> — products with quantity enabled.
+      </li>
+      <li>
+        <code>data-gumroad-price="&lt;decimal&gt;"</code> — pay-what-you-want products; major units (e.g.{" "}
+        <code>"9.99"</code>).
+      </li>
+      <li>
+        <code>data-gumroad-recurrence="monthly|quarterly|biannually|yearly|every_two_years"</code> —
+        membership/subscription products.
+      </li>
+    </ul>
+    <CodeSnippet caption="Example buy buttons">
+      {`<a data-gumroad-action="buy">Buy now</a>
+<a data-gumroad-action="buy" data-gumroad-option="Pro" data-gumroad-recurrence="yearly">Buy Pro – $99/year</a>
+<button data-gumroad-action="buy" data-gumroad-quantity="2">Buy 2 seats</button>`}
+    </CodeSnippet>
+  </div>
+);
+
 export const GetCategories = () => (
   <ApiEndpoint
     method="get"
@@ -184,7 +298,7 @@ export const GetProduct = () => (
   -d "access_token=ACCESS_TOKEN" \\
   -X GET`}
     </CodeSnippet>
-    <CodeSnippet caption="Gumroad CLI">gumroad products view A-m3CDDC5dlrSdKZp0RFhA==</CodeSnippet>
+    <CodeSnippet caption="Gumroad CLI">gumroad products show A-m3CDDC5dlrSdKZp0RFhA==</CodeSnippet>
     <CodeSnippet caption="Example response:">
       {`{
   "success": true,
@@ -192,6 +306,7 @@ export const GetProduct = () => (
     "custom_permalink": null,
     "custom_receipt": null,
     "custom_summary": "You'll get one PSD file.",
+    "custom_html": null,
     "custom_fields": [],
     "customizable_price": null,
     "description": "I made this for fun.",
@@ -394,6 +509,10 @@ export const UpdateProduct = () => (
       <ApiParameter name="tags" description="(optional) array of tag strings; full replacement" />
       <ApiParameter name="custom_receipt" description="(optional)" />
       <ApiParameter name="custom_summary" description="(optional)" />
+      <ApiParameter
+        name="custom_html"
+        description="(optional) custom landing page HTML; null or empty string clears it"
+      />
       <ApiParameter name="cover_ids" description="(optional) array of cover GUIDs in display order" />
       <ApiParameter name="rich_content" description="(optional) array of pages; full replacement" />
       <ApiParameter
@@ -445,6 +564,7 @@ export const UpdateProduct = () => (
   }
 }`}
     </CodeSnippet>
+    <CustomHtmlDocumentation />
   </ApiEndpoint>
 );
 
