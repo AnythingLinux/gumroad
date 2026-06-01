@@ -6363,12 +6363,44 @@ describe Purchase, :vcr do
       end
     end
 
-    context "when there is no refund policy" do
+    context "when there is no per-purchase or seller refund policy" do
       it "returns false" do
         allow(purchase).to receive(:successful?).and_return(true)
         allow(purchase).to receive(:refunded?).and_return(false)
         allow(purchase).to receive(:chargedback?).and_return(false)
         allow(purchase).to receive(:purchase_refund_policy).and_return(nil)
+        allow(purchase.seller).to receive(:refund_policy).and_return(nil)
+
+        expect(purchase.within_refund_policy_timeframe?).to be false
+      end
+    end
+
+    context "when the per-purchase policy is missing but the seller has an account-level policy" do
+      let(:seller_refund_policy) { purchase.seller.refund_policy }
+
+      before do
+        seller_refund_policy.update!(max_refund_period_in_days: 30)
+        allow(purchase).to receive(:successful?).and_return(true)
+        allow(purchase).to receive(:refunded?).and_return(false)
+        allow(purchase).to receive(:chargedback?).and_return(false)
+        allow(purchase).to receive(:purchase_refund_policy).and_return(nil)
+      end
+
+      it "honors the seller policy when within the timeframe" do
+        purchase.created_at = 5.days.ago
+
+        expect(purchase.within_refund_policy_timeframe?).to be true
+      end
+
+      it "returns false when outside the seller policy timeframe" do
+        purchase.created_at = 35.days.ago
+
+        expect(purchase.within_refund_policy_timeframe?).to be false
+      end
+
+      it "returns false when the seller policy has a non-positive max period" do
+        seller_refund_policy.update!(max_refund_period_in_days: 0)
+        purchase.created_at = 5.days.ago
 
         expect(purchase.within_refund_policy_timeframe?).to be false
       end

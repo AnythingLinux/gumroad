@@ -429,14 +429,14 @@ describe Api::Internal::Helper::PurchasesController, :vcr do
 
     let(:purchase) { instance_double(Purchase, id: 1, email: "test@example.com", external_id_numeric: 1) }
     let(:params) { { purchase_id: "12345", email: "test@example.com" } }
-    let(:purchase_refund_policy) { double("PurchaseRefundPolicy", fine_print: nil) }
+    let(:refund_policy) { double("RefundPolicy", fine_print: nil) }
 
     before do
       stub_const("GUMROAD_ADMIN_ID", admin_user.id)
 
       allow(Purchase).to receive(:find_by_external_id_numeric).with(12345).and_return(purchase)
       allow(purchase).to receive(:within_refund_policy_timeframe?).and_return(true)
-      allow(purchase).to receive(:purchase_refund_policy).and_return(purchase_refund_policy)
+      allow(purchase).to receive(:effective_refund_policy).and_return(refund_policy)
       allow(purchase).to receive(:refund_and_save!).with(admin_user.id).and_return(true)
     end
 
@@ -461,7 +461,18 @@ describe Api::Internal::Helper::PurchasesController, :vcr do
 
       it "returns an error when fine print exists" do
         allow(purchase).to receive(:within_refund_policy_timeframe?).and_return(true)
-        allow(purchase_refund_policy).to receive(:fine_print).and_return("Some fine print")
+        allow(refund_policy).to receive(:fine_print).and_return("Some fine print")
+
+        post :auto_refund_purchase, params: params
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["success"]).to eq(false)
+        expect(JSON.parse(response.body)["message"]).to eq("This product has specific refund conditions that require seller review")
+      end
+
+      it "surfaces fine print from the seller policy when no per-purchase policy exists" do
+        seller_policy = double("SellerRefundPolicy", fine_print: "Manual review required")
+        allow(purchase).to receive(:effective_refund_policy).and_return(seller_policy)
 
         post :auto_refund_purchase, params: params
 
@@ -472,7 +483,7 @@ describe Api::Internal::Helper::PurchasesController, :vcr do
 
       it "returns an error if the refund fails" do
         allow(purchase).to receive(:within_refund_policy_timeframe?).and_return(true)
-        allow(purchase_refund_policy).to receive(:fine_print).and_return(nil)
+        allow(refund_policy).to receive(:fine_print).and_return(nil)
 
         allow(purchase).to receive(:refund_and_save!).with(admin_user.id).and_return(false)
 

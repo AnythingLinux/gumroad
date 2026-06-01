@@ -161,7 +161,7 @@ class Api::Internal::Admin::PurchasesController < Api::Internal::Admin::BaseCont
           return render json: { success: false, message: "Purchase is outside of the refund policy timeframe" }, status: :unprocessable_entity
         end
 
-        if purchase.purchase_refund_policy&.fine_print.present?
+        if purchase.effective_refund_policy&.fine_print.present?
           return render json: { success: false, message: "This product has specific refund conditions that require seller review" }, status: :unprocessable_entity
         end
       end

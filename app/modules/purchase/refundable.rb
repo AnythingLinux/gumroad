@@ -349,13 +349,17 @@ class Purchase
     return false unless successful? || gift_receiver_purchase_successful? || not_charged?
     return false if refunded? || chargedback?
 
-    refund_policy = purchase_refund_policy
+    refund_policy = effective_refund_policy
     return false unless refund_policy.present?
 
     max_days = refund_policy.max_refund_period_in_days
     return false if max_days.nil? || max_days <= 0
 
     created_at > max_days.days.ago
+  end
+
+  def effective_refund_policy
+    purchase_refund_policy || seller&.refund_policy
   end
 
   private

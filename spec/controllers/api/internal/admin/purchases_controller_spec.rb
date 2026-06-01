@@ -926,6 +926,37 @@ describe Api::Internal::Admin::PurchasesController do
         expect(response.parsed_body["message"]).to eq(Purchase::Refundable::ACTIVE_DISPUTE_REFUND_ERROR_MESSAGE)
       end
 
+      context "when no per-purchase refund policy row exists but the seller has an account-level policy" do
+        before do
+          allow(purchase).to receive(:within_refund_policy_timeframe?).and_call_original
+          allow(purchase).to receive(:purchase_refund_policy).and_return(nil)
+          allow(purchase).to receive(:successful?).and_return(true)
+          allow(purchase).to receive(:refunded?).and_return(false)
+          allow(purchase).to receive(:chargedback?).and_return(false)
+          purchase.seller.refund_policy.update!(max_refund_period_in_days: 30, fine_print: nil)
+          purchase.created_at = 1.day.ago
+        end
+
+        it "honors the seller policy timeframe and refunds without force" do
+          expect(purchase).to receive(:refund!).with(refunding_user_id: admin_user.id, amount: nil).and_return(true)
+
+          post :refund, params: params
+
+          expect(response).to have_http_status(:ok)
+          expect(response.parsed_body["success"]).to be(true)
+        end
+
+        it "returns 422 when outside the seller policy timeframe" do
+          purchase.created_at = 31.days.ago
+
+          post :refund, params: params
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body["success"]).to be(false)
+          expect(response.parsed_body["message"]).to eq("Purchase is outside of the refund policy timeframe")
+        end
+      end
+
       context "with cancel_subscription=true" do
         let(:subscription) { instance_double(Subscription, deactivated?: false, cancelled_at: nil, price: nil) }
 
