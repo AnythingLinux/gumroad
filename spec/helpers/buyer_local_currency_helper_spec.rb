@@ -95,4 +95,33 @@ describe CurrencyHelper do
       expect(helper.buyer_local_price_cents(price_cents: 199, from_currency: "usd", to_currency: "jpy")).to eq(299)
     end
   end
+
+  describe "#buyer_currency_display_props" do
+    let(:product) do
+      user = build_stubbed(:user)
+      build_stubbed(:product, user:, price_currency_type: "usd").tap do |p|
+        allow(p.user).to receive(:show_buyer_local_currency?).and_return(true)
+        allow(p).to receive(:external_id).and_return("prod_abc")
+      end
+    end
+
+    it "returns a safe static default without re-raising when an operation raises" do
+      # The rescue must NOT re-run the operations that may have thrown
+      # (show_buyer_local_currency?, price_currency_type) — regression for the
+      # rescue-handler-re-executes-failed-operations finding.
+      allow(helper).to receive(:buyer_currency_for_ip).and_raise(StandardError)
+
+      props = nil
+      expect do
+        props = helper.buyer_currency_display_props(product:, price_cents: 1000, ip: "1.2.3.4")
+      end.not_to raise_error
+
+      expect(props).to include(
+        product_id: "prod_abc",
+        variant: "default",
+        buyer_local_price_cents: nil,
+        rate: nil
+      )
+    end
+  end
 end

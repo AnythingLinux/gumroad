@@ -157,34 +157,7 @@ module CurrencyHelper
     product_currency = product.price_currency_type.to_s.downcase
     creator_opted_in = product.user.show_buyer_local_currency?
 
-    if creator_opted_in
-      buyer_currency = buyer_currency_for_ip(ip)
-      if buyer_currency.present? && buyer_currency != product_currency
-        rate = buyer_local_currency_rate(from_currency: product_currency, to_currency: buyer_currency)
-        if rate.present?
-          local_price_cents = buyer_local_price_cents(
-            price_cents:,
-            from_currency: product_currency,
-            to_currency: buyer_currency,
-            rate:
-          )
-        end
-
-        if rate.present? && local_price_cents.present?
-          return {
-            product_id: product.external_id,
-            creator_opted_in:,
-            buyer_currency_shown: buyer_currency,
-            product_currency:,
-            buyer_local_price_cents: local_price_cents,
-            rate: rate.to_f,
-            variant: "buyer_local",
-          }
-        end
-      end
-    end
-
-    {
+    default_props = {
       product_id: product.external_id,
       creator_opted_in:,
       buyer_currency_shown: product_currency,
@@ -193,12 +166,41 @@ module CurrencyHelper
       rate: nil,
       variant: "default",
     }
-  rescue StandardError
+
+    return default_props unless creator_opted_in
+
+    buyer_currency = buyer_currency_for_ip(ip)
+    return default_props unless buyer_currency.present? && buyer_currency != product_currency
+
+    rate = buyer_local_currency_rate(from_currency: product_currency, to_currency: buyer_currency)
+    return default_props if rate.blank?
+
+    local_price_cents = buyer_local_price_cents(
+      price_cents:,
+      from_currency: product_currency,
+      to_currency: buyer_currency,
+      rate:
+    )
+    return default_props if local_price_cents.blank?
+
     {
       product_id: product.external_id,
-      creator_opted_in: product.user.show_buyer_local_currency?,
-      buyer_currency_shown: product.price_currency_type.to_s.downcase,
-      product_currency: product.price_currency_type.to_s.downcase,
+      creator_opted_in:,
+      buyer_currency_shown: buyer_currency,
+      product_currency:,
+      buyer_local_price_cents: local_price_cents,
+      rate: rate.to_f,
+      variant: "buyer_local",
+    }
+  rescue StandardError
+    # Graceful degradation: never re-run the operations that may have raised
+    # (product.user.show_buyer_local_currency?, price_currency_type) — return a
+    # static safe default so the product page renders without local-currency display.
+    {
+      product_id: product.external_id,
+      creator_opted_in: false,
+      buyer_currency_shown: nil,
+      product_currency: nil,
       buyer_local_price_cents: nil,
       rate: nil,
       variant: "default",
