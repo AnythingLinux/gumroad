@@ -2,7 +2,8 @@
 
 # Refreshes the buyer-local currency rate cache out of band. Triggered on cache misses
 # from the render path so visitor requests never block on an external HTTP call.
-# Also called by a daily cron to keep all configured pairs warm.
+# The render path is stale-while-revalidate: a cache miss serves the previous rate (or
+# omits the local price on a cold miss) and enqueues this job to warm the pair.
 class PrewarmBuyerLocalCurrencyRateJob
   include Sidekiq::Job
   include CurrencyHelper

@@ -1029,8 +1029,8 @@ export default function PaymentsPage() {
               label="Show buyers their local currency on product pages"
             />
             <FieldsetDescription>
-              Buyers see an approximate price in their local currency next to your price. Checkout still uses your set
-              currency.
+              Buyers see an approximate price in their local currency in place of your set price. Checkout still uses
+              your set currency.
             </FieldsetDescription>
           </Fieldset>
         </FormSection>
