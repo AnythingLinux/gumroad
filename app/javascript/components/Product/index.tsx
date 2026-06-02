@@ -20,7 +20,7 @@ import {
   RatingsWithPercentages,
 } from "$app/parsers/product";
 import { classNames } from "$app/utils/classNames";
-import { CurrencyCode, formatPriceCentsWithCurrencySymbol } from "$app/utils/currency";
+import { CurrencyCode, formatBuyerLocalOrSetPrice, formatPriceCentsWithCurrencySymbol } from "$app/utils/currency";
 import { formatDate } from "$app/utils/date";
 import { formatOrderOfMagnitude } from "$app/utils/formatOrderOfMagnitude";
 import { variantLabel } from "$app/utils/labels";
@@ -450,9 +450,17 @@ export const Product = ({
             <h2>This bundle contains...</h2>
             <CartItemList>
               {product.bundle_products.map((bundleProduct) => {
-                const price = formatPriceCentsWithCurrencySymbol(bundleProduct.currency_code, bundleProduct.price, {
-                  symbolFormat: "long",
-                });
+                const price =
+                  bundleProduct.currency_code === product.currency_code
+                    ? formatBuyerLocalOrSetPrice(bundleProduct.price, {
+                        currencyCode: product.currency_code,
+                        buyerCurrency: product.buyer_currency,
+                        buyerLocalCurrencyRate: product.buyer_local_currency_rate,
+                        buyerLocalCurrencySubunitToUnit: product.buyer_local_currency_subunit_to_unit,
+                      })
+                    : formatPriceCentsWithCurrencySymbol(bundleProduct.currency_code, bundleProduct.price, {
+                        symbolFormat: "long",
+                      });
                 return (
                   <CartItem key={bundleProduct.id} isBundleItem>
                     <CartItemMedia className="h-28 w-28">

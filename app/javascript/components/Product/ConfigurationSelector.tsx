@@ -19,8 +19,9 @@ import { CallAvailability, getRemainingCallAvailabilities } from "$app/data/call
 import { Discount } from "$app/parsers/checkout";
 import { ProductNativeType } from "$app/parsers/product";
 import {
+  BuyerLocalCurrencyContext,
   CurrencyCode,
-  formatPriceCentsWithCurrencySymbol,
+  formatBuyerLocalOrSetPrice,
   formatPriceCentsWithoutCurrencySymbol,
   formatPriceCentsWithoutCurrencySymbolAndComma,
   getMinPriceCents,
@@ -138,7 +139,17 @@ export type Product = {
   ppp_details: PurchasingPowerParityDetails | null;
   native_type: ProductNativeType;
   hide_sold_out_variants?: boolean;
+  buyer_currency?: string | null;
+  buyer_local_currency_rate?: number | null;
+  buyer_local_currency_subunit_to_unit?: number | null;
 };
+
+const buyerLocalContextFor = (product: Product): BuyerLocalCurrencyContext => ({
+  currencyCode: product.currency_code,
+  buyerCurrency: product.buyer_currency,
+  buyerLocalCurrencyRate: product.buyer_local_currency_rate,
+  buyerLocalCurrencySubunitToUnit: product.buyer_local_currency_subunit_to_unit,
+});
 
 export const getMaxQuantity = (product: Product, option: Option | null) =>
   option?.quantity_left != null && product.quantity_remaining !== null
@@ -231,6 +242,7 @@ export const OptionRadioButton = ({
 }) => {
   priceCents ??= 0;
   const { value: discountedPriceCents } = computeDiscountedPrice(priceCents, discount, product);
+  const buyerLocalContext = buyerLocalContextFor(product);
   return (
     <Tab isSelected={selected} asChild className={recurrence ? "flex-col" : undefined}>
       <Button
@@ -253,12 +265,10 @@ export const OptionRadioButton = ({
           <Pill className="shrink-0">
             {discountedPriceCents < priceCents ? (
               <>
-                <s>{formatPriceCentsWithCurrencySymbol(currencyCode, priceCents, { symbolFormat: "long" })}</s>{" "}
+                <s>{formatBuyerLocalOrSetPrice(priceCents, buyerLocalContext)}</s>{" "}
               </>
             ) : null}
-            {formatPriceCentsWithCurrencySymbol(currencyCode, discountedPriceCents, {
-              symbolFormat: "long",
-            })}
+            {formatBuyerLocalOrSetPrice(discountedPriceCents, buyerLocalContext)}
             {isPWYW ? "+" : null}
             {recurrence ? ` ${recurrenceLabels[recurrence]}` : null}
             <div itemProp="price" className="hidden">
@@ -626,7 +636,7 @@ export const ConfigurationSelector = React.forwardRef<
                   }
                   className="justify-center"
                 >
-                  {formatPriceCentsWithCurrencySymbol(product.currency_code, option.price_difference_cents ?? 0, {
+                  {formatBuyerLocalOrSetPrice(option.price_difference_cents ?? 0, buyerLocalContextFor(product), {
                     symbolFormat: "short",
                   })}
                 </Button>

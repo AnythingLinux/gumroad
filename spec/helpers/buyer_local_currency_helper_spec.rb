@@ -11,11 +11,22 @@ describe CurrencyHelper do
       expect(helper.buyer_currency_for_country("GB")).to eq("gbp")
       expect(helper.buyer_currency_for_country("JP")).to eq("jpy")
       expect(helper.buyer_currency_for_country("BR")).to eq("brl")
+      expect(helper.buyer_currency_for_country("KR")).to eq("krw")
+    end
+
+    it "maps any country in the eurozone to eur, not just a hardcoded subset" do
+      expect(helper.buyer_currency_for_country("EE")).to eq("eur") # Estonia
+      expect(helper.buyer_currency_for_country("SK")).to eq("eur") # Slovakia
     end
 
     it "returns nil for unknown countries" do
       expect(helper.buyer_currency_for_country("ZZ")).to be_nil
       expect(helper.buyer_currency_for_country(nil)).to be_nil
+    end
+
+    it "returns nil for countries whose currency is not supported for display or input" do
+      expect(helper.buyer_currency_for_country("SE")).to be_nil # sek is not in currencies.json
+      expect(helper.buyer_currency_for_country("MX")).to be_nil # mxn is not in currencies.json
     end
   end
 

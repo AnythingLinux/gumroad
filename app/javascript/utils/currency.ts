@@ -123,3 +123,30 @@ export const formatMinorUnitPriceWithIntl = (
         })();
   return formatter.format(amountMinorUnits / resolvedSubunitToUnit);
 };
+
+export type BuyerLocalCurrencyContext = {
+  currencyCode: CurrencyCode;
+  buyerCurrency?: string | null | undefined;
+  buyerLocalCurrencyRate?: number | null | undefined;
+  buyerLocalCurrencySubunitToUnit?: number | null | undefined;
+};
+
+// Formats a price for product-page display: the buyer's approximate local currency when the
+// seller has opted in and a rate is available, otherwise the seller's set currency. The rate
+// is a minor-unit rate (set-currency cents -> buyer-currency minor units), so it applies to
+// any amount denominated in the product's currency. Use only for visible browsing prices —
+// never for amounts the buyer enters/pays or for schema.org microdata, which stay set-currency.
+export const formatBuyerLocalOrSetPrice = (
+  amountCents: number,
+  { currencyCode, buyerCurrency, buyerLocalCurrencyRate, buyerLocalCurrencySubunitToUnit }: BuyerLocalCurrencyContext,
+  {
+    symbolFormat = "long",
+    fallbackLocalCents,
+  }: { symbolFormat?: "long" | "short"; fallbackLocalCents?: number | null } = {},
+): string => {
+  const localCents =
+    buyerLocalCurrencyRate != null ? Math.round(amountCents * buyerLocalCurrencyRate) : fallbackLocalCents;
+  return buyerCurrency != null && localCents != null
+    ? formatMinorUnitPriceWithIntl(buyerCurrency, localCents, buyerLocalCurrencySubunitToUnit ?? undefined)
+    : formatPriceCentsWithCurrencySymbol(currencyCode, amountCents, { symbolFormat });
+};

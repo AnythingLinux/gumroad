@@ -3,8 +3,7 @@ import * as React from "react";
 import { classNames } from "$app/utils/classNames";
 import {
   CurrencyCode,
-  formatMinorUnitPriceWithIntl,
-  formatPriceCentsWithCurrencySymbol,
+  formatBuyerLocalOrSetPrice,
   formatPriceCentsWithoutCurrencySymbolAndComma,
 } from "$app/utils/currency";
 import { formatRecurrenceWithDuration, RecurrenceId } from "$app/utils/recurringPricing";
@@ -45,16 +44,9 @@ export const PriceTag = ({
   buyerLocalPriceCents,
   buyerLocalOriginalPriceCents,
 }: Props) => {
-  const buyerLocalPriceCentsFor = (amountCents: number, fallbackAmountCents?: number | null) =>
-    buyerLocalCurrencyRate != null ? Math.round(amountCents * buyerLocalCurrencyRate) : fallbackAmountCents;
-  const currentBuyerLocalPriceCents = buyerLocalPriceCentsFor(price, buyerLocalPriceCents);
-  const buyerLocalOldPriceCents =
-    oldPrice != null ? buyerLocalPriceCentsFor(oldPrice, buyerLocalOriginalPriceCents) : null;
-  const useLocalDisplay = buyerCurrency != null && currentBuyerLocalPriceCents != null;
-  const formatDisplayPrice = (amountCents: number, localCents: number | null | undefined) =>
-    useLocalDisplay && localCents != null
-      ? formatMinorUnitPriceWithIntl(buyerCurrency, localCents, buyerLocalCurrencySubunitToUnit)
-      : formatPriceCentsWithCurrencySymbol(currencyCode, amountCents, { symbolFormat: "long" });
+  const buyerLocalContext = { currencyCode, buyerCurrency, buyerLocalCurrencyRate, buyerLocalCurrencySubunitToUnit };
+  const formatDisplayPrice = (amountCents: number, fallbackLocalCents?: number | null) =>
+    formatBuyerLocalOrSetPrice(amountCents, buyerLocalContext, { fallbackLocalCents });
 
   const recurrenceLabel = recurrence
     ? formatRecurrenceWithDuration(recurrence.id, recurrence.duration_in_months)
@@ -64,10 +56,10 @@ export const PriceTag = ({
     <>
       {oldPrice != null ? (
         <>
-          <s>{formatDisplayPrice(oldPrice, buyerLocalOldPriceCents)}</s>{" "}
+          <s>{formatDisplayPrice(oldPrice, buyerLocalOriginalPriceCents)}</s>{" "}
         </>
       ) : null}
-      {formatDisplayPrice(price, currentBuyerLocalPriceCents)}
+      {formatDisplayPrice(price, buyerLocalPriceCents)}
       {isPayWhatYouWant ? "+" : null}
       {recurrenceLabel ? ` ${recurrenceLabel}` : null}
     </>

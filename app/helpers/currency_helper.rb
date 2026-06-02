@@ -5,49 +5,6 @@ module CurrencyHelper
   # Note: To reference a currency in code, use Currency::[3-char-ref].
   # e.g. Currency::USD, Currency::CAD
 
-  COUNTRY_TO_CURRENCY = {
-    "US" => "usd",
-    "CA" => "cad",
-    "GB" => "gbp",
-    "IE" => "eur",
-    "DE" => "eur",
-    "FR" => "eur",
-    "ES" => "eur",
-    "IT" => "eur",
-    "NL" => "eur",
-    "BE" => "eur",
-    "PT" => "eur",
-    "AT" => "eur",
-    "FI" => "eur",
-    "GR" => "eur",
-    "JP" => "jpy",
-    "AU" => "aud",
-    "CH" => "chf",
-    "SE" => "sek",
-    "NO" => "nok",
-    "DK" => "dkk",
-    "BR" => "brl",
-    "MX" => "mxn",
-    "IN" => "inr",
-    "SG" => "sgd",
-    "HK" => "hkd",
-    "KR" => "krw",
-    "NZ" => "nzd",
-    "ZA" => "zar",
-    "PL" => "pln",
-    "CZ" => "czk",
-    "HU" => "huf",
-    "TR" => "try",
-    "IL" => "ils",
-    "AE" => "aed",
-    "SA" => "sar",
-    "TH" => "thb",
-    "ID" => "idr",
-    "PH" => "php",
-    "MY" => "myr",
-    "AR" => "ars",
-  }.freeze
-
   def currency_namespace
     Redis::Namespace.new(:currencies, redis: $redis)
   end
@@ -102,7 +59,12 @@ module CurrencyHelper
   end
 
   def buyer_currency_for_country(country_code)
-    COUNTRY_TO_CURRENCY[country_code.to_s.upcase]
+    return if country_code.blank?
+
+    currency = ISO3166::Country.new(country_code.to_s.upcase)&.currency_code&.downcase
+    # Only localize into currencies we support for both display and input (currencies.json);
+    # buyers in other countries fall back to the seller's set price.
+    currency if currency && CURRENCY_CHOICES.key?(currency)
   end
 
   def buyer_local_price_cents(price_cents:, from_currency:, to_currency:, rate: nil)
