@@ -78,6 +78,24 @@ describe Api::V2::ProductSectionsController do
         )
       end
 
+      it "does not share default shown_products between created sections" do
+        post @action, params: { link_id: @product.external_id, type: "products", access_token: @token.token }
+        @product.seller_profile_sections.sole.shown_products << @shown_product1.id
+
+        post @action, params: { link_id: @product.external_id, type: "products", access_token: @token.token }
+
+        expect(response.parsed_body["section"]["shown_products"]).to eq([])
+        expect(@product.seller_profile_sections.order(:id).last.shown_products).to eq([])
+      end
+
+      it "deduplicates shown_products while preserving their first-seen order" do
+        post @action, params: @params.merge(shown_products: [@shown_product2.external_id, @shown_product1.external_id, @shown_product2.external_id])
+
+        section = @product.seller_profile_sections.sole
+        expect(section.shown_products).to eq([@shown_product2.id, @shown_product1.id])
+        expect(response.parsed_body["section"]["shown_products"]).to eq([@shown_product2.external_id, @shown_product1.external_id])
+      end
+
       it "rejects shown_products that are not the seller's products" do
         foreign_product = create(:product)
 
@@ -169,6 +187,13 @@ describe Api::V2::ProductSectionsController do
           "show_filters" => true,
           "add_new_products" => false
         )
+      end
+
+      it "deduplicates shown_products when updating" do
+        put @action, params: @params.merge(shown_products: [@new_product.external_id, @old_product.external_id, @new_product.external_id])
+
+        expect(@section.reload.shown_products).to eq([@new_product.id, @old_product.id])
+        expect(response.parsed_body["section"]["shown_products"]).to eq([@new_product.external_id, @old_product.external_id])
       end
 
       it "rejects unsupported section type changes" do

@@ -4,7 +4,7 @@ class Api::V2::ProductSectionsController < Api::V2::BaseController
   PRODUCT_SECTION_TYPE = "products"
   DEFAULT_PRODUCT_SECTION_ATTRIBUTES = {
     default_product_sort: "page_layout",
-    shown_products: [],
+    shown_products: [].freeze,
     show_filters: false,
     add_new_products: false,
   }.freeze
@@ -75,7 +75,7 @@ class Api::V2::ProductSectionsController < Api::V2::BaseController
     end
 
     def product_section_attributes(with_defaults:)
-      attributes = with_defaults ? DEFAULT_PRODUCT_SECTION_ATTRIBUTES.dup : {}
+      attributes = with_defaults ? DEFAULT_PRODUCT_SECTION_ATTRIBUTES.deep_dup : {}
       attributes[:header] = params[:header] if params.key?(:header)
       attributes[:hide_header] = boolean_param(:hide_header) if params.key?(:hide_header)
       attributes[:default_product_sort] = params[:default_product_sort] if params.key?(:default_product_sort)
@@ -99,12 +99,13 @@ class Api::V2::ProductSectionsController < Api::V2::BaseController
         raise InvalidProductSectionParams, "shown_products must reference your own product IDs."
       end
 
-      found_product_ids = current_resource_owner.products.where(id: product_ids.uniq).ids
-      if product_ids.uniq.sort != found_product_ids.sort
+      unique_product_ids = product_ids.uniq
+      found_product_ids = current_resource_owner.products.where(id: unique_product_ids).ids
+      if unique_product_ids.sort != found_product_ids.sort
         raise InvalidProductSectionParams, "shown_products must reference your own product IDs."
       end
 
-      product_ids
+      unique_product_ids
     end
 
     def boolean_param(key)
@@ -140,8 +141,8 @@ class Api::V2::ProductSectionsController < Api::V2::BaseController
       success_with_object(:section, section ? Api::ProductSectionsPresenter.new(@product, sections: [section]).props.sole : nil)
     end
 
-    def error_with_section(section = nil)
-      error_with_object(:section, section)
+    def error_with_section
+      error_with_object(:section, nil)
     end
 
     def record_error_message(error)
