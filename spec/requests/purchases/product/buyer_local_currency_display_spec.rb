@@ -111,6 +111,21 @@ describe "Buyer-local currency display (#5281)", type: :system, js: true do
     end
   end
 
+  context "when an opted-in seller's pay-what-you-want product is viewed from a EUR country" do
+    before do
+      allow(GeoIp).to receive(:lookup).and_return(france)
+      @seller = create(:user_with_compliance_info, show_buyer_local_currency: true)
+      @product = create(:product, user: @seller, price_cents: 10_00, customizable_price: true, suggested_price_cents: 12_00)
+    end
+
+    it "shows the pay-what-you-want field and suggested price in the buyer's local currency" do
+      visit "/l/#{@product.unique_permalink}"
+
+      expect(page).to have_text("€8.00+", normalize_ws: true) # localized minimum on the price tag
+      expect(page).to have_field("Price", placeholder: "9.60+") # suggested price converted to EUR (12.00 * 0.8)
+    end
+  end
+
   context "when the same opted-in product is viewed from the US" do
     before do
       allow(GeoIp).to receive(:lookup).and_return(united_states)

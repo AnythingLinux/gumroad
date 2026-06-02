@@ -21,6 +21,7 @@ import { ProductNativeType } from "$app/parsers/product";
 import {
   BuyerLocalCurrencyContext,
   CurrencyCode,
+  currencyCodeList,
   formatBuyerLocalOrSetPrice,
   formatPriceCentsWithoutCurrencySymbol,
   formatPriceCentsWithoutCurrencySymbolAndComma,
@@ -56,9 +57,36 @@ const PWYWInput = React.forwardRef<
     suggestedPriceCents: number | null;
     hasError: boolean;
     hideLabel?: boolean;
+    buyerLocal?: { currencyCode: CurrencyCode; rate: number } | null;
   }
->(({ currencyCode, cents, onChange, suggestedPriceCents, hasError, onBlur, hideLabel }, ref) => {
+>(({ currencyCode, cents, onChange, suggestedPriceCents, hasError, onBlur, hideLabel, buyerLocal }, ref) => {
   const uid = React.useId();
+
+  // The buyer enters and sees their local currency, but selection.price.value (`cents`) stays in
+  // the seller's set currency — the amount actually charged — so we convert only at this boundary.
+  const inputCurrency = buyerLocal?.currencyCode ?? currencyCode;
+  const toInputCents = (setCents: number | null) =>
+    buyerLocal && setCents != null ? Math.round(setCents * buyerLocal.rate) : setCents;
+  const toSetCents = (inputCents: number | null) =>
+    buyerLocal && inputCents != null ? Math.round(inputCents / buyerLocal.rate) : inputCents;
+
+  // Track the entered value in the input currency so set<->local round-trip rounding doesn't make
+  // the field jitter while typing; resync only when the set price changes from outside this input.
+  const [inputCents, setInputCents] = React.useState<number | null>(() => toInputCents(cents));
+  const lastEmittedSetCents = React.useRef<number | null>(cents);
+  React.useEffect(() => {
+    if (cents !== lastEmittedSetCents.current) {
+      lastEmittedSetCents.current = cents;
+      setInputCents(toInputCents(cents));
+    }
+  }, [cents]);
+
+  const handleChange = (newInputCents: number | null) => {
+    setInputCents(newInputCents);
+    const setCents = toSetCents(newInputCents);
+    lastEmittedSetCents.current = setCents;
+    onChange(setCents);
+  };
 
   return (
     <Fieldset state={hasError ? "danger" : undefined}>
@@ -69,10 +97,10 @@ const PWYWInput = React.forwardRef<
       ) : null}
       <PriceInput
         id={uid}
-        currencyCode={currencyCode}
-        cents={cents}
-        onChange={onChange}
-        placeholder={`${formatPriceCentsWithoutCurrencySymbol(currencyCode, suggestedPriceCents || 0)}+`}
+        currencyCode={inputCurrency}
+        cents={inputCents}
+        onChange={handleChange}
+        placeholder={`${formatPriceCentsWithoutCurrencySymbol(inputCurrency, toInputCents(suggestedPriceCents) || 0)}+`}
         hasError={hasError}
         onBlur={() => {
           const minPriceCents = getMinPriceCents(currencyCode);
@@ -597,6 +625,7 @@ export const ConfigurationSelector = React.forwardRef<
   React.useImperativeHandle(ref, () => ({
     focusRequiredInput: () => pwywInputRef.current?.focus(),
   }));
+  const buyerCurrencyCode = currencyCodeList.find((code) => code === product.buyer_currency) ?? null;
   const pwywInput = (
     <PWYWInput
       currencyCode={product.currency_code}
@@ -606,6 +635,11 @@ export const ConfigurationSelector = React.forwardRef<
       suggestedPriceCents={suggestedPriceCents}
       hasError={selection.price.error}
       hideLabel={product.native_type === "coffee"}
+      buyerLocal={
+        buyerCurrencyCode && product.buyer_local_currency_rate != null
+          ? { currencyCode: buyerCurrencyCode, rate: product.buyer_local_currency_rate }
+          : null
+      }
       ref={pwywInputRef}
     />
   );
