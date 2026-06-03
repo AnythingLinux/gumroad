@@ -10,6 +10,7 @@ describe "Buyer-local currency end-to-end display (#5281)", type: :request, iner
   let(:currency_cache) { Redis::Namespace.new(:currencies, redis: $redis) }
 
   before do
+    Feature.activate(:buyer_local_currency)
     # USD-based rate kept warm hourly by UpdateCurrenciesWorker; the usd→eur cross rate is 0.8.
     currency_cache.set("EUR", "0.8")
     # Rack::Attack#throttle_by_params reads body.read on every request; on a

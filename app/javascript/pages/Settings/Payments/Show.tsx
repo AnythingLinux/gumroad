@@ -97,6 +97,7 @@ type PaymentsPageProps = {
   payout_country_name: string | null;
   payout_frequency: PayoutFrequency;
   payout_frequency_daily_supported: boolean;
+  buyer_local_currency_enabled: boolean;
   show_buyer_local_currency: boolean;
   can_manage_beneficial_owners: boolean;
   errors?: {
@@ -1019,21 +1020,23 @@ export default function PaymentsPage() {
           </section>
         </FormSection>
 
-        <FormSection header={<h2>Product pages</h2>}>
-          <Fieldset>
-            <Switch
-              checked={form.data.show_buyer_local_currency}
-              onChange={(e) => form.setData("show_buyer_local_currency", e.target.checked)}
-              aria-label="Show buyers their local currency on product pages"
-              disabled={props.is_form_disabled}
-              label="Show buyers their local currency on product pages"
-            />
-            <FieldsetDescription>
-              Buyers see an approximate price in their local currency in place of your set price. Checkout still uses
-              USD.
-            </FieldsetDescription>
-          </Fieldset>
-        </FormSection>
+        {props.buyer_local_currency_enabled ? (
+          <FormSection header={<h2>Product pages</h2>}>
+            <Fieldset>
+              <Switch
+                checked={form.data.show_buyer_local_currency}
+                onChange={(e) => form.setData("show_buyer_local_currency", e.target.checked)}
+                aria-label="Show buyers their local currency on product pages"
+                disabled={props.is_form_disabled}
+                label="Show buyers their local currency on product pages"
+              />
+              <FieldsetDescription>
+                Buyers see an approximate price in their local currency in place of your set price. Checkout still uses
+                USD.
+              </FieldsetDescription>
+            </Fieldset>
+          </FormSection>
+        ) : null}
 
         <FormSection
           header={

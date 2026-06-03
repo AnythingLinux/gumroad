@@ -18,9 +18,15 @@ describe "Buyer-local currency display (#5281)", type: :system, js: true do
     )
   end
 
-  before { currency_namespace.set("EUR", "0.8") }
+  before do
+    currency_namespace.set("EUR", "0.8")
+    Feature.activate(:buyer_local_currency)
+  end
 
-  after { currency_namespace.del("EUR") }
+  after do
+    currency_namespace.del("EUR")
+    Feature.deactivate(:buyer_local_currency)
+  end
 
   # The GA events are gated client-side on shouldTrack() (the
   # gr:google_analytics:enabled meta tag, always "false" outside prod/staging)
@@ -60,6 +66,22 @@ describe "Buyer-local currency display (#5281)", type: :system, js: true do
       end
     end
     event
+  end
+
+  context "when the :buyer_local_currency feature is disabled" do
+    before do
+      Feature.deactivate(:buyer_local_currency)
+      allow(GeoIp).to receive(:lookup).and_return(france)
+      @seller = create(:user_with_compliance_info, show_buyer_local_currency: true)
+      @product = create(:product, user: @seller, price_cents: 10_00)
+    end
+
+    it "shows the seller's set currency even though the seller has opted in" do
+      visit "/l/#{@product.unique_permalink}"
+
+      expect(page).to have_text("$10", normalize_ws: true)
+      expect(page).to have_no_text("€")
+    end
   end
 
   context "when an opted-in seller's USD product is viewed from a EUR country" do

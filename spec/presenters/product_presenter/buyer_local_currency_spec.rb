@@ -16,6 +16,7 @@ describe "ProductPresenter buyer local currency props" do
   end
 
   before do
+    Feature.activate(:buyer_local_currency)
     allow(GeoIp).to receive(:lookup).with("2.2.2.2").and_return(
       GeoIp::Result.new(
         country_name: "France",

@@ -106,12 +106,24 @@ describe CurrencyHelper do
   end
 
   describe "#buyer_currency_display_props" do
+    before { Feature.activate(:buyer_local_currency) }
+    after { Feature.deactivate(:buyer_local_currency) }
+
     let(:product) do
       user = build_stubbed(:user)
       build_stubbed(:product, user:, price_currency_type: "usd").tap do |p|
         allow(p.user).to receive(:show_buyer_local_currency?).and_return(true)
         allow(p).to receive(:external_id).and_return("prod_abc")
       end
+    end
+
+    it "returns the static default when the feature is disabled even though the seller opted in" do
+      Feature.deactivate(:buyer_local_currency)
+      allow(helper).to receive(:buyer_currency_for_ip).and_return("eur")
+
+      props = helper.buyer_currency_display_props(product:, price_cents: 1000, ip: "1.2.3.4")
+
+      expect(props).to include(creator_opted_in: false, variant: "default", rate: nil)
     end
 
     it "returns a safe static default without re-raising when an operation raises" do
