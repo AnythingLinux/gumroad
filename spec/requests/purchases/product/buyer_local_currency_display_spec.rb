@@ -124,6 +124,32 @@ describe "Buyer-local currency display (#5281)", type: :system, js: true do
       expect(page).to have_text("€8.00+", normalize_ws: true) # localized minimum on the price tag
       expect(page).to have_field("Price", placeholder: "9.60+") # suggested price converted to EUR (12.00 * 0.8)
     end
+
+    it "states the minimum price in the buyer's local currency when the entered amount is below the floor" do
+      visit "/l/#{@product.unique_permalink}"
+
+      fill_in "Name a fair price", with: "5" # €5.00, below the €8.00 (= $10.00 * 0.8) floor
+      click_on "I want this!"
+
+      expect(page).to have_alert(text: "Minimum price for this product is €8.00.", visible: :all)
+    end
+  end
+
+  context "when an opted-in seller's installment-plan product is viewed from a EUR country" do
+    before do
+      allow(GeoIp).to receive(:lookup).and_return(france)
+      @seller = create(:user_with_compliance_info, show_buyer_local_currency: true)
+      @product = create(:product, user: @seller, price_cents: 10_00)
+      create(:product_installment_plan, link: @product, number_of_installments: 3)
+    end
+
+    it "states the installment payment schedule in the buyer's local currency" do
+      visit "/l/#{@product.unique_permalink}"
+
+      # $10.00 -> €8.00 total, split in set currency then localized:
+      # first 334¢ * 0.8 = €2.67, base 333¢ * 0.8 = €2.66
+      expect(page).to have_text("First installment of €2.67, followed by 2 monthly installments of €2.66", normalize_ws: true)
+    end
   end
 
   context "when the same opted-in product is viewed from the US" do

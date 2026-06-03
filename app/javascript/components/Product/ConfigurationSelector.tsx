@@ -172,7 +172,7 @@ export type Product = {
   buyer_local_currency_subunit_to_unit?: number | null;
 };
 
-const buyerLocalContextFor = (product: Product): BuyerLocalCurrencyContext => ({
+export const buyerLocalContextFor = (product: Product): BuyerLocalCurrencyContext => ({
   currencyCode: product.currency_code,
   buyerCurrency: product.buyer_currency,
   buyerLocalCurrencyRate: product.buyer_local_currency_rate,
@@ -562,7 +562,7 @@ const PaymentOptionSelector = ({
               <p>
                 {formatInstallmentPaymentSchedule(
                   fullPriceCents,
-                  product.currency_code,
+                  buyerLocalContextFor(product),
                   product.installment_plan.number_of_installments,
                 )}
               </p>
