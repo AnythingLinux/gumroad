@@ -149,22 +149,20 @@ const WishlistItemCard = ({
       badge={
         item.purchasable ? (
           <div style={{ position: "absolute", top: "var(--spacer-4)", right: "var(--spacer-4)" }}>
-            <WithTooltip position="top" tip="Add to cart">
-              <NavigationButton
-                href={addToCartUrl(item)}
-                color="primary"
-                aria-label="Add to cart"
-                onClick={() =>
-                  trackCtaClick({
-                    sellerId: item.product.seller?.id,
-                    permalink: item.product.permalink,
-                    name: item.product.name,
-                  })
-                }
-              >
-                <Cart pack="filled" className="size-5" />
-              </NavigationButton>
-            </WithTooltip>
+            <NavigationButton
+              href={addToCartUrl(item)}
+              color="primary"
+              onClick={() =>
+                trackCtaClick({
+                  sellerId: item.product.seller?.id,
+                  permalink: item.product.permalink,
+                  name: item.product.name,
+                })
+              }
+            >
+              <Cart pack="filled" className="size-5" />
+              Add to cart
+            </NavigationButton>
           </div>
         ) : null
       }
