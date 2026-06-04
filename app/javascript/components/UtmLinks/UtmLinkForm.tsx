@@ -19,7 +19,6 @@ import { InputGroup } from "$app/components/ui/InputGroup";
 import { Label } from "$app/components/ui/Label";
 import { Pill } from "$app/components/ui/Pill";
 import { Textarea } from "$app/components/ui/Textarea";
-import { WithTooltip } from "$app/components/WithTooltip";
 
 type UtmLinkFormData = {
   utm_link: {
@@ -185,7 +184,9 @@ export const UtmLinkForm = (pageProps: UtmLinkFormProps | UtmLinkEditProps) => {
     router.reload({
       only: ["additional_metadata"],
       onSuccess: (page) => {
-        const additionalMetadata = typia.assert<UtmLinkFormAdditionalMetadata | undefined>(page.props.additional_metadata);
+        const additionalMetadata = typia.assert<UtmLinkFormAdditionalMetadata | undefined>(
+          page.props.additional_metadata,
+        );
         const newPermalink = additionalMetadata?.new_permalink;
         if (newPermalink) {
           setShortUrl((shortUrl) => ({ ...shortUrl, permalink: newPermalink }));
@@ -349,16 +350,14 @@ export const UtmLinkForm = (pageProps: UtmLinkFormProps | UtmLinkEditProps) => {
                   </Button>
                 </CopyToClipboard>
                 {!isEditing && (
-                  <WithTooltip tip="Generate new short link">
-                    <Button
-                      size="icon"
-                      onClick={generateNewPermalink}
-                      disabled={isLoadingNewPermalink}
-                      aria-label="Generate new short link"
-                    >
-                      <RefreshCcw className="size-5" />
-                    </Button>
-                  </WithTooltip>
+                  <Button
+                    onClick={generateNewPermalink}
+                    disabled={isLoadingNewPermalink}
+                    aria-label="Generate new short link"
+                  >
+                    <RefreshCcw className="size-5" />
+                    Generate
+                  </Button>
                 )}
               </div>
             </div>
