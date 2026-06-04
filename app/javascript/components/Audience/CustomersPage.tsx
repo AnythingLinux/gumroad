@@ -357,13 +357,12 @@ const CustomersPage = ({
             </Popover>
             <Popover open={exportPopoverOpen} onOpenChange={setExportPopoverOpen}>
               <PopoverAnchor>
-                <WithTooltip tip="Export">
-                  <PopoverTrigger aria-label="Export" asChild>
-                    <Button size="icon">
-                      <ArrowInDownSquareHalf className="size-5" />
-                    </Button>
-                  </PopoverTrigger>
-                </WithTooltip>
+                <PopoverTrigger aria-label="Export" asChild>
+                  <Button>
+                    <ArrowInDownSquareHalf className="size-5" />
+                    Export
+                  </Button>
+                </PopoverTrigger>
               </PopoverAnchor>
               <PopoverContent>
                 <div className="flex flex-col gap-4">

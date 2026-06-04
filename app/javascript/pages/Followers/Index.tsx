@@ -17,7 +17,6 @@ import { Sheet, SheetHeader } from "$app/components/ui/Sheet";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "$app/components/ui/Table";
 import { useDebouncedCallback } from "$app/components/useDebouncedCallback";
 import { useUserAgentInfo } from "$app/components/UserAgent";
-import { WithTooltip } from "$app/components/WithTooltip";
 
 import placeholder from "$assets/images/placeholders/followers.png";
 
@@ -96,13 +95,12 @@ export default function FollowersPage() {
           ) : null}
           <Popover>
             <PopoverAnchor>
-              <WithTooltip tip="Export" position="bottom">
-                <PopoverTrigger aria-label="Export" asChild>
-                  <Button size="icon">
-                    <ArrowInDownSquareHalf aria-label="Download" className="size-5" />
-                  </Button>
-                </PopoverTrigger>
-              </WithTooltip>
+              <PopoverTrigger aria-label="Export" asChild>
+                <Button>
+                  <ArrowInDownSquareHalf aria-label="Download" className="size-5" />
+                  Export
+                </Button>
+              </PopoverTrigger>
             </PopoverAnchor>
             <PopoverContent sideOffset={4}>
               <ExportSubscribersPopover />
