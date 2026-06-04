@@ -264,6 +264,31 @@ describe Api::Mobile::UrlRedirectsController do
                                        format: :json }
       end.to change { url_redirect.reload.uses }.from(0).to(1)
     end
+
+    context "with rich content containing only some embedded files" do
+      before do
+        create(:rich_content, entity: product, description: [
+                 { "type" => "fileEmbed", "attrs" => { "id" => @product_file1.external_id } },
+               ])
+      end
+
+      it "streams a non-embedded product file via fallback" do
+        stub_playlist_s3_object_get.call
+        travel_to(Date.parse("2014-01-27")) do
+          get :stream, params: { token: url_redirect.token,
+                                 product_file_id: file_1.external_id,
+                                 mobile_token: Api::Mobile::BaseController::MOBILE_TOKEN,
+                                 format: :json }
+        end
+
+        expect(response).to be_successful
+        expect(response.parsed_body).to eq({
+          success: true,
+          playlist_url: api_mobile_hls_playlist_url(url_redirect.token, file_1.external_id, mobile_token: Api::Mobile::BaseController::MOBILE_TOKEN, host: UrlService.api_domain_with_protocol),
+          subtitles: []
+        }.as_json)
+      end
+    end
   end
 
   describe "GET hls_playlist" do
@@ -326,6 +351,19 @@ describe Api::Mobile::UrlRedirectsController do
         expect(response.body =~ /,CODECS=.+$/).to be_truthy
       end
       expect(@url_redirect.uses).to eq 1
+    end
+
+    it "returns the playlist for a non-embedded product file via fallback" do
+      embedded_file = create(:product_file, link: @url_redirect.referenced_link)
+      create(:rich_content, entity: @url_redirect.referenced_link, description: [
+               { "type" => "fileEmbed", "attrs" => { "id" => embedded_file.external_id } },
+             ])
+      stub_playlist_s3_object_get.call
+
+      get :hls_playlist, params: { token: @url_redirect.token, product_file_id: @file_1.external_id, mobile_token: Api::Mobile::BaseController::MOBILE_TOKEN }
+
+      expect(response).to be_successful
+      expect(response.body).to include("#EXTM3U")
     end
   end
 
@@ -409,8 +447,8 @@ describe Api::Mobile::UrlRedirectsController do
     context "with rich content containing only some embedded files" do
       before do
         create(:rich_content, entity: @product, description: [
-          { "type" => "fileEmbed", "attrs" => { "id" => @product.product_files.first.external_id } },
-        ])
+                 { "type" => "fileEmbed", "attrs" => { "id" => @product.product_files.first.external_id } },
+               ])
         allow_any_instance_of(Aws::S3::Object).to receive(:content_length).and_return(100)
       end
 
@@ -446,12 +484,13 @@ describe Api::Mobile::UrlRedirectsController do
       end
 
       it "does not allow downloading files from a non-purchased variant via fallback" do
-        get :download, params: {
-          token: @url_redirect.token,
-          product_file_id: @product.product_files.second.external_id,
-          mobile_token: Api::Mobile::BaseController::MOBILE_TOKEN
-        }
-        expect(response).to have_http_status(:not_found)
+        expect do
+          get :download, params: {
+            token: @url_redirect.token,
+            product_file_id: @product.product_files.second.external_id,
+            mobile_token: Api::Mobile::BaseController::MOBILE_TOKEN
+          }
+        end.to raise_error(ActionController::RoutingError, "Not Found")
       end
     end
   end
