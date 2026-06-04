@@ -405,5 +405,54 @@ describe Api::Mobile::UrlRedirectsController do
       expect(event.event_type).to eq ConsumptionEvent::EVENT_TYPE_DOWNLOAD
       expect(event.platform).to eq Platform::IPHONE
     end
+
+    context "with rich content containing only some embedded files" do
+      before do
+        create(:rich_content, entity: @product, description: [
+          { "type" => "fileEmbed", "attrs" => { "id" => @product.product_files.first.external_id } },
+        ])
+        allow_any_instance_of(Aws::S3::Object).to receive(:content_length).and_return(100)
+      end
+
+      it "downloads an embedded product file normally" do
+        get :download, params: {
+          token: @url_redirect.token,
+          product_file_id: @product.product_files.first.external_id,
+          mobile_token: Api::Mobile::BaseController::MOBILE_TOKEN
+        }
+        expect(response).to be_redirect
+      end
+
+      it "downloads a non-embedded product file via fallback" do
+        get :download, params: {
+          token: @url_redirect.token,
+          product_file_id: @product.product_files.second.external_id,
+          mobile_token: Api::Mobile::BaseController::MOBILE_TOKEN
+        }
+        expect(response).to be_redirect
+      end
+    end
+
+    context "with variant-based purchases" do
+      let(:variant_category) { create(:variant_category, link: @product) }
+      let(:variant_a) { create(:variant, variant_category:) }
+      let(:variant_b) { create(:variant, variant_category:) }
+
+      before do
+        variant_a.product_files = [@product.product_files.first]
+        variant_b.product_files = [@product.product_files.second]
+        purchase = create(:purchase, link: @product, variant_attributes: [variant_a])
+        @url_redirect = create(:url_redirect, link: @product, purchase:)
+      end
+
+      it "does not allow downloading files from a non-purchased variant via fallback" do
+        get :download, params: {
+          token: @url_redirect.token,
+          product_file_id: @product.product_files.second.external_id,
+          mobile_token: Api::Mobile::BaseController::MOBILE_TOKEN
+        }
+        expect(response).to have_http_status(:not_found)
+      end
+    end
   end
 end
