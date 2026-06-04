@@ -42,8 +42,16 @@ class Subscription::UpdaterService
     self.calculate_upgrade_cost_as_of = Time.current.end_of_day
     self.prorated_discount_price_cents = subscription.prorated_discount_price_cents(calculate_as_of: calculate_upgrade_cost_as_of)
 
-    if is_resubscribing && (subscription.cancelled_by_seller? || product.deleted?)
-      return { success: false, error_message: "This subscription cannot be restarted." }
+    if is_resubscribing && product.deleted?
+      return { success: false, error_message: "This product is no longer available, so this membership can't be restarted." }
+    end
+
+    if is_resubscribing && subscription.cancelled_by_seller? && use_existing_card?
+      return {
+        success: false,
+        error_message: "This membership was cancelled by the creator. To continue, please subscribe again from the product page.",
+        restart_at_checkout_url: product.long_url,
+      }
     end
 
     if is_resubscribing && subscription.is_installment_plan? && subscription.charges_completed?
