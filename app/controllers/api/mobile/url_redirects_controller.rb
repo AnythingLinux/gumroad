@@ -46,9 +46,15 @@ class Api::Mobile::UrlRedirectsController < Api::Mobile::BaseController
       @product_file = if @url_redirect.installment.present?
         @url_redirect.installment.product_files.find_by_external_id(permitted_params[:product_file_id])
       else
-        @url_redirect.product_file(permitted_params[:product_file_id])
+        @url_redirect.product_file(permitted_params[:product_file_id]) ||
+          product_file_fallback
       end
       e404 if @product_file.nil?
+    end
+
+    def product_file_fallback
+      return if @url_redirect.with_product_files.is_a?(BaseVariant)
+      @url_redirect.referenced_link&.product_files&.alive&.find_by_external_id(permitted_params[:product_file_id])
     end
 
     def mark_rental_as_viewed
