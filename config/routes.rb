@@ -613,6 +613,7 @@ Rails.application.routes.draw do
       end
       resource :dismiss_ai_product_generation_promo, only: [:create]
     end
+    resources :profile_sections, only: [:create, :update, :destroy]
 
     namespace :checkout do
       resources :discounts, only: %i[index create update destroy] do
@@ -1285,8 +1286,6 @@ Rails.application.routes.draw do
       resources :products, only: [:create, :destroy, :index], controller: "wishlists/products"
       resource :followers, only: [:create, :destroy], controller: "wishlists/followers"
     end
-
-    resources :profile_sections, only: [:create, :update, :destroy]
 
     put "/product_reviews/set", to: "product_reviews#set", format: :json
     resources :product_reviews, only: [:index, :show]
